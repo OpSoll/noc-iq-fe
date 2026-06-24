@@ -1,30 +1,71 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createOutage } from "@/services/outages";
+import { saveDraft, clearDraft, loadDraft } from "@/lib/drafts";
 import type { OutageCreate, Severity, OutageStatus } from "@/types/outages";
+
+const DRAFT_KEY = "outage-new";
 
 function generateId() {
   return `OUT-${Date.now()}`;
 }
 
+const INITIAL_FORM = {
+  site_name: "",
+  site_id: "",
+  severity: "medium" as Severity,
+  status: "open" as OutageStatus,
+  detected_at: new Date().toISOString().slice(0, 16),
+  description: "",
+  affected_services: "",
+  affected_subscribers: "",
+  assigned_to: "",
+};
+
 export default function NewOutagePage() {
   const router = useRouter();
+  const [restored, setRestored] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [draftRestoreShown, setDraftRestoreShown] = useState(false);
 
-  const [form, setForm] = useState({
-    site_name: "",
-    site_id: "",
-    severity: "medium" as Severity,
-    status: "open" as OutageStatus,
-    detected_at: new Date().toISOString().slice(0, 16),
-    description: "",
-    affected_services: "",
-    affected_subscribers: "",
-    assigned_to: "",
-  });
+  const [form, setForm] = useState(INITIAL_FORM);
+
+  useEffect(() => {
+    const draft = loadDraft(DRAFT_KEY);
+    if (draft && !restored) {
+      setDraftRestoreShown(true);
+      setRestored(true);
+    }
+  }, [restored]);
+
+  useEffect(() => {
+    if (restored) {
+      const timer = setInterval(() => saveDraft(DRAFT_KEY, form as unknown as Record<string, string>), 3000);
+      return () => clearInterval(timer);
+    }
+  }, [restored, form]);
+
+  function restoreDraft() {
+    const draft = loadDraft(DRAFT_KEY);
+    if (draft) {
+      const merged = { ...INITIAL_FORM };
+      for (const k of Object.keys(INITIAL_FORM)) {
+        if (draft.values[k] !== undefined) {
+          (merged as Record<string, string>)[k] = draft.values[k];
+        }
+      }
+      setForm(merged);
+    }
+    setDraftRestoreShown(false);
+  }
+
+  function dismissDraft() {
+    clearDraft(DRAFT_KEY);
+    setDraftRestoreShown(false);
+  }
 
   function set(field: string, value: string) {
     setForm((f) => ({ ...f, [field]: value }));
@@ -59,6 +100,7 @@ export default function NewOutagePage() {
 
     try {
       const outage = await createOutage(payload);
+      clearDraft(DRAFT_KEY);
       router.push(`/outages/${outage.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create outage.");
@@ -77,6 +119,15 @@ export default function NewOutagePage() {
         </button>
         <h1 className="text-2xl font-semibold text-slate-900">Create Outage</h1>
       </div>
+
+      {draftRestoreShown && (
+        <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          <span>You have an unsaved draft. </span>
+          <button onClick={restoreDraft} className="font-medium underline hover:text-amber-900">Restore</button>
+          <span> | </span>
+          <button onClick={dismissDraft} className="font-medium underline hover:text-amber-900">Discard</button>
+        </div>
+      )}
 
       {error && (
         <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
