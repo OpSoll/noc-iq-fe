@@ -427,24 +427,12 @@ cargo test
 cargo test -- --nocapture
 ```
 
-## 🗺️ Architecture Decision Records (ADRs)
+## 📖 Key Documentation
 
-Significant route-level decisions are tracked in [`docs/adr/`](./docs/adr/README.md).
-
-**When contributing to a critical route** (`/outages`, `/payments`, `/login`, `/register`, `/config`, `/setting`), check whether an ADR exists for the pattern you're changing. If your change alters the architecture of a route:
-
-1. Copy [`docs/adr/000-template.md`](./docs/adr/000-template.md) to a new numbered file
-2. Fill in all sections, including the route(s) affected
-3. Add a row to the [`docs/adr/README.md`](./docs/adr/README.md) index
-4. Reference the ADR number in your PR description
-
-**Existing ADRs by route:**
-
-| Route | ADR |
-|-------|-----|
-| `/login`, `/register` | [ADR-001: Auth Route Session Strategy](./docs/adr/001-auth-route-session-strategy.md) |
-| `/outages` | [ADR-002: Outages Route Data Fetching Strategy](./docs/adr/002-outages-route-data-fetching.md) |
-| `/payments` | [ADR-003: Payments Route Stellar Integration](./docs/adr/003-payments-route-stellar-integration.md) |
+- **[Architecture Map](docs/ARCHITECTURE_MD.md)** — Route-to-service dependency graph (auto-generated)
+- **[Seed Data Packs](docs/SEED_DATA.md)** — Deterministic preview data for UI review
+- **[Preview Quality Gate](docs/PREVIEW_QUALITY_GATE.md)** — Route behavior checklist for PRs
+- **[API Reference](docs/API.md)** — Full REST API documentation
 
 ## 📚 Documentation Guidelines
 
