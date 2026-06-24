@@ -28,8 +28,15 @@ export function useOutages(params: UseOutagesParams = {}) {
   return useQuery<PaginatedOutages, Error>({
     queryKey: ["outages", normalizedParams],
 
-    queryFn: ({ signal }) =>
-      fetchOutages(normalizedParams, { signal }),
+    queryFn: () =>
+      fetchOutages({
+        page: normalizedParams.page ?? DEFAULT_PAGE,
+        page_size: normalizedParams.page_size,
+        severity: normalizedParams.severity,
+        status: normalizedParams.status,
+        search: normalizedParams.search,
+        sort: normalizedParams.sort,
+      }),
 
     placeholderData: keepPreviousData,
 
@@ -41,7 +48,7 @@ export function useOutages(params: UseOutagesParams = {}) {
 
     refetchOnWindowFocus: false,
 
-    enabled: (normalizedParams.page ?? 0) > 0,
+    enabled: (normalizedParams.page ?? DEFAULT_PAGE) > 0,
 
     select: (data) => ({
       ...data,
