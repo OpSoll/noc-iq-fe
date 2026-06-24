@@ -1,0 +1,51 @@
+name: Contract Change Checklist
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/services/**'
+      - 'src/lib/api.ts'
+      - 'src/lib/client.ts'
+      - 'src/lib/auth/**'
+      - 'src/hooks/useSlaConfig.ts'
+
+jobs:
+  contract-check:
+    name: Detect contract changes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run contract-change check
+        run: node scripts/contract-change-check.mjs --base origin/main
+        # Exit 1 means contract changes found — post as PR comment, don't block hard
+        continue-on-error: true
+        id: check
+
+      - name: Post checklist comment
+        if: steps.check.outcome == 'failure'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `## ⚠️ Backend Contract Change Detected
+
+            This PR modifies service or API integration files. Please confirm the following before merging:
+
+            - [ ] Affected test files pass locally (\`npm test\`)
+            - [ ] \`docs/API.md\` updated if the API shape changed
+            - [ ] Relevant ADR in \`docs/adr/\` updated if the pattern changed
+            - [ ] Type definitions in \`src/types/\` match the new contract
+
+            Run \`node scripts/contract-change-check.mjs\` locally to see the full list of impacted services and routes.`
+            });

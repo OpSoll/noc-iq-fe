@@ -1,0 +1,35 @@
+name: Changelog Automation
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  update-changelog:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # full history needed for git log
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Generate changelog section
+        run: node scripts/generate-changelog.mjs
+
+      - name: Commit updated CHANGELOG.md if changed
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git diff --quiet CHANGELOG.md || (
+            git add CHANGELOG.md &&
+            git commit -m "chore: update changelog [skip ci]"
+          )
+
+      - name: Push changes
+        run: git push

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   fetchWebhooks,
@@ -10,9 +10,11 @@ import {
   fetchWebhookDeliveries,
   retryDelivery,
 } from "@/services/webhookService";
+import { saveDraft, loadDraft, clearDraft } from "@/lib/drafts";
 import type { Webhook, WebhookDelivery } from "@/types/webhook";
 
 const AVAILABLE_EVENTS = ["outage.created", "outage.resolved", "payment.processed", "sla.breached"];
+const DRAFT_KEY = "webhook-new";
 
 export default function WebhooksPage() {
   const qc = useQueryClient();
@@ -22,6 +24,39 @@ export default function WebhooksPage() {
   const [formEvents, setFormEvents] = useState<string[]>([]);
   const [formError, setFormError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [draftRestoreShown, setDraftRestoreShown] = useState(false);
+  const [draftRestored, setDraftRestored] = useState(false);
+
+  useEffect(() => {
+    if (!showForm || editingId) return;
+    const draft = loadDraft(DRAFT_KEY);
+    if (draft && !draftRestored) {
+      setDraftRestoreShown(true);
+      setDraftRestored(true);
+    }
+  }, [showForm, editingId, draftRestored]);
+
+  useEffect(() => {
+    if (!showForm || editingId || !draftRestored) return;
+    const timer = setInterval(() => {
+      saveDraft(DRAFT_KEY, { url: formUrl, events: JSON.stringify(formEvents) });
+    }, 3000);
+    return () => clearInterval(timer);
+  }, [showForm, editingId, draftRestored, formUrl, formEvents]);
+
+  function restoreWebhookDraft() {
+    const draft = loadDraft(DRAFT_KEY);
+    if (draft) {
+      setFormUrl(draft.values.url || "");
+      try { setFormEvents(JSON.parse(draft.values.events || "[]")); } catch { setFormEvents([]); }
+    }
+    setDraftRestoreShown(false);
+  }
+
+  function dismissWebhookDraft() {
+    clearDraft(DRAFT_KEY);
+    setDraftRestoreShown(false);
+  }
 
   const { data: webhooks = [], isLoading } = useQuery({
     queryKey: ["webhooks"],
@@ -38,6 +73,7 @@ export default function WebhooksPage() {
     mutationFn: createWebhook,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["webhooks"] });
+      clearDraft(DRAFT_KEY);
       resetForm();
     },
     onError: (err: Error) => setFormError(err.message),
@@ -73,6 +109,7 @@ export default function WebhooksPage() {
     setFormEvents([]);
     setFormError(null);
     setEditingId(null);
+    clearDraft(DRAFT_KEY);
   }
 
   function openCreate() {
@@ -135,6 +172,15 @@ export default function WebhooksPage() {
           <h2 className="text-base font-semibold text-gray-700">
             {editingId ? "Edit webhook" : "New webhook"}
           </h2>
+
+          {draftRestoreShown && (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-800">
+              <span>You have an unsaved draft. </span>
+              <button onClick={restoreWebhookDraft} className="font-medium underline hover:text-amber-900">Restore</button>
+              <span> | </span>
+              <button onClick={dismissWebhookDraft} className="font-medium underline hover:text-amber-900">Discard</button>
+            </div>
+          )}
 
           <div className="space-y-1">
             <label className="block text-sm font-medium text-gray-700">Payload URL</label>

@@ -31,9 +31,7 @@ export default function GlobalError({
           error.message || "An unexpected error occurred while loading this page."
         }
         primaryAction={{ label: "Try again", onClick: reset }}
-        
         secondaryAction={{ label: "Reload page", onClick: () => window.location.reload() }}
-        
       />
       {process.env.NODE_ENV === "development" && error.digest ? (
         <div className="mx-auto w-full max-w-xl rounded-xl border border-slate-200 bg-white p-4 text-xs text-slate-500 shadow-sm">
