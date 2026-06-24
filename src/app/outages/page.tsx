@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 
 import { RouteLoadingState } from "@/components/ui/route-state";
-import { OutagesPageClient } from "./components/outages-page-client";
+import OutagesPageClient from "./components/outages-page-client";
 
 
 export default function OutagesPage() {

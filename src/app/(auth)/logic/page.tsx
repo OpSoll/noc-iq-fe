@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { saveRedirect } from "@/lib/auth/redirectStorage";
 import { REDIRECT_KEY } from "@/lib/auth/redirect";
 
-export default function LoginPage() {
+export default function AuthLogicPage() {
+  const router = useRouter();
   const params = useSearchParams();
 
   useEffect(() => {
@@ -13,7 +14,8 @@ export default function LoginPage() {
     if (redirect) {
       saveRedirect(redirect);
     }
-  }, [params]);
+    router.replace("/login");
+  }, [params, router]);
 
-  return <LoginForm />;
+  return null;
 }

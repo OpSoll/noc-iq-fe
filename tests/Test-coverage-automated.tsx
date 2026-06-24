@@ -1,10 +1,16 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import PaymentsView from "@/components/payments/payments-view";
 import { PaymentDetailDrawer } from "@/components/payments/payment-detail-drawer";
+import ConfigPage from "@/app/config/page";
 
+const mockGet = vi.fn();
+const mockPut = vi.fn();
+vi.mock("@/lib/api", () => ({
+  api: { get: (...a: unknown[]) => mockGet(...a), put: (...a: unknown[]) => mockPut(...a) },
+}));
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace: vi.fn() }),
   useSearchParams: () => ({ get: () => null }),
@@ -98,7 +104,7 @@ describe("SLA config page", () => {
       },
     });
 
-    render(<SlaConfigPage />);
+    render(<ConfigPage />);
 
     expect(await screen.findByText("Severity Service Level Agreements")).toBeInTheDocument();
     expect(mockGet).toHaveBeenCalledWith("/sla/config");
