@@ -1,0 +1,250 @@
+# Changelog
+
+All notable changes to **noc-iq-fe** are documented here.
+
+Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) conventions.  
+Versions align with [Semantic Versioning](https://semver.org/).
+
+<!-- CHANGELOG_START -->
+
+## [Unreleased] — 2026-06-24
+
+### Features
+- add frontend dependency policy checks for risky package additions ⚠️ **route-impacting** (`021de2b`)
+- implement changelog automation for frontend operational surfaces (`212a7a4`)
+- implement W5 issues — draft preservation, architecture map, quality gate, seed data packs ⚠️ **route-impacting** (`77e7649`)
+- add reliability scorecard CI workflow and docs ⚠️ **route-impacting** (`3e470fa`)
+- add contributor contract-change checklist with auto hints (`9f0308a`)
+- **#283**: add secure client-side secret redaction in debug consoles ⚠️ **route-impacting** (`2db4aea`)
+- **auth**: add redirect preservation utilities ⚠️ **route-impacting** (`7179cc9`)
+- **config**: introduce environment-based API base URL ⚠️ **route-impacting** (`8783303`)
+- **errors**: normalize API errors with correlation ID support ⚠️ **route-impacting** (`379d468`)
+- upload progress/cancel, error report, API error normalization, request cancellation ⚠️ **route-impacting** (`2a78900`)
+- toast system, explorer links, payment deep links, api-types doc (closes #133 #134 #135 #136) ⚠️ **route-impacting** (`13fe603`)
+- dashboard export + compare mode, bulk import preview + validation (#121 #122 #123 #124) (`b8f1a11`)
+- FE-073–076 payments export, dashboard filters, chart drilldowns (`707a222`)
+- payments filters, outage links, retry/reconcile, sorting and density (`a82d62d`)
+- FE-065/066/067/068 - React Query mutations, SLA contract alignment, dispute resolution notes, dispute filter+pagination ⚠️ **route-impacting** (`b4c671a`)
+- FE-017/018/020/022 outage create, edit, timeline, wallet readiness ⚠️ **route-impacting** (`d87fdba`)
+- FE-053/054/055/056 auth tokens, auto-refresh, route guard, profile page ⚠️ **route-impacting** (`a4e12b3`)
+- add column visibility, density, delete confirmation, location map, and post-incident analysis ⚠️ **route-impacting** (`09112f9`)
+- add login, register, webhooks, and bulk import history screens ⚠️ **route-impacting** (`9c26c67`)
+- FE-057/058/059/060 — cross-tab session sync, outage search, sorting, URL state ⚠️ **route-impacting** (`5a24575`)
+- filter presets, payment drawer, auth nav, SLA disputes (#86 #88 #90 #91) ⚠️ **route-impacting** (`24a9a80`)
+- **frontend**: implement legacy surface cleanup ⚠️ **route-impacting** (`9474016`)
+- **frontend**: implement route state consistency ⚠️ **route-impacting** (`d27587d`)
+- **frontend**: implement config flow test coverage ⚠️ **route-impacting** (`bcb9023`)
+- **frontend**: implement outage flow test coverage (`545ad4e`)
+- **frontend**: implement live analytics dashboard experience (`0955490`)
+- **frontend**: implement canonical payments view ⚠️ **route-impacting** (`e53c818`)
+- **frontend**: implement wallet status experience ⚠️ **route-impacting** (`fbb0712`)
+- **frontend**: implement outage export flow ⚠️ **route-impacting** (`07e862f`)
+- **frontend**: implement outages table workflow ⚠️ **route-impacting** (`d992916`)
+- **frontend**: implement outage sla preview flow ⚠️ **route-impacting** (`2f731fc`)
+- **frontend**: implement outage resolve modal ⚠️ **route-impacting** (`792d906`)
+- **frontend**: implement unified dashboard view ⚠️ **route-impacting** (`1939af7`)
+- **frontend**: implement backend sla config page ⚠️ **route-impacting** (`f0bc0a5`)
+- **frontend**: implement settings wallet account screen ⚠️ **route-impacting** (`e717626`)
+- **frontend**: implement payments app route ⚠️ **route-impacting** (`fc97c10`)
+- **frontend**: implement live analytics dashboard shell ⚠️ **route-impacting** (`56016cd`)
+- **outages**: implement real-time polling for outage tracking ⚠️ **route-impacting** (`5f8bf6d`)
+- **core**: implement global error boundary and fallback UI ⚠️ **route-impacting** (`11df337`)
+- add recompute SLA action to outage rows (#25) (`aadea1d`)
+- implement resolve outage workflow with SLA computation ⚠️ **route-impacting** (`9950f01`)
+- implement outages screen and clean up shadcn and tailwind config ⚠️ **route-impacting** (`1627888`)
+- add basic outage list page consuming backend API ⚠️ **route-impacting** (`64e0cc3`)
+- add typed API client layer for outages and SLA (`80970c7`)
+- scaffold app shell with routing and base pages (`77129ec`)
+- **outages**: geocode location names to lat/lon on create; extend models with location_name/latitude/longitude; make Firebase optional for tests; align create_outage response with tests; fix timezone-aware validation; add geocoding service; update tests and .gitignore (`1665e8b`)
+- **analytics**: add /analytics/kpis endpoint for active outages, MTTR, severity counts (`e562f74`)
+- add GET /outages/{ticket_id}/summary plain-text endpoint (`7936c13`)
+- **api**: implement report creation and update endpoints with payload models (`5ee51d5`)
+- **api**: add report creation and update endpoints with payload models (`3e1a73c`)
+- **auth**: implement user authentication with Firebase ID token verification (`cef9a0f`)
+- **api**: build CRUD endpoints for RCA management (`d70b33f`)
+- **api**: Fetch Report History by Ticket ID (`1bfb52a`)
+- convert value error to http error (`dcbd6ef`)
+- create outage post endpoint (`f715263`)
+- restructure gateway interface (`0eeadea`)
+- create outage report model (`e53bc67`)
+
+### Bug Fixes
+- **outages**: remove duplicate declarations and JSX from merge artifacts ⚠️ **route-impacting** (`feddaa5`)
+- resolve FE-001/005/007/008 issues (#159 #163 #165 #166) ⚠️ **route-impacting** (`2a8b8db`)
+- clean up imports, general errors ⚠️ **route-impacting** (`17bf446`)
+
+### Refactoring
+- **tests**: reorganize and enhance test cases for outage report functionality (`0cb56bf`)
+- **api**: streamline report handling and introduce RCA management logic (`f47df11`)
+
+### Documentation
+- add CODEOWNERS and escalation map for high-risk modules (`42198c4`)
+- add route-level ADR templates and baseline ADR entries (`9312375`)
+
+> **Rollout notes:** Review route-impacting changes above before deploying. Manual corrections can be made directly in CHANGELOG.md.
+
+
+## [Unreleased] — 2026-06-24
+
+### Features
+- implement changelog automation for frontend operational surfaces (`212a7a4`)
+- implement W5 issues — draft preservation, architecture map, quality gate, seed data packs ⚠️ **route-impacting** (`77e7649`)
+- add reliability scorecard CI workflow and docs ⚠️ **route-impacting** (`3e470fa`)
+- add contributor contract-change checklist with auto hints (`9f0308a`)
+- **#283**: add secure client-side secret redaction in debug consoles ⚠️ **route-impacting** (`2db4aea`)
+- **auth**: add redirect preservation utilities ⚠️ **route-impacting** (`7179cc9`)
+- **config**: introduce environment-based API base URL ⚠️ **route-impacting** (`8783303`)
+- **errors**: normalize API errors with correlation ID support ⚠️ **route-impacting** (`379d468`)
+- upload progress/cancel, error report, API error normalization, request cancellation ⚠️ **route-impacting** (`2a78900`)
+- toast system, explorer links, payment deep links, api-types doc (closes #133 #134 #135 #136) ⚠️ **route-impacting** (`13fe603`)
+- dashboard export + compare mode, bulk import preview + validation (#121 #122 #123 #124) (`b8f1a11`)
+- FE-073–076 payments export, dashboard filters, chart drilldowns (`707a222`)
+- payments filters, outage links, retry/reconcile, sorting and density (`a82d62d`)
+- FE-065/066/067/068 - React Query mutations, SLA contract alignment, dispute resolution notes, dispute filter+pagination ⚠️ **route-impacting** (`b4c671a`)
+- FE-017/018/020/022 outage create, edit, timeline, wallet readiness ⚠️ **route-impacting** (`d87fdba`)
+- FE-053/054/055/056 auth tokens, auto-refresh, route guard, profile page ⚠️ **route-impacting** (`a4e12b3`)
+- add column visibility, density, delete confirmation, location map, and post-incident analysis ⚠️ **route-impacting** (`09112f9`)
+- add login, register, webhooks, and bulk import history screens ⚠️ **route-impacting** (`9c26c67`)
+- FE-057/058/059/060 — cross-tab session sync, outage search, sorting, URL state ⚠️ **route-impacting** (`5a24575`)
+- filter presets, payment drawer, auth nav, SLA disputes (#86 #88 #90 #91) ⚠️ **route-impacting** (`24a9a80`)
+- **frontend**: implement legacy surface cleanup ⚠️ **route-impacting** (`9474016`)
+- **frontend**: implement route state consistency ⚠️ **route-impacting** (`d27587d`)
+- **frontend**: implement config flow test coverage ⚠️ **route-impacting** (`bcb9023`)
+- **frontend**: implement outage flow test coverage (`545ad4e`)
+- **frontend**: implement live analytics dashboard experience (`0955490`)
+- **frontend**: implement canonical payments view ⚠️ **route-impacting** (`e53c818`)
+- **frontend**: implement wallet status experience ⚠️ **route-impacting** (`fbb0712`)
+- **frontend**: implement outage export flow ⚠️ **route-impacting** (`07e862f`)
+- **frontend**: implement outages table workflow ⚠️ **route-impacting** (`d992916`)
+- **frontend**: implement outage sla preview flow ⚠️ **route-impacting** (`2f731fc`)
+- **frontend**: implement outage resolve modal ⚠️ **route-impacting** (`792d906`)
+- **frontend**: implement unified dashboard view ⚠️ **route-impacting** (`1939af7`)
+- **frontend**: implement backend sla config page ⚠️ **route-impacting** (`f0bc0a5`)
+- **frontend**: implement settings wallet account screen ⚠️ **route-impacting** (`e717626`)
+- **frontend**: implement payments app route ⚠️ **route-impacting** (`fc97c10`)
+- **frontend**: implement live analytics dashboard shell ⚠️ **route-impacting** (`56016cd`)
+- **outages**: implement real-time polling for outage tracking ⚠️ **route-impacting** (`5f8bf6d`)
+- **core**: implement global error boundary and fallback UI ⚠️ **route-impacting** (`11df337`)
+- add recompute SLA action to outage rows (#25) (`aadea1d`)
+- implement resolve outage workflow with SLA computation ⚠️ **route-impacting** (`9950f01`)
+- implement outages screen and clean up shadcn and tailwind config ⚠️ **route-impacting** (`1627888`)
+- add basic outage list page consuming backend API ⚠️ **route-impacting** (`64e0cc3`)
+- add typed API client layer for outages and SLA (`80970c7`)
+- scaffold app shell with routing and base pages (`77129ec`)
+- **outages**: geocode location names to lat/lon on create; extend models with location_name/latitude/longitude; make Firebase optional for tests; align create_outage response with tests; fix timezone-aware validation; add geocoding service; update tests and .gitignore (`1665e8b`)
+- **analytics**: add /analytics/kpis endpoint for active outages, MTTR, severity counts (`e562f74`)
+- add GET /outages/{ticket_id}/summary plain-text endpoint (`7936c13`)
+- **api**: implement report creation and update endpoints with payload models (`5ee51d5`)
+- **api**: add report creation and update endpoints with payload models (`3e1a73c`)
+- **auth**: implement user authentication with Firebase ID token verification (`cef9a0f`)
+- **api**: build CRUD endpoints for RCA management (`d70b33f`)
+- **api**: Fetch Report History by Ticket ID (`1bfb52a`)
+- convert value error to http error (`dcbd6ef`)
+- create outage post endpoint (`f715263`)
+- restructure gateway interface (`0eeadea`)
+- create outage report model (`e53bc67`)
+
+### Bug Fixes
+- **outages**: remove duplicate declarations and JSX from merge artifacts ⚠️ **route-impacting** (`feddaa5`)
+- resolve FE-001/005/007/008 issues (#159 #163 #165 #166) ⚠️ **route-impacting** (`2a8b8db`)
+- clean up imports, general errors ⚠️ **route-impacting** (`17bf446`)
+
+### Refactoring
+- **tests**: reorganize and enhance test cases for outage report functionality (`0cb56bf`)
+- **api**: streamline report handling and introduce RCA management logic (`f47df11`)
+
+### Documentation
+- add CODEOWNERS and escalation map for high-risk modules (`42198c4`)
+- add route-level ADR templates and baseline ADR entries (`9312375`)
+
+> **Rollout notes:** Review route-impacting changes above before deploying. Manual corrections can be made directly in CHANGELOG.md.
+
+
+## [Unreleased] — 2026-06-24
+
+### Features
+- implement changelog automation for frontend operational surfaces (`212a7a4`)
+- add reliability scorecard CI workflow and docs ⚠️ **route-impacting** (`3e470fa`)
+- add contributor contract-change checklist with auto hints (`9f0308a`)
+- **#283**: add secure client-side secret redaction in debug consoles ⚠️ **route-impacting** (`2db4aea`)
+- **auth**: add redirect preservation utilities ⚠️ **route-impacting** (`7179cc9`)
+- **config**: introduce environment-based API base URL ⚠️ **route-impacting** (`8783303`)
+- **errors**: normalize API errors with correlation ID support ⚠️ **route-impacting** (`379d468`)
+- upload progress/cancel, error report, API error normalization, request cancellation ⚠️ **route-impacting** (`2a78900`)
+- toast system, explorer links, payment deep links, api-types doc (closes #133 #134 #135 #136) ⚠️ **route-impacting** (`13fe603`)
+- dashboard export + compare mode, bulk import preview + validation (#121 #122 #123 #124) (`b8f1a11`)
+- FE-073–076 payments export, dashboard filters, chart drilldowns (`707a222`)
+- payments filters, outage links, retry/reconcile, sorting and density (`a82d62d`)
+- FE-065/066/067/068 - React Query mutations, SLA contract alignment, dispute resolution notes, dispute filter+pagination ⚠️ **route-impacting** (`b4c671a`)
+- FE-017/018/020/022 outage create, edit, timeline, wallet readiness ⚠️ **route-impacting** (`d87fdba`)
+- FE-053/054/055/056 auth tokens, auto-refresh, route guard, profile page ⚠️ **route-impacting** (`a4e12b3`)
+- add column visibility, density, delete confirmation, location map, and post-incident analysis ⚠️ **route-impacting** (`09112f9`)
+- add login, register, webhooks, and bulk import history screens ⚠️ **route-impacting** (`9c26c67`)
+- FE-057/058/059/060 — cross-tab session sync, outage search, sorting, URL state ⚠️ **route-impacting** (`5a24575`)
+- filter presets, payment drawer, auth nav, SLA disputes (#86 #88 #90 #91) ⚠️ **route-impacting** (`24a9a80`)
+- **frontend**: implement legacy surface cleanup ⚠️ **route-impacting** (`9474016`)
+- **frontend**: implement route state consistency ⚠️ **route-impacting** (`d27587d`)
+- **frontend**: implement config flow test coverage ⚠️ **route-impacting** (`bcb9023`)
+- **frontend**: implement outage flow test coverage (`545ad4e`)
+- **frontend**: implement live analytics dashboard experience (`0955490`)
+- **frontend**: implement canonical payments view ⚠️ **route-impacting** (`e53c818`)
+- **frontend**: implement wallet status experience ⚠️ **route-impacting** (`fbb0712`)
+- **frontend**: implement outage export flow ⚠️ **route-impacting** (`07e862f`)
+- **frontend**: implement outages table workflow ⚠️ **route-impacting** (`d992916`)
+- **frontend**: implement outage sla preview flow ⚠️ **route-impacting** (`2f731fc`)
+- **frontend**: implement outage resolve modal ⚠️ **route-impacting** (`792d906`)
+- **frontend**: implement unified dashboard view ⚠️ **route-impacting** (`1939af7`)
+- **frontend**: implement backend sla config page ⚠️ **route-impacting** (`f0bc0a5`)
+- **frontend**: implement settings wallet account screen ⚠️ **route-impacting** (`e717626`)
+- **frontend**: implement payments app route ⚠️ **route-impacting** (`fc97c10`)
+- **frontend**: implement live analytics dashboard shell ⚠️ **route-impacting** (`56016cd`)
+- **outages**: implement real-time polling for outage tracking ⚠️ **route-impacting** (`5f8bf6d`)
+- **core**: implement global error boundary and fallback UI ⚠️ **route-impacting** (`11df337`)
+- add recompute SLA action to outage rows (#25) (`aadea1d`)
+- implement resolve outage workflow with SLA computation ⚠️ **route-impacting** (`9950f01`)
+- implement outages screen and clean up shadcn and tailwind config ⚠️ **route-impacting** (`1627888`)
+- add basic outage list page consuming backend API ⚠️ **route-impacting** (`64e0cc3`)
+- add typed API client layer for outages and SLA (`80970c7`)
+- scaffold app shell with routing and base pages (`77129ec`)
+- **outages**: geocode location names to lat/lon on create; extend models with location_name/latitude/longitude; make Firebase optional for tests; align create_outage response with tests; fix timezone-aware validation; add geocoding service; update tests and .gitignore (`1665e8b`)
+- **analytics**: add /analytics/kpis endpoint for active outages, MTTR, severity counts (`e562f74`)
+- add GET /outages/{ticket_id}/summary plain-text endpoint (`7936c13`)
+- **api**: implement report creation and update endpoints with payload models (`5ee51d5`)
+- **api**: add report creation and update endpoints with payload models (`3e1a73c`)
+- **auth**: implement user authentication with Firebase ID token verification (`cef9a0f`)
+- **api**: build CRUD endpoints for RCA management (`d70b33f`)
+- **api**: Fetch Report History by Ticket ID (`1bfb52a`)
+- convert value error to http error (`dcbd6ef`)
+- create outage post endpoint (`f715263`)
+- restructure gateway interface (`0eeadea`)
+- create outage report model (`e53bc67`)
+
+### Bug Fixes
+- **outages**: remove duplicate declarations and JSX from merge artifacts ⚠️ **route-impacting** (`feddaa5`)
+- resolve FE-001/005/007/008 issues (#159 #163 #165 #166) ⚠️ **route-impacting** (`2a8b8db`)
+- clean up imports, general errors ⚠️ **route-impacting** (`17bf446`)
+
+### Refactoring
+- **tests**: reorganize and enhance test cases for outage report functionality (`0cb56bf`)
+- **api**: streamline report handling and introduce RCA management logic (`f47df11`)
+
+### Documentation
+- add CODEOWNERS and escalation map for high-risk modules (`42198c4`)
+- add route-level ADR templates and baseline ADR entries (`9312375`)
+
+> **Rollout notes:** Review route-impacting changes above before deploying. Manual corrections can be made directly in CHANGELOG.md.
+
+
+## [Unreleased] — 2026-06-24
+
+### Features
+- **changelog**: implement changelog automation for frontend operational surfaces ⚠️ **route-impacting** (`placeholder`)
+
+> **Rollout notes:** This entry is a placeholder for the current work on issue #294 [FE-W5-123].  
+> Route-impacting changes require a review of `src/app/` diffs before deployment.  
+> Manual corrections can be made directly in this file at any time.
+
+---
+
+_This file is updated automatically on push to `main` via `.github/workflows/changelog.yml`.  
+To override or annotate an entry, edit this file and commit directly._
