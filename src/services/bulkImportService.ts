@@ -1,4 +1,4 @@
-import { AxiosProgressEvent, AxiosRequestConfig } from "axios";
+import type { AxiosRequestConfig } from "axios";
 
 import { api } from "@/lib/api";
 
@@ -9,6 +9,11 @@ import type {
 
 const BULK_IMPORT_ENDPOINT = "/outages/bulk";
 const BULK_IMPORT_HISTORY_ENDPOINT = "/outages/bulk/history";
+
+interface AxiosProgressEvent {
+  loaded: number;
+  total?: number;
+}
 
 interface BulkImportOptions {
   signal?: AbortSignal;

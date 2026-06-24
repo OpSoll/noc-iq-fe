@@ -1,5 +1,5 @@
-import { buildApiUrl } from "@/lib/api/url";
-import { normalizeApiError } from "@/lib/errors/normalizeApiError";
+import { buildApiUrl } from "@/lib/url";
+import { normalizeApiError } from "@/lib/normalizeApiError";
 
 export async function apiClient(
   path: string,

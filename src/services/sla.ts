@@ -1,4 +1,4 @@
-import { AxiosError } from "axios";
+import type { AxiosError as IAxiosError } from "axios";
 
 import { api } from "@/lib/api";
 
@@ -45,7 +45,7 @@ const SLA_ENDPOINTS = {
 /* -------------------------------------------------------------------------- */
 
 function extractErrorMessage(error: unknown): string {
-  const axiosError = error as AxiosError<APIErrorResponse>;
+  const axiosError = error as IAxiosError<APIErrorResponse>;
 
   return (
     axiosError.response?.data?.message ||
@@ -54,7 +54,7 @@ function extractErrorMessage(error: unknown): string {
   );
 }
 
-function sanitizeParams<T extends Record<string, unknown>>(
+function sanitizeParams<T extends object>(
   params: T
 ): Partial<T> {
   return Object.fromEntries(
