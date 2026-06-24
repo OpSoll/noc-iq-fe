@@ -1,0 +1,41 @@
+# CODEOWNERS
+# Each line maps a path pattern to one or more owner teams/users.
+# Owners are automatically requested for review when a PR modifies matching files.
+# Docs: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default: all files require review from the core team
+*                                   @OpSoll/noc-iq-frontend
+
+# ── High-Risk Modules ────────────────────────────────────────────────────────
+
+# Auth & session (session hijack, redirect bugs = critical)
+src/lib/auth/                       @OpSoll/noc-iq-frontend @OpSoll/noc-iq-security
+src/providers/session.tsx           @OpSoll/noc-iq-frontend @OpSoll/noc-iq-security
+src/components/RouteGuard.tsx       @OpSoll/noc-iq-frontend @OpSoll/noc-iq-security
+
+# Stellar / payment integrations (financial risk)
+src/services/paymentService.ts      @OpSoll/noc-iq-frontend @OpSoll/noc-iq-stellar
+src/lib/client.ts                   @OpSoll/noc-iq-frontend @OpSoll/noc-iq-stellar
+src/app/payments/                   @OpSoll/noc-iq-frontend @OpSoll/noc-iq-stellar
+src/components/payments/            @OpSoll/noc-iq-frontend @OpSoll/noc-iq-stellar
+
+# Outages core (operational impact)
+src/services/outages.ts             @OpSoll/noc-iq-frontend
+src/app/outages/                    @OpSoll/noc-iq-frontend
+src/components/outages/             @OpSoll/noc-iq-frontend
+
+# SLA logic (contract / billing impact)
+src/services/sla.ts                 @OpSoll/noc-iq-frontend @OpSoll/noc-iq-stellar
+src/hooks/useSlaConfig.ts           @OpSoll/noc-iq-frontend @OpSoll/noc-iq-stellar
+
+# API & environment config (affects all environments)
+src/lib/api.ts                      @OpSoll/noc-iq-frontend
+src/lib/config/                     @OpSoll/noc-iq-frontend
+src/app/config/                     @OpSoll/noc-iq-frontend
+
+# ── CI / Workflow ─────────────────────────────────────────────────────────────
+.github/                            @OpSoll/noc-iq-frontend
+
+# ── Documentation ─────────────────────────────────────────────────────────────
+docs/                               @OpSoll/noc-iq-frontend
+CONTRIBUTING.md                     @OpSoll/noc-iq-frontend
