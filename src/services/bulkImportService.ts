@@ -12,6 +12,11 @@ type AxiosProgressEvent = { loaded: number; total?: number };
 const BULK_IMPORT_ENDPOINT = "/outages/bulk";
 const BULK_IMPORT_HISTORY_ENDPOINT = "/outages/bulk/history";
 
+interface AxiosProgressEvent {
+  loaded: number;
+  total?: number;
+}
+
 interface BulkImportOptions {
   signal?: AbortSignal;
   onProgress?: (progress: number) => void;

@@ -95,6 +95,7 @@ export default function SLADashboardView() {
         title="Dashboard unavailable"
         description="We could not load the latest analytics right now."
         primaryAction={{ label: "Retry", onClick: () => void primary.refetch() }}
+        
       />
     );
   }

@@ -11,6 +11,12 @@ const mockPut = vi.fn();
 vi.mock("@/lib/api", () => ({
   api: { get: (...a: unknown[]) => mockGet(...a), put: (...a: unknown[]) => mockPut(...a) },
 }));
+
+const mockGet = vi.fn();
+const mockPut = vi.fn();
+vi.mock("@/lib/api", () => ({
+  api: { get: (...a: unknown[]) => mockGet(...a), put: (...a: unknown[]) => mockPut(...a) },
+}));
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace: vi.fn() }),
   useSearchParams: () => ({ get: () => null }),

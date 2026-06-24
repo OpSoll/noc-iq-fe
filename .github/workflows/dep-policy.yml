@@ -1,0 +1,20 @@
+name: Dependency Policy Check
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'package.json'
+      - 'scripts/dep-policy-exceptions.json'
+
+jobs:
+  dep-policy:
+    name: Check dependency policy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Run dependency policy check
+        run: node scripts/dep-policy-check.mjs

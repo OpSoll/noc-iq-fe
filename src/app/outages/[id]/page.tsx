@@ -180,6 +180,7 @@ export default function OutageDetailsPage() {
         title="Error loading outage"
         description={error}
         primaryAction={{ label: "Reload page", onClick: () => window.location.reload() }}
+        
       />
     );
   }

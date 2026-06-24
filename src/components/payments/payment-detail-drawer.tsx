@@ -291,6 +291,7 @@ export function PaymentDetailDrawer({ paymentId, onClose }: Props) {
               title="Failed to load"
               description={error}
               primaryAction={{ label: "Try Again", onClick: handleRetryLoad }}
+              
             />
           )}
           
