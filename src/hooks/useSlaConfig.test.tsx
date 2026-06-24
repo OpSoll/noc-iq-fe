@@ -1,11 +1,15 @@
 import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactNode } from "react";
+import { vi, describe, it, beforeEach, expect } from "vitest";
 import { api } from "@/lib/api";
 import { useSlaConfig, useUpdateSlaConfig } from "@/hooks/useSlaConfig";
 
-jest.mock("@/lib/api");
-const mockedApi = api as jest.Mocked<typeof api>;
+vi.mock("@/lib/api");
+const mockedApi = api as unknown as {
+  get: ReturnType<typeof vi.fn>;
+  put: ReturnType<typeof vi.fn>;
+};
 
 function makeWrapper(client: QueryClient) {
   return function Wrapper({ children }: { children: ReactNode }) {
