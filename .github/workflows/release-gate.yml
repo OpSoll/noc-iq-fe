@@ -1,0 +1,31 @@
+name: Release Gate
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  compatibility-check:
+    name: Frontend-Backend Compatibility Gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run compatibility release gate
+        run: node scripts/release-gate.mjs
+        env:
+          # Optional override; falls back to fixtures/backend-contract.json
+          BACKEND_API_VERSION: ${{ vars.BACKEND_API_VERSION }}
+          # Bypass requires explicit approval — set these repo vars to skip the gate
+          RELEASE_GATE_BYPASS: ${{ vars.RELEASE_GATE_BYPASS }}
+          RELEASE_GATE_APPROVER: ${{ vars.RELEASE_GATE_APPROVER }}
+          RELEASE_GATE_REASON: ${{ vars.RELEASE_GATE_REASON }}

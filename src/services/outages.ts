@@ -1,4 +1,4 @@
-import { AxiosError } from "axios";
+import type { AxiosError as IAxiosError } from "axios";
 
 import { api } from "@/lib/api";
 import type {
@@ -28,12 +28,13 @@ interface ApiErrorResponse {
 const OUTAGES_ENDPOINT = "/outages";
 
 function handleApiError(error: unknown, fallbackMessage: string): never {
-  if (error instanceof AxiosError) {
-    const apiError = error.response?.data as ApiErrorResponse | undefined;
+  if ((error as IAxiosError).isAxiosError) {
+    const axErr = error as IAxiosError<ApiErrorResponse>;
+    const apiError = axErr.response?.data;
 
     throw new Error(
       apiError?.message ||
-        error.message ||
+        axErr.message ||
         fallbackMessage,
     );
   }
@@ -53,7 +54,6 @@ export async function listOutages(
 ): Promise<Outage[]> {
   try {
     const res = await api.get<PaginatedOutages>(OUTAGES_ENDPOINT, {
-      signal: options?.signal,
     });
 
     return res.data.items;
@@ -72,7 +72,6 @@ export async function getOutages(
   try {
     const res = await api.get<PaginatedOutages>(OUTAGES_ENDPOINT, {
       params,
-      signal: options?.signal,
     });
 
     return res.data;
@@ -94,7 +93,6 @@ export async function getOutage(
     }
 
     const res = await api.get<Outage>(`${OUTAGES_ENDPOINT}/${id}`, {
-      signal: options?.signal,
     });
 
     return res.data;

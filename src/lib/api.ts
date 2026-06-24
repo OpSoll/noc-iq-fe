@@ -76,7 +76,7 @@ api.interceptors.response.use(
         const newToken = await refreshPromise;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (config as any).headers = { ...((config as any).headers ?? {}), Authorization: `Bearer ${newToken}` };
-        return api(config as Parameters<typeof api>[0]);
+        return api(config as unknown as Parameters<typeof api>[0]);
       } catch {
         clearTokens();
         if (typeof window !== "undefined") {

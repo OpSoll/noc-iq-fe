@@ -10,10 +10,10 @@ type Outage = {
 };
 
 type Props = {
-  data: Outage[];
+  data?: Outage[];
 };
 
-export default function OutagesPageClient({ data }: Props) {
+export default function OutagesPageClient({ data = [] }: Props) {
   // -----------------------------
   // State
   // -----------------------------
