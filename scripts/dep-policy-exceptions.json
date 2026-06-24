@@ -1,0 +1,9 @@
+{
+  "_comment": "Add entries here to exempt a package from a specific policy rule. Each entry requires a 'rules' array and a 'reason'.",
+  "_example": {
+    "some-package": {
+      "rules": ["rule-id"],
+      "reason": "Justification for the exception"
+    }
+  }
+}

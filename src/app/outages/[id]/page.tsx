@@ -179,8 +179,8 @@ export default function OutageDetailsPage() {
       <RouteErrorState
         title="Error loading outage"
         description={error}
-        actionLabel="Reload page"
-        onAction={() => window.location.reload()}
+        primaryAction={{ label: "Reload page", onClick: () => window.location.reload() }}
+        
       />
     );
   }
