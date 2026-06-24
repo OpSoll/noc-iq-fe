@@ -1,4 +1,9 @@
-import { AxiosProgressEvent, AxiosRequestConfig } from "axios";
+type AxiosProgressEvent = { loaded: number; total?: number };
+type AxiosRequestConfig<_D = unknown> = {
+  headers?: Record<string, string>;
+  signal?: AbortSignal;
+  onUploadProgress?: (event: AxiosProgressEvent) => void;
+};
 
 import { api } from "@/lib/api";
 

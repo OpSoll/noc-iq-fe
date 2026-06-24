@@ -41,7 +41,7 @@ export function useOutages(params: UseOutagesParams = {}) {
 
     refetchOnWindowFocus: false,
 
-    enabled: normalizedParams.page > 0,
+    enabled: (normalizedParams.page ?? 0) > 0,
 
     select: (data) => ({
       ...data,
