@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { saveRedirect } from "@/lib/auth/redirectStorage";
 import { REDIRECT_KEY } from "@/lib/auth/redirect";
+import { LoginForm } from "./LoginForm";
 
 export default function LoginPage() {
   const params = useSearchParams();

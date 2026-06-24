@@ -94,8 +94,7 @@ export default function SLADashboardView() {
       <RouteErrorState
         title="Dashboard unavailable"
         description="We could not load the latest analytics right now."
-        actionLabel="Retry"
-        onAction={() => void primary.refetch()}
+        primaryAction={{ label: "Retry", onClick: () => void primary.refetch() }}
       />
     );
   }
