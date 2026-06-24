@@ -427,6 +427,13 @@ cargo test
 cargo test -- --nocapture
 ```
 
+## 📖 Key Documentation
+
+- **[Architecture Map](docs/ARCHITECTURE_MD.md)** — Route-to-service dependency graph (auto-generated)
+- **[Seed Data Packs](docs/SEED_DATA.md)** — Deterministic preview data for UI review
+- **[Preview Quality Gate](docs/PREVIEW_QUALITY_GATE.md)** — Route behavior checklist for PRs
+- **[API Reference](docs/API.md)** — Full REST API documentation
+
 ## 📚 Documentation Guidelines
 
 - Use **clear, concise language**
