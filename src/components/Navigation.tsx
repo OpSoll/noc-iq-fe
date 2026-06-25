@@ -2,12 +2,20 @@
 
 import Link from "next/link";
 import { useSession } from "@/hooks/useSession";
+import { useAccessibility, type AccessibilityMode } from "@/providers/accessibility";
 
 // Routes only visible to admin users
 const ADMIN_ROUTES = ["/webhooks", "/config"];
 
+const A11Y_MODES: { value: AccessibilityMode; label: string }[] = [
+  { value: "default", label: "Default" },
+  { value: "high-contrast", label: "High contrast" },
+  { value: "reduced-motion", label: "Reduced motion" },
+];
+
 const Navigation = () => {
   const { state, user, logout } = useSession();
+  const { mode, setMode } = useAccessibility();
   const isAdmin = user?.role === "admin";
 
   return (
@@ -32,7 +40,20 @@ const Navigation = () => {
         )}
       </div>
 
-      <div className="text-sm text-slate-600">
+      <div className="flex items-center gap-2 text-sm text-slate-600">
+        <select
+          value={mode}
+          onChange={(e) => setMode(e.target.value as AccessibilityMode)}
+          className="rounded border border-slate-200 bg-white px-2 py-1 text-xs text-slate-500"
+          aria-label="Accessibility mode"
+        >
+          {A11Y_MODES.map((m) => (
+            <option key={m.value} value={m.value}>
+              {m.label}
+            </option>
+          ))}
+        </select>
+
         {state === "loading" && (
           <span className="text-slate-400">Checking session…</span>
         )}
