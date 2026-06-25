@@ -23,16 +23,14 @@ export default function RootLayout({ children }: RootLayoutProps) {
       <body>
         <ReactQueryProvider>
           <SessionProvider>
-            <AccessibilityProvider>
-              <ToastProvider>
-                <RouteGuard>
-                  <Navigation />
-                  <ClientShell>
-                    {children}
-                  </ClientShell>
-                </RouteGuard>
-              </ToastProvider>
-            </AccessibilityProvider>
+            <ToastProvider>
+              <RouteGuard>
+                <Navigation />
+                <ClientShell>
+                  {children}
+                </ClientShell>
+              </RouteGuard>
+            </ToastProvider>
           </SessionProvider>
         </ReactQueryProvider>
       </body>

@@ -181,6 +181,38 @@ export function SessionProvider({
    * -------------------------
    */
 
+  /**
+   * -------------------------
+   * Concurrent session detection
+   * -------------------------
+   */
+
+  const detectConcurrentSession = useCallback(() => {
+    if (!isBrowser()) return;
+    const knownSession = sessionStorage.getItem("noc_session_id");
+    const currentSession = btoa(Math.random().toString(36).slice(2, 10));
+
+    if (knownSession && knownSession !== currentSession) {
+      window.dispatchEvent(
+        new CustomEvent("session:conflict", {
+          detail: {
+            type: "concurrent-session",
+            message: "Another session was detected. Your data may be stale.",
+            affectedActions: ["resolve-outage", "update-webhook", "update-config"],
+            severity: "warning" as const,
+          },
+        })
+      );
+    }
+    sessionStorage.setItem("noc_session_id", currentSession);
+  }, []);
+
+  /**
+   * -------------------------
+   * Bootstrap Session
+   * -------------------------
+   */
+
   useEffect(() => {
     mountedRef.current = true;
 
@@ -207,6 +239,7 @@ export function SessionProvider({
         if (!mountedRef.current) return;
 
         setAuthenticated(response.data);
+        detectConcurrentSession();
       } catch (error: unknown) {
         if (
           (error as { name?: string }).name ===
@@ -232,9 +265,33 @@ export function SessionProvider({
       clearSession();
     }
 
+    function handleRefreshContext() {
+      if (!isBrowser()) return;
+      const token = getAccessToken();
+      if (!token) {
+        clearSession();
+        return;
+      }
+      api
+        .get<SessionUser>("/auth/me")
+        .then((res) => {
+          if (!mountedRef.current) return;
+          setAuthenticated(res.data);
+        })
+        .catch(() => {
+          if (!mountedRef.current) return;
+          clearSession();
+        });
+    }
+
     window.addEventListener(
       "auth:logout",
       handleLogoutEvent
+    );
+
+    window.addEventListener(
+      "auth:refresh-context",
+      handleRefreshContext
     );
 
     return () => {
@@ -246,8 +303,12 @@ export function SessionProvider({
         "auth:logout",
         handleLogoutEvent
       );
+      window.removeEventListener(
+        "auth:refresh-context",
+        handleRefreshContext
+      );
     };
-  }, [clearSession, setAuthenticated]);
+  }, [clearSession, setAuthenticated, detectConcurrentSession]);
 
   /**
    * -------------------------
