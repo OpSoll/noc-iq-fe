@@ -6,6 +6,7 @@ import ClientShell from "@/components/ClientShell";
 import { ReactQueryProvider } from "@/providers/react-query";
 import { SessionProvider } from "@/providers/session";
 import { ToastProvider } from "@/components/ui/toast";
+import { AccessibilityProvider } from "@/providers/accessibility";
 
 export const metadata = {
   title: "NOCIQ",
