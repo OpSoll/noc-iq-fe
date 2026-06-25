@@ -1,10 +1,12 @@
 import React from "react";
+import type { KPIConfidence } from "@/services/analytics";
 
 interface KPICardProps {
   title: string;
   value: string | number;
   subtitle?: string;
   highlight?: "green" | "red" | "blue" | "yellow";
+  confidence?: KPIConfidence;
 }
 
 const highlightMap: Record<string, string> = {
@@ -26,16 +28,37 @@ const KPICard: React.FC<KPICardProps> = ({
   value,
   subtitle,
   highlight = "blue",
+  confidence,
 }) => {
   return (
     <div
       className={`rounded-xl border-l-4 p-5 shadow-sm ${highlightMap[highlight]}`}
     >
-      <p className="text-sm font-medium text-gray-500">{title}</p>
+      <div className="flex items-start justify-between">
+        <p className="text-sm font-medium text-gray-500">{title}</p>
+        {confidence && (
+          <div className="flex flex-col items-end gap-0.5">
+            <span
+              className={`text-xs font-medium ${
+                confidence.isSparse ? "text-amber-500" : "text-gray-400"
+              }`}
+              title={confidence.warning}
+            >
+              {confidence.confidence}% conf.
+            </span>
+            <span className="text-[10px] text-gray-400">
+              n={confidence.sampleSize}
+            </span>
+          </div>
+        )}
+      </div>
       <p className={`mt-1 text-3xl font-bold ${valueColorMap[highlight]}`}>
         {value}
       </p>
       {subtitle && <p className="mt-1 text-xs text-gray-400">{subtitle}</p>}
+      {confidence?.warning && (
+        <p className="mt-1 text-xs text-amber-500">{confidence.warning}</p>
+      )}
     </div>
   );
 };
