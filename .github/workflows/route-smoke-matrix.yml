@@ -1,0 +1,51 @@
+name: Route Smoke Matrix
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+    inputs:
+      capability_mode:
+        description: Capability mode to test
+        type: choice
+        options:
+          - baseline
+          - degraded
+          - restricted
+
+permissions:
+  contents: read
+  checks: write
+
+jobs:
+  smoke-matrix:
+    strategy:
+      matrix:
+        mode: [baseline, degraded, restricted]
+      fail-fast: false
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Set capability mode
+        run: echo "CAPABILITY_MODE=${{ github.event.inputs.capability_mode || matrix.mode }}" >> $GITHUB_ENV
+
+      - name: Run smoke tests for ${{ matrix.mode }} mode
+        env:
+          CAPABILITY_MODE: ${{ matrix.mode }}
+        run: npx vitest run tests/e2e/route-smoke.test.ts --reporter=verbose 2>&1
+
+      - name: Report ${{ matrix.mode }} results
+        if: always()
+        run: |
+          echo "## Route Smoke Matrix: ${{ matrix.mode }}" >> $GITHUB_STEP_SUMMARY
+          echo "Status: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY

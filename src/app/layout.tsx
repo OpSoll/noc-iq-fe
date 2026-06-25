@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import "./globals.css";
 import Navigation from "@/components/Navigation";
 import RouteGuard from "@/components/RouteGuard";
+import ClientShell from "@/components/ClientShell";
 import { ReactQueryProvider } from "@/providers/react-query";
 import { SessionProvider } from "@/providers/session";
 import { ToastProvider } from "@/components/ui/toast";
@@ -24,7 +25,9 @@ export default function RootLayout({ children }: RootLayoutProps) {
             <ToastProvider>
               <RouteGuard>
                 <Navigation />
-                {children}
+                <ClientShell>
+                  {children}
+                </ClientShell>
               </RouteGuard>
             </ToastProvider>
           </SessionProvider>

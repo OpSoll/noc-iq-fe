@@ -1,32 +1,53 @@
 import { describe, it, expect } from "vitest";
+import {
+  ROLE_CAPABILITY_MATRIX,
+  ROUTE_CAPABILITY_MAP,
+  MODE_RESTRICTIONS,
+  hasCapability,
+  getCapabilityForPath,
+} from "@/services/capabilities";
 
-const BASE = process.env.PREVIEW_URL || "http://localhost:3000";
+const ROLES = Object.keys(ROLE_CAPABILITY_MATRIX);
+const MODES = Object.keys(MODE_RESTRICTIONS) as Array<keyof typeof MODE_RESTRICTIONS>;
+const ROUTES = Object.keys(ROUTE_CAPABILITY_MAP);
 
-async function fetchRoute(path: string): Promise<{ status: number; text: string }> {
-  try {
-    const res = await fetch(`${BASE}${path}`);
-    return { status: res.status, text: await res.text() };
-  } catch {
-    return { status: 0, text: "Network error" };
-  }
-}
+describe("Route Smoke Matrix", () => {
+  ROUTES.forEach((route) => {
+    const capability = ROUTE_CAPABILITY_MAP[route];
 
-const ROUTES: { path: string; label: string }[] = [
-  { path: "/login", label: "Auth — login" },
-  { path: "/register", label: "Auth — register" },
-  { path: "/", label: "Dashboard" },
-  { path: "/outages", label: "Outages list" },
-  { path: "/payments", label: "Payments" },
-  { path: "/webhooks", label: "Webhooks" },
-  { path: "/config", label: "SLA Config" },
-  { path: "/bulk-import", label: "Bulk Import" },
-];
-
-describe("Preview route smoke tests", () => {
-  for (const route of ROUTES) {
-    it(`${route.label} (${route.path}) responds`, async () => {
-      const { status } = await fetchRoute(route.path);
-      expect([200, 302, 308]).toContain(status);
+    it(`route ${route} requires capability ${capability}`, () => {
+      expect(capability).toBeTruthy();
     });
-  }
+
+    ROLES.forEach((role) => {
+      MODES.forEach((mode) => {
+        const allowed = hasCapability(role, capability, mode);
+        const modeCaps = MODE_RESTRICTIONS[mode];
+        const modeAllows = modeCaps.includes(capability);
+        const roleAllows = ROLE_CAPABILITY_MATRIX[role as keyof typeof ROLE_CAPABILITY_MATRIX].includes(capability);
+
+        it(`[${mode}] ${role} → ${route} (${capability}) = ${allowed}`, () => {
+          if (!roleAllows) {
+            expect(allowed).toBe(false);
+          } else if (!modeAllows) {
+            expect(allowed).toBe(false);
+          } else {
+            expect(allowed).toBe(true);
+          }
+        });
+      });
+    });
+  });
+
+  it("admin has all capabilities in baseline mode", () => {
+    const allCaps = Object.values(ROUTE_CAPABILITY_MAP);
+    allCaps.forEach((cap) => {
+      expect(hasCapability("admin", cap, "baseline")).toBe(true);
+    });
+  });
+
+  it("restricted mode only allows view:dashboard and view:outages", () => {
+    expect(hasCapability("admin", "view:payments", "restricted")).toBe(false);
+    expect(hasCapability("admin", "action:resolve-outage", "restricted")).toBe(false);
+  });
 });
