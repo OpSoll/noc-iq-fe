@@ -23,8 +23,11 @@ export function clearTokens(): void {
   localStorage.removeItem(REFRESH_KEY);
 }
 
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api/v1";
+
 export const api = axios.create({
-  baseURL: "http://localhost:8000/api/v1/",
+  baseURL: API_BASE_URL,
   timeout: 15_000,
   headers: {
     "Content-Type": "application/json",
@@ -51,7 +54,7 @@ async function doRefresh(): Promise<string> {
   if (!refreshToken) throw new Error("No refresh token");
 
   const res = await axios.post<{ access_token: string; refresh_token: string }>(
-    "http://localhost:8000/api/v1/auth/refresh",
+    `${API_BASE_URL}/auth/refresh`,
     { refresh_token: refreshToken },
   );
   setTokens(res.data.access_token, res.data.refresh_token);
