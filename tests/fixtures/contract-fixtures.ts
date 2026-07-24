@@ -25,7 +25,7 @@ export const OUTAGE_FIXTURES: ContractFixture<Outage[]> = {
   capturedAt: "2026-06-20T12:00:00Z",
   backendVersion: "v1.1",
   data: [
-    { id: "fix-1", site_name: "Lagos Node 1", site_id: "NG-LA-01", severity: "critical", status: "open", detected_at: "2026-06-22T14:00:00Z", description: "Total upstream failure", affected_services: ["DNS", "BGP"], affected_subscribers: 15000 },
+    { id: "fix-1", site_name: "Lagos Node 1", site_id: "NG-LA-01", severity: "critical", status: "open", detected_at: "2026-06-22T14:00:00Z", resolved_at: undefined, description: "Total upstream failure", affected_services: ["DNS", "BGP"], affected_subscribers: 15000 },
     { id: "fix-2", site_name: "Nairobi Core", site_id: "KE-NB-01", severity: "high", status: "resolved", detected_at: "2026-06-21T06:00:00Z", resolved_at: "2026-06-21T08:45:00Z", description: "Fiber cut", affected_services: ["BGP"], affected_subscribers: 8000 },
   ],
 };
