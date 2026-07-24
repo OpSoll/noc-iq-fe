@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { PaymentDetailDrawer } from "@/components/payments/payment-detail-drawer";
+import { PrintButton } from "@/components/shared/PrintButton";
 import { RouteEmptyState, RouteErrorState, RouteLoadingState } from "@/components/ui/route-state";
 import { exportPayments, fetchPayments } from "@/services/paymentService";
 import type { PaginatedPayments, Payment } from "@/types/payment";
@@ -136,8 +137,9 @@ export default function PaymentsView() {
     <div className="space-y-4 p-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-800">Payments</h1>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 no-print">
           {exportError && <span className="text-xs text-red-600">{exportError}</span>}
+          <PrintButton />
           <button
             onClick={() => void handleExport()}
             disabled={exporting}
@@ -162,7 +164,7 @@ export default function PaymentsView() {
       </div>
 
       {/* FE-069: filter bar */}
-      <div className="grid grid-cols-2 gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-4 no-print">
         <label className="space-y-1 text-xs">
           <span className="font-medium text-slate-600">Status</span>
           <select
@@ -297,7 +299,7 @@ export default function PaymentsView() {
       </div>
 
       {data && totalPages > 1 && (
-        <div className="flex items-center justify-between text-sm text-gray-500">
+        <div className="flex items-center justify-between text-sm text-gray-500 no-print">
           <span>Page {page} of {totalPages} — {data.total} total</span>
           <div className="flex gap-2">
             <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} className="rounded-lg border px-3 py-1.5 transition-colors hover:bg-gray-100 disabled:opacity-40">Previous</button>

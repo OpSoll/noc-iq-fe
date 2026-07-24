@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 import { SLADisputesPanel } from "@/components/outages/SLADisputesPanel";
+import { PrintButton } from "@/components/shared/PrintButton";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RouteEmptyState, RouteErrorState, RouteLoadingState } from "@/components/ui/route-state";
@@ -206,7 +207,8 @@ export default function OutageDetailsPage() {
             {outage.status}
           </Badge>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 no-print">
+          <PrintButton />
           {!editing && (
             <button
               onClick={startEdit}
@@ -242,7 +244,7 @@ export default function OutageDetailsPage() {
       )}
 
       {editing && (
-        <Card>
+        <Card className="no-print">
           <CardHeader className="pb-3"><CardTitle>Edit Outage</CardTitle></CardHeader>
           <CardContent className="space-y-4 text-sm">
             <div className="grid gap-4 sm:grid-cols-2">

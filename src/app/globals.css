@@ -109,3 +109,54 @@ html.a11y-reduced-motion .transition-transform {
   white-space: nowrap;
   border-width: 0;
 }
+
+/* Print styles for outage reports and SLA summaries */
+@media print {
+  /* Hide navigation and UI chrome */
+  nav,
+  footer,
+  .no-print,
+  [data-no-print] {
+    display: none !important;
+  }
+
+  /* Stop animations and transitions */
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  /* Optimize text for printing */
+  body {
+    background: white;
+    color: black;
+    font-size: 12pt;
+    line-height: 1.5;
+  }
+
+  /* Prevent content from being split across pages */
+  .print-avoid-break {
+    page-break-inside: avoid;
+  }
+
+  /* Page break handling for large sections */
+  .print-page-break {
+    page-break-before: always;
+  }
+
+  /* Ensure links are visible */
+  a {
+    text-decoration: underline;
+    color: black;
+  }
+
+  /* Hide spinners/loading states */
+  .animate-spin,
+  .animate-pulse,
+  [role="status"],
+  .spinner {
+    display: none !important;
+  }
+}
