@@ -42,7 +42,7 @@ jobs:
       - name: Run smoke tests for ${{ matrix.mode }} mode
         env:
           CAPABILITY_MODE: ${{ matrix.mode }}
-        run: npx vitest run tests/e2e/route-smoke.test.ts --reporter=verbose 2>&1
+        run: npx vitest run --config vitest.e2e.config.ts tests/e2e/route-smoke.test.ts --reporter=verbose 2>&1
 
       - name: Report ${{ matrix.mode }} results
         if: always()
