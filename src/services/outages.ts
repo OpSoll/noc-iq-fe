@@ -185,3 +185,80 @@ export async function resolveOutage(
     handleApiError(error, "Failed to resolve outage.");
   }
 }
+
+/* -------------------------------------------------------------------------- */
+/*                            Batch Operations                                */
+/* -------------------------------------------------------------------------- */
+
+interface BatchOperationResponse {
+  success_count: number;
+  failure_count: number;
+  errors?: Array<{ id: string; error: string }>;
+}
+
+/**
+ * Acknowledge multiple outages in batch.
+ */
+export async function batchAcknowledgeOutages(
+  ids: string[],
+): Promise<BatchOperationResponse> {
+  try {
+    if (!ids.length) {
+      throw new Error("At least one outage ID is required.");
+    }
+
+    const res = await api.post<BatchOperationResponse>(
+      `${OUTAGES_ENDPOINT}/batch/acknowledge`,
+      { ids },
+    );
+
+    return res.data;
+  } catch (error) {
+    handleApiError(error, "Failed to acknowledge outages.");
+  }
+}
+
+/**
+ * Resolve multiple outages in batch.
+ */
+export async function batchResolveOutages(
+  ids: string[],
+  payload?: { mttr_minutes?: number },
+): Promise<BatchOperationResponse> {
+  try {
+    if (!ids.length) {
+      throw new Error("At least one outage ID is required.");
+    }
+
+    const res = await api.post<BatchOperationResponse>(
+      `${OUTAGES_ENDPOINT}/batch/resolve`,
+      { ids, ...payload },
+    );
+
+    return res.data;
+  } catch (error) {
+    handleApiError(error, "Failed to resolve outages.");
+  }
+}
+
+/**
+ * Recalculate SLA for multiple outages in batch.
+ */
+export async function batchRecalculateSLA(
+  ids: string[],
+): Promise<BatchOperationResponse> {
+  try {
+    if (!ids.length) {
+      throw new Error("At least one outage ID is required.");
+    }
+
+    const res = await api.post<BatchOperationResponse>(
+      `${OUTAGES_ENDPOINT}/batch/recalculate-sla`,
+      { ids },
+    );
+
+    return res.data;
+  } catch (error) {
+    handleApiError(error, "Failed to recalculate SLA.");
+  }
+}
