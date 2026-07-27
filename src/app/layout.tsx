@@ -10,6 +10,7 @@ import { ToastProvider } from "@/components/ui/toast";
 import { ReactQueryProvider } from "@/providers/react-query";
 import { SessionProvider } from "@/providers/session";
 import { AccessibilityProvider } from "@/providers/accessibility";
+import { FeatureFlagProvider } from "@/providers/feature-flags";
 
 export const metadata = {
   title: "NOCIQ",
@@ -31,16 +32,18 @@ export default async function RootLayout({
       <body>
         <ReactQueryProvider>
           <SessionProvider>
-            <ToastProvider>
-              <AccessibilityProvider>
-                <RouteGuard>
-                  <Navigation />
-                  <ClientShell nonce={nonce}>
-                    {children}
-                  </ClientShell>
-                </RouteGuard>
-              </AccessibilityProvider>
-            </ToastProvider>
+            <FeatureFlagProvider>
+              <ToastProvider>
+                <AccessibilityProvider>
+                  <RouteGuard>
+                    <Navigation />
+                    <ClientShell nonce={nonce}>
+                      {children}
+                    </ClientShell>
+                  </RouteGuard>
+                </AccessibilityProvider>
+              </ToastProvider>
+            </FeatureFlagProvider>
           </SessionProvider>
         </ReactQueryProvider>
       </body>

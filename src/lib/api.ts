@@ -1,4 +1,5 @@
 import axios from "axios";
+import { getCorrelationId } from "@/lib/telemetry/tracer";
 
 export const TOKEN_KEY = "noc_access_token";
 export const REFRESH_KEY = "noc_refresh_token";
@@ -35,11 +36,15 @@ export const api = axios.create({
   withCredentials: true,
 });
 
-// Attach stored access token to every request
+// Attach stored access token and correlation ID to every request
 api.interceptors.request.use((config) => {
   const token = getAccessToken();
   if (token && config.headers) {
     config.headers.Authorization = `Bearer ${token}`;
+  }
+  const correlationId = getCorrelationId();
+  if (correlationId && config.headers) {
+    config.headers["X-Correlation-ID"] = correlationId;
   }
   return config;
 });
