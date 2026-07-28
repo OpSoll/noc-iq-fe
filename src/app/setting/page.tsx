@@ -3,9 +3,14 @@
 import { useMemo, useState } from "react";
 
 import { api } from "@/lib/api";
-import { explorerLink } from "@/lib/explorer";
 import { useSession } from "@/hooks/useSession";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/components/ui/toast";
+import { useWalletDetail, useWalletStatus, useWalletBalance } from "@/hooks/useWallet";
+import { useCreateWallet, useLinkWallet } from "@/hooks/useWalletMutations";
+import { useMutationToast } from "@/hooks/useMutationToast";
+import { WalletAddress } from "@/components/wallet/WalletAddress";
+import { WalletHealthBadge } from "@/components/wallet/WalletHealthBadge";
 
 type AuthUser = {
   id: string;
@@ -24,41 +29,6 @@ type AuthSessionResponse = {
   user: AuthUser;
 };
 
-type Wallet = {
-  user_id: string;
-  public_key: string;
-  created_at: string;
-  last_updated: string;
-  funded: boolean;
-  active: boolean;
-  trustline_ready: boolean;
-  message?: string;
-};
-
-type WalletStatus = {
-  user_id: string;
-  public_key: string;
-  funded: boolean;
-  trustline_ready: boolean;
-  usable: boolean;
-  active: boolean;
-  last_updated: string;
-};
-
-type WalletBalance = {
-  address: string;
-  balances: Record<
-    string,
-    {
-      balance: string;
-      asset_type: string;
-      asset_code?: string;
-      asset_issuer?: string;
-    }
-  >;
-  last_updated: string;
-};
-
 function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : "Something went wrong";
 }
@@ -66,51 +36,51 @@ function getErrorMessage(error: unknown) {
 export default function SettingsPage() {
   const { state: sessionState, user: sessionUser, logout } = useSession();
   const router = useRouter();
+  const toast = useToast();
   const [sessionActionLoading, setSessionActionLoading] = useState<string | null>(null);
-  const [sessionActionFeedback, setSessionActionFeedback] = useState<string | null>(null);
-  const [sessionActionError, setSessionActionError] = useState<string | null>(null);
 
-  async function handleSignOut() {
-    setSessionActionLoading("signout");
-    setSessionActionFeedback(null);
-    setSessionActionError(null);
-    try {
-      await logout();
-      router.replace("/login");
-    } catch {
-      setSessionActionError("Sign out failed. Please try again.");
-    } finally {
-      setSessionActionLoading(null);
-    }
-  }
+  const createWalletMutation = useCreateWallet();
+  const linkWalletMutation = useLinkWallet();
 
-  async function handleLogoutAll() {
-    setSessionActionLoading("logout-all");
-    setSessionActionFeedback(null);
-    setSessionActionError(null);
-    try {
-      await api.post("/auth/logout-all");
+  const signOutMutation = useMutationToast({
+    mutationFn: async () => {
       await logout();
+      return true;
+    },
+    successMessage: "Signed out successfully.",
+    errorMessage: () => "Sign out failed. Please try again.",
+    onSuccess: () => {
       router.replace("/login");
-    } catch (err) {
-      // logout-all endpoint may not exist yet; fall back to single logout
-      if ((err as { response?: { status?: number } }).response?.status === 404) {
-        await logout();
-        router.replace("/login");
-      } else {
-        setSessionActionError("Could not revoke all sessions. Please try again.");
-        setSessionActionLoading(null);
+    },
+  });
+
+  const logoutAllMutation = useMutationToast({
+    mutationFn: async () => {
+      try {
+        await api.post("/auth/logout-all");
+      } catch (err) {
+        if ((err as { response?: { status?: number } }).response?.status !== 404) {
+          throw new Error("Could not revoke all sessions.");
+        }
       }
-    }
-  }
+      await logout();
+      return true;
+    },
+    successMessage: "All sessions revoked successfully.",
+    errorMessage: () => "Could not revoke all sessions. Please try again.",
+    onSuccess: () => {
+      router.replace("/login");
+    },
+  });
+
   const [session, setSession] = useState<AuthSessionResponse | null>(null);
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
-  const [wallet, setWallet] = useState<Wallet | null>(null);
-  const [walletStatus, setWalletStatus] = useState<WalletStatus | null>(null);
-  const [walletBalance, setWalletBalance] = useState<WalletBalance | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loadingAction, setLoadingAction] = useState<string | null>(null);
+  const [walletForm, setWalletForm] = useState({
+    user_id: "",
+    public_key: "",
+    funded: false,
+    trustline_ready: false,
+  });
 
   const [registerForm, setRegisterForm] = useState({
     email: "operator@example.com",
@@ -122,49 +92,53 @@ export default function SettingsPage() {
     email: "operator@example.com",
     password: "secure123",
   });
-  const [walletForm, setWalletForm] = useState({
-    user_id: "",
-    public_key: "",
-    funded: false,
-    trustline_ready: false,
-  });
 
   const activeUserId = useMemo(
-    () => currentUser?.id ?? walletForm.user_id.trim(),
+    () => currentUser?.id ?? (walletForm.user_id.trim() || undefined),
     [currentUser?.id, walletForm.user_id],
   );
+
+  const [requestedUserId, setRequestedUserId] = useState<string | undefined>(undefined);
+  const [requestedAddressState, setRequestedAddressState] = useState<string | undefined>(undefined);
+
+  const walletQuery = useWalletDetail(requestedUserId);
+  const walletStatusQuery = useWalletStatus(requestedUserId);
+  const walletBalanceQuery = useWalletBalance(requestedAddressState);
+
+  const wallet = walletQuery.data ?? null;
+  const walletStatus = walletStatusQuery.data ?? null;
+  const walletBalance = walletBalanceQuery.data ?? null;
+
   const walletAssetCount = useMemo(
     () => Object.keys(walletBalance?.balances ?? {}).length,
     [walletBalance],
   );
   const walletReadinessLabel = useMemo(() => {
-    if (!walletStatus) {
-      return "Not loaded";
-    }
-    if (!walletStatus.active) {
-      return "Inactive";
-    }
-    if (!walletStatus.funded) {
-      return "Funding required";
-    }
-    if (!walletStatus.trustline_ready) {
-      return "Trustline missing";
-    }
+    if (!walletStatus) return "Not loaded";
+    if (!walletStatus.active) return "Inactive";
+    if (!walletStatus.funded) return "Funding required";
+    if (!walletStatus.trustline_ready) return "Trustline missing";
     return walletStatus.usable ? "Ready" : "Review required";
   }, [walletStatus]);
   const walletReadinessTone = useMemo(() => {
-    if (!walletStatus) {
-      return "text-slate-900";
-    }
+    if (!walletStatus) return "text-slate-900";
     return walletStatus.usable ? "text-emerald-600" : "text-amber-600";
   }, [walletStatus]);
   const walletAddress = wallet?.public_key ?? walletStatus?.public_key ?? walletForm.public_key;
 
-  async function handleRegister() {
-    setLoadingAction("register");
-    setError(null);
-    setFeedback(null);
+  async function handleSignOut() {
+    setSessionActionLoading("signout");
+    signOutMutation.mutate(undefined);
+    setSessionActionLoading(null);
+  }
 
+  async function handleLogoutAll() {
+    setSessionActionLoading("logout-all");
+    logoutAllMutation.mutate(undefined);
+    setSessionActionLoading(null);
+  }
+
+  async function handleRegister() {
     try {
       const response = await api.post<AuthUser>("/auth/register", registerForm);
       setCurrentUser(response.data);
@@ -172,19 +146,13 @@ export default function SettingsPage() {
         ...current,
         user_id: response.data.id,
       }));
-      setFeedback("Account registered successfully.");
+      toast("Account registered successfully.", "success");
     } catch (issue) {
-      setError(getErrorMessage(issue));
-    } finally {
-      setLoadingAction(null);
+      toast(getErrorMessage(issue), "error");
     }
   }
 
   async function handleLogin() {
-    setLoadingAction("login");
-    setError(null);
-    setFeedback(null);
-
     try {
       const response = await api.post<AuthSessionResponse>("/auth/login", loginForm);
       setSession(response.data);
@@ -193,36 +161,25 @@ export default function SettingsPage() {
         ...current,
         user_id: response.data.user.id,
       }));
-      setFeedback("Signed in successfully.");
+      toast("Signed in successfully.", "success");
     } catch (issue) {
-      setError(getErrorMessage(issue));
-    } finally {
-      setLoadingAction(null);
+      toast(getErrorMessage(issue), "error");
     }
   }
 
   async function handleLoadSession() {
     if (!session?.access_token) {
-      setError("Login first to load the current session.");
+      toast("Login first to load the current session.", "error");
       return;
     }
-
-    setLoadingAction("session");
-    setError(null);
-    setFeedback(null);
-
     try {
       const response = await api.get<AuthUser>("/auth/me", {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
+        headers: { Authorization: `Bearer ${session.access_token}` },
       });
       setCurrentUser(response.data);
-      setFeedback("Session refreshed from the backend.");
+      toast("Session refreshed from the backend.", "success");
     } catch (issue) {
-      setError(getErrorMessage(issue));
-    } finally {
-      setLoadingAction(null);
+      toast(getErrorMessage(issue), "error");
     }
   }
 
@@ -230,142 +187,72 @@ export default function SettingsPage() {
     if (!session?.access_token) {
       setSession(null);
       setCurrentUser(null);
-      setFeedback("Local session cleared.");
+      toast("Local session cleared.", "info");
       return;
     }
-
-    setLoadingAction("logout");
-    setError(null);
-    setFeedback(null);
-
     try {
-      await api.post(
-        "/auth/logout",
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-          },
-        },
-      );
+      await api.post("/auth/logout", {}, {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
       setSession(null);
       setCurrentUser(null);
-      setFeedback("Logged out successfully.");
+      toast("Logged out successfully.", "success");
     } catch (issue) {
-      setError(getErrorMessage(issue));
-    } finally {
-      setLoadingAction(null);
+      toast(getErrorMessage(issue), "error");
     }
   }
 
-  async function handleCreateWallet() {
+  function handleCreateWallet() {
     if (!activeUserId) {
-      setError("Provide a user ID or log in before creating a wallet.");
+      toast("Provide a user ID or log in before creating a wallet.", "error");
       return;
     }
-
-    setLoadingAction("create-wallet");
-    setError(null);
-    setFeedback(null);
-
-    try {
-      const response = await api.post<Wallet>("/wallets/create", {
-        user_id: activeUserId,
-      });
-      setWallet(response.data);
-      setWalletForm((current) => ({
-        ...current,
-        user_id: response.data.user_id,
-        public_key: response.data.public_key,
-        funded: response.data.funded,
-        trustline_ready: response.data.trustline_ready,
-      }));
-      setFeedback(response.data.message ?? "Wallet created.");
-    } catch (issue) {
-      setError(getErrorMessage(issue));
-    } finally {
-      setLoadingAction(null);
-    }
+    createWalletMutation.mutate(
+      { user_id: activeUserId },
+      {
+        onSuccess: (data) => {
+          setWalletForm((current) => ({
+            ...current,
+            user_id: data.user_id,
+            public_key: data.public_key,
+            funded: data.funded,
+            trustline_ready: data.trustline_ready,
+          }));
+        },
+      },
+    );
   }
 
-  async function handleLinkWallet() {
+  function handleLinkWallet() {
     if (!walletForm.user_id.trim() || !walletForm.public_key.trim()) {
-      setError("Provide both a user ID and public key before linking a wallet.");
+      toast("Provide both a user ID and public key before linking a wallet.", "error");
       return;
     }
-
-    setLoadingAction("link-wallet");
-    setError(null);
-    setFeedback(null);
-
-    try {
-      const response = await api.post<Wallet>("/wallets/link", {
-        user_id: walletForm.user_id.trim(),
-        public_key: walletForm.public_key.trim(),
-        funded: walletForm.funded,
-        trustline_ready: walletForm.trustline_ready,
-      });
-      setWallet(response.data);
-      setFeedback("Wallet linked successfully.");
-    } catch (issue) {
-      setError(getErrorMessage(issue));
-    } finally {
-      setLoadingAction(null);
-    }
+    linkWalletMutation.mutate({
+      user_id: walletForm.user_id.trim(),
+      public_key: walletForm.public_key.trim(),
+      funded: walletForm.funded,
+      trustline_ready: walletForm.trustline_ready,
+    });
   }
 
-  async function handleLoadWalletDetails() {
+  function handleLoadWalletDetails() {
     if (!activeUserId) {
-      setError("Provide a user ID or log in before loading wallet details.");
+      toast("Provide a user ID or log in before loading wallet details.", "error");
       return;
     }
-
-    setLoadingAction("wallet-details");
-    setError(null);
-    setFeedback(null);
-
-    try {
-      const [walletResponse, statusResponse] = await Promise.all([
-        api.get<Wallet>(`/wallets/${activeUserId}`),
-        api.get<WalletStatus>(`/wallets/${activeUserId}/status`),
-      ]);
-      setWallet(walletResponse.data);
-      setWalletStatus(statusResponse.data);
-      setWalletForm((current) => ({
-        ...current,
-        user_id: walletResponse.data.user_id,
-        public_key: walletResponse.data.public_key,
-        funded: walletResponse.data.funded,
-        trustline_ready: walletResponse.data.trustline_ready,
-      }));
-      setFeedback("Wallet details loaded.");
-    } catch (issue) {
-      setError(getErrorMessage(issue));
-    } finally {
-      setLoadingAction(null);
-    }
+    setRequestedUserId(activeUserId);
+    toast("Wallet details loaded.", "success");
   }
 
-  async function handleLoadBalance() {
+  function handleLoadBalance() {
     const address = wallet?.public_key ?? walletForm.public_key.trim();
     if (!address) {
-      setError("Load or link a wallet before requesting balances.");
+      toast("Load or link a wallet before requesting balances.", "error");
       return;
     }
-
-    setLoadingAction("wallet-balance");
-    setError(null);
-    setFeedback(null);
-
-    try {
-      const response = await api.get<WalletBalance>(`/wallets/${address}/balance`);
-      setWalletBalance(response.data);
-      setFeedback("Wallet balance loaded.");
-    } catch (issue) {
-      setError(getErrorMessage(issue));
-    } finally {
-      setLoadingAction(null);
-    }
+    setRequestedAddressState(address);
+    toast("Wallet balance loaded.", "success");
   }
 
   return (
@@ -378,12 +265,6 @@ export default function SettingsPage() {
           Manage operator session state, register or sign in, and check wallet readiness from the live backend.
         </p>
       </div>
-
-      {feedback ? (
-        <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-          {feedback}
-        </div>
-      ) : null}
 
       {/* FE-056: Account profile section */}
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -419,29 +300,12 @@ export default function SettingsPage() {
         )}
       </section>
 
-      {error ? (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {error}
-        </div>
-      ) : null}
-
       {/* FE-008: Session management */}
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="text-xl font-semibold text-slate-900">Session Management</h2>
         <p className="mt-1 text-sm text-slate-500">
           Control your active session and understand token refresh behaviour.
         </p>
-
-        {sessionActionFeedback && (
-          <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-            {sessionActionFeedback}
-          </div>
-        )}
-        {sessionActionError && (
-          <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            {sessionActionError}
-          </div>
-        )}
 
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 text-sm space-y-3">
@@ -581,10 +445,9 @@ export default function SettingsPage() {
               />
               <button
                 onClick={handleRegister}
-                disabled={loadingAction === "register"}
                 className="w-full rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
               >
-                {loadingAction === "register" ? "Registering..." : "Register account"}
+                Register account
               </button>
             </div>
 
@@ -615,22 +478,19 @@ export default function SettingsPage() {
               />
               <button
                 onClick={handleLogin}
-                disabled={loadingAction === "login"}
                 className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60"
               >
-                {loadingAction === "login" ? "Signing in..." : "Sign in"}
+                Sign in
               </button>
               <div className="flex gap-2">
                 <button
                   onClick={handleLoadSession}
-                  disabled={loadingAction === "session"}
                   className="flex-1 rounded-md border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
                 >
                   Refresh session
                 </button>
                 <button
                   onClick={handleLogout}
-                  disabled={loadingAction === "logout"}
                   className="flex-1 rounded-md border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
                 >
                   Logout
@@ -663,11 +523,14 @@ export default function SettingsPage() {
         </section>
 
         <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div>
-            <h2 className="text-xl font-semibold text-slate-900">Wallet Status</h2>
-            <p className="text-sm text-slate-500">
-              Create, link, and inspect the operator wallet through the backend bridge.
-            </p>
+          <div className="flex items-start justify-between">
+            <div>
+              <h2 className="text-xl font-semibold text-slate-900">Wallet Status</h2>
+              <p className="text-sm text-slate-500">
+                Create, link, and inspect the operator wallet through the backend bridge.
+              </p>
+            </div>
+            <WalletHealthBadge status={walletStatus} />
           </div>
 
           <div className="grid gap-3">
@@ -726,31 +589,31 @@ export default function SettingsPage() {
           <div className="grid gap-2 sm:grid-cols-2">
             <button
               onClick={handleCreateWallet}
-              disabled={loadingAction === "create-wallet"}
+              disabled={createWalletMutation.isPending}
               className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
             >
-              {loadingAction === "create-wallet" ? "Creating..." : "Create wallet"}
+              {createWalletMutation.isPending ? "Creating..." : "Create wallet"}
             </button>
             <button
               onClick={handleLinkWallet}
-              disabled={loadingAction === "link-wallet"}
+              disabled={linkWalletMutation.isPending}
               className="rounded-md border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
             >
-              {loadingAction === "link-wallet" ? "Linking..." : "Link wallet"}
+              {linkWalletMutation.isPending ? "Linking..." : "Link wallet"}
             </button>
             <button
               onClick={handleLoadWalletDetails}
-              disabled={loadingAction === "wallet-details"}
+              disabled={walletQuery.isFetching || walletStatusQuery.isFetching}
               className="rounded-md border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
             >
-              {loadingAction === "wallet-details" ? "Loading..." : "Load wallet details"}
+              {walletQuery.isFetching || walletStatusQuery.isFetching ? "Loading..." : "Load wallet details"}
             </button>
             <button
               onClick={handleLoadBalance}
-              disabled={loadingAction === "wallet-balance"}
+              disabled={walletBalanceQuery.isFetching}
               className="rounded-md border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
             >
-              {loadingAction === "wallet-balance" ? "Loading..." : "Load balance"}
+              {walletBalanceQuery.isFetching ? "Loading..." : "Load balance"}
             </button>
           </div>
 
@@ -761,12 +624,8 @@ export default function SettingsPage() {
                 <dl className="mt-3 grid gap-2 text-slate-600">
                   <div className="flex justify-between gap-4">
                     <dt>Address</dt>
-                    <dd className="break-all text-right font-medium text-slate-900">
-                      {explorerLink("account", wallet.public_key) ? (
-                        <a href={explorerLink("account", wallet.public_key)!} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                          {wallet.public_key}
-                        </a>
-                      ) : wallet.public_key}
+                    <dd className="text-right">
+                      <WalletAddress address={wallet.public_key} />
                     </dd>
                   </div>
                   <div className="flex justify-between gap-4">

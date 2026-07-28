@@ -18,6 +18,8 @@ const invalidationMap: InvalidationEntry[] = [
   { mutationType: "webhook.update", invalidate: [["webhooks"]] },
   { mutationType: "webhook.delete", invalidate: [["webhooks"]] },
   { mutationType: "sla.update", invalidate: [["sla"], ["dashboard-metrics"]] },
+  { mutationType: "wallet.create", invalidate: [["wallet"], ["dashboard-metrics"]] },
+  { mutationType: "wallet.link", invalidate: [["wallet"]] },
 ];
 
 export function getInvalidations(mutationType: string): QueryKeyPattern[] {

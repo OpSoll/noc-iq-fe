@@ -12,7 +12,7 @@ type AxiosProgressEvent = { loaded: number; total?: number };
 const BULK_IMPORT_ENDPOINT = "/outages/bulk";
 const BULK_IMPORT_HISTORY_ENDPOINT = "/outages/bulk/history";
 
-interface AxiosProgressEvent {
+interface BulkImportProgress {
   loaded: number;
   total?: number;
 }

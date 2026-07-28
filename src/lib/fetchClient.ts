@@ -118,3 +118,16 @@ const errorMiddleware: FetchMiddleware = async (
     details,
   );
 };
+
+function compose(...middlewares: FetchMiddleware[]): FetchFunction {
+  const execute = (index: number, input: RequestInfo | URL, init: RequestInit): Promise<Response> => {
+    if (index >= middlewares.length) {
+      return fetch(input, init);
+    }
+    const next: FetchFunction = (i, n) => execute(index + 1, i, n ?? {});
+    return middlewares[index](input, init, next);
+  };
+  return (input, init) => execute(0, input, init ?? {});
+}
+
+export const fetchClient = compose(authMiddleware, correlationMiddleware, errorMiddleware);

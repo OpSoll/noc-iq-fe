@@ -40,5 +40,5 @@ export function validateChartData(
     }
     return true;
   });
-  return { valid: errors.length === 0, errors, sanitized };
+  return { valid: errors.length === 0, errors, sanitized: sanitized as Record<string, unknown>[] };
 }

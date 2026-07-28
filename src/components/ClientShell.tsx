@@ -6,7 +6,7 @@ import { ConflictNotification } from "@/components/notifications/ConflictNotific
 import SessionExpiryModal from "@/components/session/SessionExpiryModal";
 import { getPendingMutations, clearAllPendingMutations } from "@/lib/mutationTracker";
 
-export default function ClientShell({ children }: { children: ReactNode }) {
+export default function ClientShell({ children, nonce }: { children: ReactNode; nonce?: string }) {
   const { conflict, dismiss, refreshContext } = useConflictDetection();
   const pendingMutations = getPendingMutations().map((m) => ({
     id: m.id,
