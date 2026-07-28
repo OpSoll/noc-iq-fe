@@ -1,317 +1,252 @@
-"use client";
+'use client';
 
-import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useMemo, useState } from 'react';
+import { useUrlSync } from '@/hooks/useUrlSync';
+import { PaymentService } from '@/services/paymentService';
+import type { Payment, PaymentStatus, PaymentType } from '@/types/payment';
+import { useQuery } from '@tanstack/react-query';
+import { PaymentDetailDrawer } from './payment-detail-drawer';
+import { useRouter, useSearchParams } from 'next/navigation';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationPrevious,
+  PaginationNext,
+  PaginationEllipsis,
+} from '@/components/ui/pagination';
 
-import { PaymentDetailDrawer } from "@/components/payments/payment-detail-drawer";
-import { PrintButton } from "@/components/shared/PrintButton";
-import { RouteEmptyState, RouteErrorState, RouteLoadingState } from "@/components/ui/route-state";
-import { exportPayments, fetchPayments } from "@/services/paymentService";
-import type { PaginatedPayments, Payment } from "@/types/payment";
-
-type SortKey = "created_at" | "amount" | "status";
-type SortDir = "asc" | "desc";
-type Density = "default" | "compact";
-
-const statusStyles: Record<string, string> = {
-  completed: "bg-green-100 text-green-700",
-  pending: "bg-yellow-100 text-yellow-700",
-  failed: "bg-red-100 text-red-700",
-  confirmed: "bg-emerald-100 text-emerald-700",
+const URL_DEFAULTS = {
+  status: 'all',
+  type: 'all',
+  dateFrom: '',
+  dateTo: '',
+  page: '1',
+  perPage: '20',
+  paymentId: '',
+  sortKey: 'createdAt',
+  sortDir: 'desc',
 };
 
-const typeStyles: Record<string, string> = {
-  reward: "bg-blue-100 text-blue-700",
-  penalty: "bg-red-100 text-red-700",
-};
-
-export default function PaymentsView() {
+export function PaymentsView() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [data, setData] = useState<PaginatedPayments | null>(null);
-  const [page, setPage] = useState(1);
-  const [perPage] = useState(10);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [selectedPaymentId, setSelectedPaymentId] = useState<string | null>(
-    () => searchParams.get("paymentId")
-  );
-  const [exporting, setExporting] = useState(false);
-  const [exportError, setExportError] = useState<string | null>(null);
+  const [urlState, setUrlState] = useUrlSync(URL_DEFAULTS);
 
-  // Sync drawer open/close with URL
-  function openDrawer(id: string) {
-    setSelectedPaymentId(id);
-    router.replace(`/payments?paymentId=${id}`, { scroll: false });
-  }
-  function closeDrawer() {
-    setSelectedPaymentId(null);
-    router.replace("/payments", { scroll: false });
-  }
+  const statusFilter = urlState.status;
+  const typeFilter = urlState.type;
+  const dateFrom = urlState.dateFrom;
+  const dateTo = urlState.dateTo;
+  const page = parseInt(urlState.page, 10);
+  const perPage = parseInt(urlState.perPage, 10);
+  const sortKey = urlState.sortKey;
+  const sortDir = urlState.sortDir as 'asc' | 'desc';
+  const selectedPaymentId = urlState.paymentId || null;
 
-  // FE-069: filter state
-  const [statusFilter, setStatusFilter] = useState("");
-  const [typeFilter, setTypeFilter] = useState("");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
-
-  // FE-072: sort + density
-  const [sortKey, setSortKey] = useState<SortKey>("created_at");
-  const [sortDir, setSortDir] = useState<SortDir>("desc");
-  const [density, setDensity] = useState<Density>("default");
-
-  const requestKey = useMemo(
-    () => `${page}:${perPage}:${statusFilter}:${typeFilter}:${dateFrom}:${dateTo}`,
-    [page, perPage, statusFilter, typeFilter, dateFrom, dateTo]
-  );
-
-  useEffect(() => {
-    let isMounted = true;
-    setLoading(true);
-    fetchPayments({
-      page,
-      page_size: perPage,
-      status: statusFilter || undefined,
-      type: typeFilter || undefined,
-      date_from: dateFrom || undefined,
-      date_to: dateTo || undefined,
-    })
-      .then((response) => { if (isMounted) { setData(response); setError(null); } })
-      .catch(() => { if (isMounted) setError("Failed to load payments."); })
-      .finally(() => { if (isMounted) setLoading(false); });
-    return () => { isMounted = false; };
-  }, [requestKey]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // FE-072: client-side sort
-  const sortedItems = useMemo(() => {
-    if (!data) return [];
-    return [...data.items].sort((a, b) => {
-      let cmp = 0;
-      if (sortKey === "created_at") {
-        cmp = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-      } else if (sortKey === "amount") {
-        cmp = a.amount - b.amount;
-      } else if (sortKey === "status") {
-        cmp = a.status.localeCompare(b.status);
-      }
-      return sortDir === "asc" ? cmp : -cmp;
-    });
-  }, [data, sortKey, sortDir]);
-
-  function toggleSort(key: SortKey) {
-    if (sortKey === key) {
-      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-    } else {
-      setSortKey(key);
-      setSortDir("asc");
-    }
-  }
-
-  function SortIndicator({ col }: { col: SortKey }) {
-    if (sortKey !== col) return <span className="ml-1 text-gray-300">↕</span>;
-    return <span className="ml-1">{sortDir === "asc" ? "↑" : "↓"}</span>;
-  }
-
-  const totalPages = data ? Math.max(1, Math.ceil(data.total / perPage)) : 1;
-  const cell = density === "compact" ? "px-3 py-1.5 text-xs" : "px-4 py-3 text-sm";
-
-  async function handleExport() {
-    setExporting(true);
-    setExportError(null);
-    try {
-      await exportPayments({
-        status: statusFilter || undefined,
-        type: typeFilter || undefined,
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['payments', { statusFilter, typeFilter, dateFrom, dateTo, page, perPage, sortKey, sortDir }],
+    queryFn: () =>
+      PaymentService.fetchPayments({
+        status: statusFilter !== 'all' ? statusFilter : undefined,
+        type: typeFilter !== 'all' ? typeFilter : undefined,
         date_from: dateFrom || undefined,
         date_to: dateTo || undefined,
-      });
-    } catch {
-      setExportError("Export failed. Please try again.");
-    } finally {
-      setExporting(false);
-    }
+        page,
+        page_size: perPage,
+        sort_by: sortKey,
+        sort_dir: sortDir,
+      }),
+  });
+
+  const payments = data?.items ?? [];
+  const total = data?.total ?? 0;
+  const totalPages = Math.ceil(total / perPage);
+
+  const handleFilterChange = (key: string, value: string) => {
+    setUrlState({ [key]: value, page: '1' } as any);
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setUrlState({ page: String(newPage) });
+  };
+
+  const handleRowClick = (paymentId: string) => {
+    setUrlState({ paymentId });
+  };
+
+  const handleCloseDrawer = () => {
+    setUrlState({ paymentId: '' });
+  };
+
+  const handleSort = (key: string) => {
+    const newDir = sortKey === key && sortDir === 'asc' ? 'desc' : 'asc';
+    setUrlState({ sortKey: key, sortDir: newDir });
+  };
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <p className="text-red-500">Failed to load payments. Please try again.</p>
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-4 p-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-800">Payments</h1>
-        <div className="flex items-center gap-3 no-print">
-          {exportError && <span className="text-xs text-red-600">{exportError}</span>}
-          <PrintButton />
-          <button
-            onClick={() => void handleExport()}
-            disabled={exporting}
-            className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-50"
+    <div className="space-y-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-2xl font-bold">Payments</h1>
+        <div className="flex flex-wrap items-center gap-2">
+          <select
+            value={statusFilter}
+            onChange={(e) => handleFilterChange('status', e.target.value)}
+            className="rounded border px-3 py-1.5 text-sm"
+            aria-label="Filter by status"
           >
-            {exporting ? "Exporting…" : "Export CSV"}
-          </button>
-          {/* FE-072: density toggle */}
-          <div className="flex items-center gap-1 text-xs text-slate-600">
-            <span className="font-medium">Density:</span>
-            {(["default", "compact"] as Density[]).map((d) => (
-              <button
-                key={d}
-                onClick={() => setDensity(d)}
-                className={`rounded px-2 py-0.5 capitalize border ${density === d ? "bg-slate-800 text-white border-slate-800" : "border-slate-200 hover:bg-slate-100"}`}
-              >
-                {d}
-              </button>
-            ))}
-          </div>
+            <option value="all">All Statuses</option>
+            <option value="PENDING">Pending</option>
+            <option value="CONFIRMED">Confirmed</option>
+            <option value="RELEASED">Released</option>
+            <option value="REFUNDED">Refunded</option>
+            <option value="FAILED">Failed</option>
+          </select>
+          <select
+            value={typeFilter}
+            onChange={(e) => handleFilterChange('type', e.target.value)}
+            className="rounded border px-3 py-1.5 text-sm"
+            aria-label="Filter by type"
+          >
+            <option value="all">All Types</option>
+            <option value="COMMISSION">Commission</option>
+            <option value="MILESTONE">Milestone</option>
+          </select>
+          <input
+            type="date"
+            value={dateFrom}
+            onChange={(e) => handleFilterChange('dateFrom', e.target.value)}
+            className="rounded border px-3 py-1.5 text-sm"
+            aria-label="Date from"
+          />
+          <input
+            type="date"
+            value={dateTo}
+            onChange={(e) => handleFilterChange('dateTo', e.target.value)}
+            className="rounded border px-3 py-1.5 text-sm"
+            aria-label="Date to"
+          />
         </div>
       </div>
 
-      {/* FE-069: filter bar */}
-      <div className="grid grid-cols-2 gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-4 no-print">
-        <label className="space-y-1 text-xs">
-          <span className="font-medium text-slate-600">Status</span>
-          <select
-            className="w-full rounded border border-slate-200 bg-white px-2 py-1.5 text-sm"
-            value={statusFilter}
-            onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-          >
-            <option value="">All</option>
-            <option value="pending">Pending</option>
-            <option value="completed">Completed</option>
-            <option value="confirmed">Confirmed</option>
-            <option value="failed">Failed</option>
-          </select>
-        </label>
-        <label className="space-y-1 text-xs">
-          <span className="font-medium text-slate-600">Type</span>
-          <select
-            className="w-full rounded border border-slate-200 bg-white px-2 py-1.5 text-sm"
-            value={typeFilter}
-            onChange={(e) => { setTypeFilter(e.target.value); setPage(1); }}
-          >
-            <option value="">All</option>
-            <option value="reward">Reward</option>
-            <option value="penalty">Penalty</option>
-          </select>
-        </label>
-        <label className="space-y-1 text-xs">
-          <span className="font-medium text-slate-600">From</span>
-          <input
-            type="date"
-            className="w-full rounded border border-slate-200 bg-white px-2 py-1.5 text-sm"
-            value={dateFrom}
-            onChange={(e) => { setDateFrom(e.target.value); setPage(1); }}
-          />
-        </label>
-        <label className="space-y-1 text-xs">
-          <span className="font-medium text-slate-600">To</span>
-          <input
-            type="date"
-            className="w-full rounded border border-slate-200 bg-white px-2 py-1.5 text-sm"
-            value={dateTo}
-            onChange={(e) => { setDateTo(e.target.value); setPage(1); }}
-          />
-        </label>
-      </div>
-
-      <div className="overflow-hidden rounded-xl bg-white shadow-sm">
-        <table className="w-full text-left">
-          <thead className="bg-gray-50">
+      <div className="overflow-x-auto rounded-lg border">
+        <table className="w-full text-left text-sm">
+          <thead className="border-b bg-gray-50 text-xs uppercase text-gray-500">
             <tr>
-              {/* FE-070: Outage ID column is now a link */}
-              <th className={`${cell} text-xs font-semibold uppercase tracking-wide text-gray-500`}>Outage</th>
-              <th className={`${cell} text-xs font-semibold uppercase tracking-wide text-gray-500`}>Type</th>
-              {/* FE-072: sortable Amount */}
-              <th
-                className={`${cell} text-xs font-semibold uppercase tracking-wide text-gray-500 cursor-pointer select-none`}
-                onClick={() => toggleSort("amount")}
-              >
-                Amount <SortIndicator col="amount" />
+              <th className="px-4 py-3">
+                <button onClick={() => handleSort('createdAt')} className="hover:underline" aria-sort={sortKey === 'createdAt' ? sortDir === 'asc' ? 'ascending' : 'descending' : 'none'}>
+                  Date {sortKey === 'createdAt' && (sortDir === 'asc' ? 'â†‘' : 'â†“')}
+                </button>
               </th>
-              {/* FE-072: sortable Date */}
-              <th
-                className={`${cell} text-xs font-semibold uppercase tracking-wide text-gray-500 cursor-pointer select-none`}
-                onClick={() => toggleSort("created_at")}
-              >
-                Date <SortIndicator col="created_at" />
-              </th>
-              <th className={`${cell} text-xs font-semibold uppercase tracking-wide text-gray-500`}>Asset</th>
-              {/* FE-072: sortable Status */}
-              <th
-                className={`${cell} text-xs font-semibold uppercase tracking-wide text-gray-500 cursor-pointer select-none`}
-                onClick={() => toggleSort("status")}
-              >
-                Status <SortIndicator col="status" />
-              </th>
+              <th className="px-4 py-3">Amount</th>
+              <th className="px-4 py-3">Status</th>
+              <th className="px-4 py-3">Type</th>
+              <th className="px-4 py-3">Commission</th>
             </tr>
           </thead>
           <tbody>
-            {loading ? (
-              <tr><td colSpan={6} className="p-0">
-                <RouteLoadingState title="Loading payments" description="Retrieving the latest reward and penalty records." />
-              </td></tr>
-            ) : error ? (
-              <tr><td colSpan={6} className="p-0">
-                <RouteErrorState title="Payments unavailable" description={error} primaryAction={{ label: "Reload page", onClick: () => window.location.reload() }} />
-              </td></tr>
-            ) : sortedItems.length === 0 ? (
-              <tr><td colSpan={6} className="p-0">
-                <RouteEmptyState title="No payments found" description="Try adjusting your filters." />
-              </td></tr>
-            ) : sortedItems.map((payment: Payment) => (
-              <tr
-                key={payment.id}
-                className="border-t transition-colors hover:bg-gray-50 cursor-pointer"
-                onClick={() => openDrawer(payment.id)}
-              >
-                {/* FE-070: outage link in table */}
-                <td className={`${cell} font-mono text-gray-700`}>
-                  {payment.outage_id ? (
-                    <Link
-                      href={`/outages/${payment.outage_id}`}
-                      className="text-blue-600 hover:underline underline-offset-2"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {payment.outage_id}
-                    </Link>
-                  ) : (
-                    <span className="italic text-gray-400">—</span>
-                  )}
-                </td>
-                <td className={cell}>
-                  <span className={`rounded-full px-2 py-0.5 text-xs font-semibold capitalize ${typeStyles[payment.type]}`}>
-                    {payment.type}
-                  </span>
-                </td>
-                <td className={`${cell} font-semibold ${payment.type === "penalty" ? "text-red-600" : "text-green-600"}`}>
-                  {payment.type === "penalty" ? "-" : "+"}${payment.amount.toLocaleString()}
-                </td>
-                <td className={`${cell} text-gray-600`}>
-                  {new Date(payment.created_at).toLocaleDateString()}
-                </td>
-                <td className={`${cell} font-mono text-gray-500`}>{payment.asset_code}</td>
-                <td className={cell}>
-                  <span className={`rounded-full px-2 py-0.5 text-xs font-semibold capitalize ${statusStyles[payment.status] ?? "bg-gray-100 text-gray-500"}`}>
-                    {payment.status}
-                  </span>
+            {isLoading ? (
+              Array.from({ length: 5 }).map((_, i) => (
+                <tr key={i} className="border-b">
+                  <td colSpan={5} className="px-4 py-3">
+                    <div className="h-4 animate-pulse rounded bg-gray-200" />
+                  </td>
+                </tr>
+              ))
+            ) : payments.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
+                  No payments found.
                 </td>
               </tr>
-            ))}
+            ) : (
+              payments.map((payment: Payment) => (
+                <tr
+                  key={payment.id}
+                  className="cursor-pointer border-b hover:bg-gray-50"
+                  onClick={() => handleRowClick(payment.id)}
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleRowClick(payment.id); } }}
+                  role="button"
+                  aria-label={`View payment ${payment.id}`}
+                >
+                  <td className="px-4 py-3">{new Date(payment.createdAt).toLocaleDateString()}</td>
+                  <td className="px-4 py-3 font-medium">
+                    {payment.amountUsdc} {payment.assetCode}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                      payment.status === 'CONFIRMED' ? 'bg-green-100 text-green-700' :
+                      payment.status === 'RELEASED' ? 'bg-blue-100 text-blue-700' :
+                      payment.status === 'REFUNDED' ? 'bg-yellow-100 text-yellow-700' :
+                      payment.status === 'FAILED' ? 'bg-red-100 text-red-700' :
+                      'bg-gray-100 text-gray-700'
+                    }`}>
+                      {payment.status}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-gray-600">{payment.type ?? 'N/A'}</td>
+                  <td className="px-4 py-3 text-gray-600">{payment.commissionId?.slice(0, 8)}...</td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
 
-      {data && totalPages > 1 && (
-        <div className="flex items-center justify-between text-sm text-gray-500 no-print">
-          <span>Page {page} of {totalPages} — {data.total} total</span>
-          <div className="flex gap-2">
-            <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} className="rounded-lg border px-3 py-1.5 transition-colors hover:bg-gray-100 disabled:opacity-40">Previous</button>
-            <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="rounded-lg border px-3 py-1.5 transition-colors hover:bg-gray-100 disabled:opacity-40">Next</button>
-          </div>
+      {totalPages > 1 && (
+        <div className="flex justify-center">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => page > 1 && handlePageChange(page - 1)}
+                  aria-disabled={page <= 1}
+                  className={page <= 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                />
+              </PaginationItem>
+              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                const pageNum = i + 1;
+                return (
+                  <PaginationItem key={pageNum}>
+                    <PaginationLink
+                      onClick={() => handlePageChange(pageNum)}
+                      isActive={page === pageNum}
+                      className="cursor-pointer"
+                    >
+                      {pageNum}
+                    </PaginationLink>
+                  </PaginationItem>
+                );
+              })}
+              {totalPages > 5 && (
+                <PaginationItem>
+                  <PaginationEllipsis />
+                </PaginationItem>
+              )}
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => page < totalPages && handlePageChange(page + 1)}
+                  aria-disabled={page >= totalPages}
+                  className={page >= totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
         </div>
       )}
 
-      <PaymentDetailDrawer
-        paymentId={selectedPaymentId}
-        onClose={closeDrawer}
-      />
+      {selectedPaymentId && (
+        <PaymentDetailDrawer paymentId={selectedPaymentId} onClose={handleCloseDrawer} />
+      )}
     </div>
   );
 }
