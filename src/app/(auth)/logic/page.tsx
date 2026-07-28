@@ -9,7 +9,6 @@ import { LoginForm } from "./LoginForm";
 export default function AuthLogicPage() {
   const router = useRouter();
   const params = useSearchParams();
-  const router = useRouter();
 
   useEffect(() => {
     const redirect = params.get(REDIRECT_KEY);

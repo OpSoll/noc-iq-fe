@@ -1,4 +1,4 @@
-import { fetchClient } from "@/lib/fetchClient";
+import { api } from "@/lib/api";
 
 export interface ReplayWebhookDeliveryResponse {
   id: string;
@@ -9,7 +9,8 @@ export interface ReplayWebhookDeliveryResponse {
 export async function replayWebhookDelivery(
   deliveryId: string,
 ): Promise<ReplayWebhookDeliveryResponse> {
-  return fetchClient.post<ReplayWebhookDeliveryResponse>(
-    `/api/v1/webhooks/deliveries/${deliveryId}/replay`,
+  const { data } = await api.post<ReplayWebhookDeliveryResponse>(
+    `/webhooks/deliveries/${deliveryId}/replay`,
   );
+  return data;
 }

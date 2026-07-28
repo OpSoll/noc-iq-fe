@@ -23,4 +23,10 @@ export const queryKeys = {
   analytics: {
     anomalies: (params?: Record<string, unknown>) => ["analytics", "anomalies", params] as const,
   },
+  wallet: {
+    all: ["wallet"] as const,
+    detail: (userId: string) => ["wallet", "detail", userId] as const,
+    status: (userId: string) => ["wallet", "status", userId] as const,
+    balance: (address: string) => ["wallet", "balance", address] as const,
+  },
 } as const;

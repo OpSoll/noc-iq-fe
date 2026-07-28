@@ -11,6 +11,7 @@ const configs: Record<string, DomainConfig> = {
   payments: { ...DEFAULT, staleTime: 60_000, refetchInterval: 120_000 },
   webhooks: { ...DEFAULT, staleTime: 30_000, refetchInterval: 60_000 },
   analytics: { ...DEFAULT, staleTime: 120_000, refetchInterval: 300_000 },
+  wallets: { ...DEFAULT, staleTime: 60_000, refetchInterval: 300_000, refetchOnWindowFocus: false },
 };
 
 export function getDomainConfig(domain: string): DomainConfig {

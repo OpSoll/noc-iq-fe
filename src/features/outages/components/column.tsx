@@ -1,9 +1,26 @@
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback } from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { api } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { Outage } from "@/types/outages";
+
+function SelectAllCheckbox({ table }: { table: { getIsAllRowsSelected: () => boolean; getIsSomeRowsSelected: () => boolean; getToggleAllRowsSelectedHandler: () => (event: React.ChangeEvent<HTMLInputElement>) => void } }) {
+  const ref = React.useRef<HTMLInputElement>(null);
+  React.useEffect(() => {
+    if (ref.current) ref.current.indeterminate = table.getIsSomeRowsSelected();
+  }, [table]);
+  return (
+    <input
+      ref={ref}
+      type="checkbox"
+      className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+      checked={table.getIsAllRowsSelected()}
+      onChange={table.getToggleAllRowsSelectedHandler()}
+      aria-label="Select all"
+    />
+  );
+}
 
 /* -------------------------------------------------------------------------- */
 /*                          Selection Checkbox Column                         */
@@ -26,14 +43,7 @@ export function selectionColumn(options: {
   return {
     id: "select",
     header: ({ table }) => (
-      <input
-        type="checkbox"
-        className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-        checked={table.getIsAllRowsSelected()}
-        indeterminate={table.getIsSomeRowsSelected()}
-        onChange={table.getToggleAllRowsSelectedHandler()}
-        aria-label="Select all"
-      />
+      <SelectAllCheckbox table={table} />
     ),
     cell: ({ row, table }) => {
       const rowId = options.getRowId(row.original);
