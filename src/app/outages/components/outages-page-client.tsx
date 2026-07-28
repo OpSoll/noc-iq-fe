@@ -114,26 +114,37 @@ export default function OutagesPageClient({ data = [] }: Props) {
       </div>
 
       {/* List */}
-      <div className="grid gap-4">
-        {filteredData.map((item) => (
-          <div
-            key={item.id}
-            className="border rounded-lg p-4 flex items-center justify-between"
-          >
-            <div>
-              <h3 className="font-medium">{item.title}</h3>
-              <p className="text-sm text-muted-foreground">
-                {new Date(item.createdAt).toLocaleString()}
-              </p>
-            </div>
+      <div className="overflow-x-auto">
+        <div className="grid gap-4">
+          {filteredData.map((item) => (
+            <div
+              key={item.id}
+              className="border rounded-lg p-4 flex items-center justify-between"
+              tabIndex={0}
+              role="button"
+              aria-label={`View outage: ${item.title}`}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  toggleSelect(item.id);
+                }
+              }}
+            >
+              <div>
+                <h3 className="font-medium">{item.title}</h3>
+                <p className="text-sm text-muted-foreground">
+                  {new Date(item.createdAt).toLocaleString()}
+                </p>
+              </div>
 
-            <input
-              type="checkbox"
-              checked={selectedIds.includes(item.id)}
-              onChange={() => toggleSelect(item.id)}
-            />
-          </div>
-        ))}
+              <input
+                type="checkbox"
+                checked={selectedIds.includes(item.id)}
+                onChange={() => toggleSelect(item.id)}
+              />
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
