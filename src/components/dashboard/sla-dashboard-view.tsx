@@ -1,33 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 
 import KPICard from "@/components/dashboard/KPICard";
 import PenaltiesRewardsChart from "@/components/dashboard/PenaltiesRewardsChart";
 import SLATrendChart from "@/components/dashboard/SLATrendChart";
+import { useToast } from "@/components/ui/toast";
 import { RouteErrorState, RouteLoadingState } from "@/components/ui/route-state";
+import {
+  buildDashboardShareUrl,
+  buildDashboardSnapshot,
+} from "@/lib/dashboardSnapshot";
+import { useUrlSync } from "@/hooks/useUrlSync";
 import { fetchDashboardMetrics, type DashboardFilters } from "@/services/dashboardService";
 import type { DashboardMetrics, TrendPoint } from "@/types/dashboard";
-
-function exportSnapshot(metrics: DashboardMetrics, label = "dashboard") {
-  const snapshot = {
-    exported_at: new Date().toISOString(),
-    label,
-    sla_compliance_percentage: metrics.sla_compliance_percentage,
-    penalties: metrics.penalties,
-    rewards: metrics.rewards,
-    trends: metrics.trends,
-  };
-  const blob = new Blob([JSON.stringify(snapshot, null, 2)], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `sla-snapshot-${label}-${new Date().toISOString().slice(0, 10)}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
-}
 
 function delta(a: number, b: number) {
   const d = a - b;
@@ -35,14 +23,130 @@ function delta(a: number, b: number) {
 }
 
 const SEVERITIES = ["", "low", "medium", "high", "critical"];
+const DASHBOARD_DEFAULTS = {
+  date_from: "",
+  date_to: "",
+  severity: "",
+  site: "",
+  compare: "0",
+};
 
 export default function SLADashboardView() {
   const router = useRouter();
-  const [compareMode, setCompareMode] = useState(false);
-  const [filters, setFilters] = useState<DashboardFilters>({});
+  const toast = useToast();
+  const [urlState, setUrlState] = useUrlSync(DASHBOARD_DEFAULTS);
+  const compareMode = urlState.compare === "1";
+  const filters = useMemo<DashboardFilters>(
+    () => ({
+      date_from: urlState.date_from || undefined,
+      date_to: urlState.date_to || undefined,
+      severity: urlState.severity || undefined,
+      site: urlState.site || undefined,
+    }),
+    [urlState],
+  );
 
   function set(key: keyof DashboardFilters, value: string) {
-    setFilters((f) => ({ ...f, [key]: value || undefined }));
+    setUrlState({ [key]: value || "", compare: compareMode ? "1" : "0" });
+  }
+
+  function setCompareMode(value: boolean) {
+    setUrlState({ compare: value ? "1" : "0" });
+  }
+
+  function buildSnapshotUrl() {
+    return buildDashboardShareUrl(
+      window.location.origin,
+      window.location.pathname,
+      filters,
+      compareMode,
+    );
+  }
+
+  function downloadSnapshot(metrics: DashboardMetrics) {
+    const snapshot = buildDashboardSnapshot(
+      metrics,
+      filters,
+      "dashboard",
+      buildSnapshotUrl(),
+    );
+    const blob = new Blob([JSON.stringify(snapshot, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `sla-snapshot-${new Date().toISOString().slice(0, 10)}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+    toast(
+      snapshot.is_empty
+        ? "Empty dashboard snapshot exported."
+        : "Dashboard snapshot exported.",
+      "success",
+    );
+  }
+
+  async function shareSnapshot(metrics: DashboardMetrics) {
+    try {
+      const snapshotUrl = buildSnapshotUrl();
+      const snapshot = buildDashboardSnapshot(
+        metrics,
+        filters,
+        "dashboard",
+        snapshotUrl,
+      );
+      const shareText = snapshot.is_empty
+        ? "Dashboard snapshot shared with the current empty-state filters."
+        : "Dashboard snapshot shared with the current filters and time range.";
+
+      if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
+        await navigator.share({
+          title: "NOC IQ dashboard snapshot",
+          text: shareText,
+          url: snapshotUrl,
+        });
+      } else {
+        await navigator.clipboard.writeText(snapshotUrl);
+      }
+      toast("Dashboard snapshot link copied.", "success");
+    } catch (error) {
+      const message =
+        error instanceof Error && error.name === "AbortError"
+          ? null
+          : error instanceof Error
+            ? error.message
+            : "Failed to share the dashboard snapshot.";
+      if (message) {
+        toast(message, "error");
+      }
+    }
+  }
+
+  function pushOutageDrilldown(point?: TrendPoint) {
+    const params = new URLSearchParams();
+    if (filters.severity) params.set("severity", filters.severity);
+    if (filters.site) {
+      params.set("site", filters.site);
+      params.set("search", filters.site);
+    }
+    if (point?.period) params.set("date_from", point.period);
+    if (filters.date_from) params.set("date_from", filters.date_from);
+    if (filters.date_to) params.set("date_to", filters.date_to);
+    router.push(`/outages?${params.toString()}`);
+  }
+
+  function pushPaymentDrilldown(type: "penalty" | "reward", point?: TrendPoint) {
+    const params = new URLSearchParams();
+    params.set("type", type);
+    if (point?.period) {
+      params.set("dateFrom", point.period);
+      params.set("dateTo", point.period);
+    } else {
+      if (filters.date_from) params.set("dateFrom", filters.date_from);
+      if (filters.date_to) params.set("dateTo", filters.date_to);
+    }
+    router.push(`/payments?${params.toString()}`);
   }
 
   const primary = useQuery<DashboardMetrics>({
@@ -52,32 +156,22 @@ export default function SLADashboardView() {
   });
 
   const secondary = useQuery<DashboardMetrics>({
-    queryKey: ["dashboard-metrics-compare"],
+    queryKey: ["dashboard-metrics-compare", compareMode],
     queryFn: () => fetchDashboardMetrics(),
     staleTime: 30_000,
     enabled: compareMode,
   });
 
   function onTrendClick(point: TrendPoint) {
-    const params = new URLSearchParams();
-    if (point.period) params.set("date_from", point.period);
-    if (filters.severity) params.set("severity", filters.severity);
-    if (filters.site) params.set("site", filters.site);
-    router.push(`/outages?${params.toString()}`);
+    pushOutageDrilldown(point);
   }
 
   function onPenaltyClick(point: TrendPoint) {
-    const params = new URLSearchParams();
-    if (point.period) params.set("date_from", point.period);
-    params.set("type", "penalty");
-    router.push(`/payments?${params.toString()}`);
+    pushPaymentDrilldown("penalty", point);
   }
 
   function onRewardClick(point: TrendPoint) {
-    const params = new URLSearchParams();
-    if (point.period) params.set("date_from", point.period);
-    params.set("type", "reward");
-    router.push(`/payments?${params.toString()}`);
+    pushPaymentDrilldown("reward", point);
   }
 
   if (primary.isLoading) {
@@ -106,6 +200,10 @@ export default function SLADashboardView() {
     ? new Date(primary.dataUpdatedAt).toLocaleString()
     : "Not synced yet";
   const cmp = compareMode && secondary.data ? secondary.data : null;
+  const isEmptyDataset =
+    metrics.trends.length === 0 &&
+    metrics.penalties.count === 0 &&
+    metrics.rewards.count === 0;
 
   return (
     <div className="space-y-6 p-6">
@@ -117,20 +215,21 @@ export default function SLADashboardView() {
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs uppercase tracking-wide text-gray-400">Updated {lastUpdated}</span>
           <button
-            onClick={() => setCompareMode((v) => !v)}
+            type="button"
+            onClick={() => setCompareMode(!compareMode)}
             className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${compareMode ? "border-blue-400 bg-blue-50 text-blue-700" : "border-gray-200 text-gray-600 hover:bg-gray-50"}`}
           >
             {compareMode ? "Exit Compare" : "Compare"}
           </button>
-          <button onClick={() => exportSnapshot(metrics)} className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50">Export</button>
-          <button onClick={() => void primary.refetch()} className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50">Refresh</button>
+          <button type="button" onClick={() => downloadSnapshot(metrics)} className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50">Export</button>
+          <button type="button" onClick={() => void shareSnapshot(metrics)} className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50">Share snapshot</button>
+          <button type="button" onClick={() => void primary.refetch()} className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50">Refresh</button>
         </div>
       </div>
 
       {compareMode && secondary.isLoading ? (
         <p className="text-sm text-gray-400">Loading comparison window…</p>
       ) : null}
-      {compareMode && secondary.isLoading ? <p className="text-sm text-gray-400">Loading comparison window…</p> : null}
 
       <div className="grid grid-cols-2 gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-4">
         <label className="space-y-1 text-xs">
@@ -153,24 +252,36 @@ export default function SLADashboardView() {
         </label>
       </div>
 
+      {isEmptyDataset ? (
+        <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+          No dashboard data matches the current filters yet. Export and share still include the active filter state so you can reference the empty view.
+        </div>
+      ) : null}
+
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KPICard
           title="SLA Compliance"
           value={`${metrics.sla_compliance_percentage.toFixed(1)}%`}
           subtitle={cmp ? `vs ${cmp.sla_compliance_percentage.toFixed(1)}% (${delta(metrics.sla_compliance_percentage, cmp.sla_compliance_percentage)}pp)` : "Overall compliance rate"}
           highlight={metrics.sla_compliance_percentage >= 90 ? "green" : "red"}
+          onClick={() => pushOutageDrilldown()}
+          actionLabel="Open filtered outages"
         />
         <KPICard
           title="Total Penalties"
           value={`$${metrics.penalties.total.toLocaleString()}`}
           subtitle={cmp ? `vs $${cmp.penalties.total.toLocaleString()} (${delta(metrics.penalties.total, cmp.penalties.total)})` : `${metrics.penalties.count} incidents`}
           highlight="red"
+          onClick={() => pushPaymentDrilldown("penalty")}
+          actionLabel="Open filtered penalty payments"
         />
         <KPICard
           title="Total Rewards"
           value={`$${metrics.rewards.total.toLocaleString()}`}
           subtitle={cmp ? `vs $${cmp.rewards.total.toLocaleString()} (${delta(metrics.rewards.total, cmp.rewards.total)})` : `${metrics.rewards.count} achievements`}
           highlight="green"
+          onClick={() => pushPaymentDrilldown("reward")}
+          actionLabel="Open filtered reward payments"
         />
         <KPICard
           title="Net Balance"
@@ -181,6 +292,8 @@ export default function SLADashboardView() {
             return `vs ${cmpNet >= 0 ? "+" : ""}$${cmpNet.toLocaleString()} (${delta(netBalance, cmpNet)})`;
           })()}
           highlight={netBalance >= 0 ? "green" : "red"}
+          onClick={() => pushPaymentDrilldown(netBalance >= 0 ? "reward" : "penalty")}
+          actionLabel="Open filtered payment drilldown"
         />
       </div>
 

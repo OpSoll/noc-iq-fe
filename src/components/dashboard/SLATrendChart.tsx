@@ -13,11 +13,11 @@ interface SLATrendChartProps {
 
 const clampPercentage = (value: number) => Math.max(0, Math.min(100, value));
 
-const SLATrendChart: React.FC<SLATrendChartProps> = ({
+export default function SLATrendChart({
   data,
   onPointClick,
   anomalies = [],
-}) => {
+}: SLATrendChartProps) {
   const [showAnomalies, setShowAnomalies] = useState(false);
 
   return (
@@ -55,9 +55,12 @@ const SLATrendChart: React.FC<SLATrendChartProps> = ({
                 onClick={() => onPointClick?.(point)}
                 role={onPointClick ? "button" : undefined}
                 tabIndex={onPointClick ? 0 : undefined}
-                onKeyDown={(e) =>
-                  e.key === "Enter" && onPointClick?.(point)
-                }
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    onPointClick?.(point);
+                  }
+                }}
               >
                 <div className="flex items-center justify-between text-sm text-gray-600">
                   <span>{point.period}</span>
@@ -90,6 +93,4 @@ const SLATrendChart: React.FC<SLATrendChartProps> = ({
       </div>
     </div>
   );
-};
-
-export default SLATrendChart;
+}
