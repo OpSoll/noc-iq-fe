@@ -1,96 +1,44 @@
-export type ScaleType = "linear" | "log" | "percentage";
-export type MeasureType = "currency" | "count" | "percentage" | "duration" | "ratio";
-
-export interface AxisConfig {
-  label: string;
-  unit?: string;
-  scale: ScaleType;
-  measure: MeasureType;
+export interface ChartSchema {
+  requiredFields: string[];
+  numericFields?: string[];
+  arrayFields?: string[];
 }
 
-export interface ValidationWarning {
-  field: string;
-  message: string;
-  severity: "warning" | "error";
+export interface ValidationResult {
+  valid: boolean;
+  errors: string[];
+  sanitized: Record<string, unknown>[];
 }
 
-const COMPATIBLE_MEASURES: Record<ScaleType, MeasureType[]> = {
-  linear: ["currency", "count", "duration", "ratio", "percentage"],
-  log: ["currency", "count", "duration", "ratio"],
-  percentage: ["percentage"],
-};
-
-const MISLEADING_COMBINATIONS: Array<{
-  check: (axes: AxisConfig[]) => ValidationWarning | null;
-}> = [
-  {
-    check: (axes) => {
-      const hasMixed = axes.some((a) => a.measure === "currency") &&
-        axes.some((a) => a.measure === "percentage");
-      if (hasMixed) {
-        return {
-          field: "axis-measures",
-          message: "Mixing currency and percentage measures on the same chart can be misleading",
-          severity: "warning",
-        };
-      }
-      return null;
-    },
-  },
-  {
-    check: (axes) => {
-      const hasLogWithZero = axes.some((a) => a.scale === "log");
-      if (hasLogWithZero) {
-        return {
-          field: "scale-log",
-          message: "Log scale cannot display zero or negative values",
-          severity: "warning",
-        };
-      }
-      return null;
-    },
-  },
-  {
-    check: (axes) => {
-      const missingUnits = axes.filter((a) => !a.unit && a.measure !== "count" && a.measure !== "ratio");
-      if (missingUnits.length > 0) {
-        return {
-          field: "missing-units",
-          message: `Axis "${missingUnits.map((a) => a.label).join(", ")}" has no unit specified`,
-          severity: "warning",
-        };
-      }
-      return null;
-    },
-  },
-];
-
-export function validateAxisConfig(axes: AxisConfig[]): ValidationWarning[] {
-  const warnings: ValidationWarning[] = [];
-
-  for (const axis of axes) {
-    const allowed = COMPATIBLE_MEASURES[axis.scale];
-    if (allowed && !allowed.includes(axis.measure)) {
-      warnings.push({
-        field: `${axis.label}.measure`,
-        message: `Measure "${axis.measure}" is not compatible with ${axis.scale} scale`,
-        severity: "error",
-      });
+export function validateChartData(
+  data: unknown[],
+  schema: ChartSchema
+): ValidationResult {
+  const errors: string[] = [];
+  if (!Array.isArray(data) || data.length === 0) {
+    return { valid: false, errors: ["Data is empty or not an array"], sanitized: [] };
+  }
+  const sanitized = data.filter((item, idx) => {
+    if (!item || typeof item !== "object") {
+      errors.push(`Item at index ${idx} is not an object`);
+      return false;
     }
-  }
-
-  for (const rule of MISLEADING_COMBINATIONS) {
-    const warning = rule.check(axes);
-    if (warning) warnings.push(warning);
-  }
-
-  return warnings;
-}
-
-export function isChartMisleading(axes: AxisConfig[]): boolean {
-  return validateAxisConfig(axes).some((w) => w.severity === "error");
-}
-
-export function getChartWarnings(axes: AxisConfig[]): string[] {
-  return validateAxisConfig(axes).map((w) => w.message);
+    const obj = item as Record<string, unknown>;
+    for (const field of schema.requiredFields) {
+      if (obj[field] === undefined || obj[field] === null) {
+        errors.push(`Missing required field "${field}" at index ${idx}`);
+        return false;
+      }
+    }
+    if (schema.numericFields) {
+      for (const field of schema.numericFields) {
+        if (obj[field] !== undefined && typeof obj[field] !== "number") {
+          errors.push(`Field "${field}" at index ${idx} is not a number`);
+          return false;
+        }
+      }
+    }
+    return true;
+  });
+  return { valid: errors.length === 0, errors, sanitized };
 }
