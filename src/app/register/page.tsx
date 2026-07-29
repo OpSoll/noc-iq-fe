@@ -4,6 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { api } from "@/lib/api";
+import usePasswordValidation from "@/hooks/usePasswordValidation";
+import PasswordStrength from "@/components/auth/PasswordStrength";
+import PasswordValidation from "@/components/auth/PasswordValidation";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -12,6 +15,8 @@ export default function RegisterPage() {
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const { password_strength, validation_result } =
+    usePasswordValidation(password);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -34,7 +39,11 @@ export default function RegisterPage() {
       router.push("/");
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Registration failed. Please try again.");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Registration failed. Please try again.",
+      );
     } finally {
       setLoading(false);
     }
@@ -44,12 +53,17 @@ export default function RegisterPage() {
     <div className="mx-auto max-w-sm space-y-6 p-8 pt-16">
       <div className="space-y-1">
         <h1 className="text-2xl font-bold text-gray-800">Create account</h1>
-        <p className="text-sm text-gray-500">Register to access the NOC IQ platform.</p>
+        <p className="text-sm text-gray-500">
+          Register to access the NOC IQ platform.
+        </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-1">
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+          <label
+            htmlFor="email"
+            className="block text-sm font-medium text-gray-700"
+          >
             Email
           </label>
           <input
@@ -64,7 +78,10 @@ export default function RegisterPage() {
         </div>
 
         <div className="space-y-1">
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+          <label
+            htmlFor="password"
+            className="block text-sm font-medium text-gray-700"
+          >
             Password
           </label>
           <input
@@ -75,11 +92,27 @@ export default function RegisterPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            aria-describedby="password-strength-feedback"
           />
+          <div
+            id="password-strength-feedback"
+            aria-live="polite"
+            className="text-sm text-gray-500"
+          >
+            {password.length > 0 && (
+              <div className="mt-2 space-y-2">
+                <PasswordStrength password_strength={password_strength} />
+                <PasswordValidation validation_result={validation_result} />
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="space-y-1">
-          <label htmlFor="confirm" className="block text-sm font-medium text-gray-700">
+          <label
+            htmlFor="confirm"
+            className="block text-sm font-medium text-gray-700"
+          >
             Confirm password
           </label>
           <input
@@ -94,12 +127,14 @@ export default function RegisterPage() {
         </div>
 
         {error && (
-          <p className="rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600">{error}</p>
+          <p className="rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600">
+            {error}
+          </p>
         )}
 
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || password_strength < 4}
           className="w-full rounded-lg bg-blue-600 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
         >
           {loading ? "Creating account…" : "Create account"}
