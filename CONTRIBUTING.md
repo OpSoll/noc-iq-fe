@@ -132,21 +132,6 @@ npm run lint
 npm run type-check
 ```
 
-**Backend:**
-```bash
-pytest
-pytest --cov=app --cov-report=html
-black app/
-flake8 app/
-mypy app/
-```
-
-**Smart Contracts:**
-```bash
-cargo test
-cargo clippy -- -D warnings
-```
-
 ### 4. Commit Your Changes
 
 We follow [Conventional Commits](https://www.conventionalcommits.org/):
@@ -158,37 +143,54 @@ git commit -m "docs: update stellar integration guide"
 git commit -m "test: add unit tests for SLA calculator"
 ```
 
-**Commit message format:**
+## 🎨 UI Component Guidelines
+
+When building shared UI components in `src/components/ui/`:
+
+- **Radix UI Primitives**: Use underlying Radix UI / shadcn primitives for accessibility (keyboard navigation, ARIA roles, focus management).
+- **Tailwind CSS Tokens**: Always utilize Tailwind CSS classes and design tokens. Avoid hardcoded static styles or inline style objects.
+- **Component File Structure**: Place reusable primitives in `src/components/ui/` and domain-specific feature cards under `src/app/<feature>/components/`.
+- **Keyboard & High Contrast Focus**: Ensure interactive controls include explicit `focus-visible:ring-2` styles and satisfy WCAG 2.1 AA 4.5:1 text contrast ratios.
+
+## 🧪 Writing Vitest Hook Tests
+
+Custom React hooks in `src/hooks/` should be covered using `@testing-library/react` and Vitest:
+
+```typescript
+import { renderHook, act } from '@testing-library/react';
+import { useCounter } from './useCounter';
+import { describe, it, expect } from 'vitest';
+
+describe('useCounter hook', () => {
+  it('increments counter value correctly', () => {
+    const { result } = renderHook(() => useCounter());
+
+    expect(result.current.count).toBe(0);
+
+    act(() => {
+      result.current.increment();
+    });
+
+    expect(result.current.count).toBe(1);
+  });
+});
 ```
-<type>: <description>
 
-[optional body]
+## 🔑 Query Key Conventions
 
-[optional footer]
+For TanStack React Query cache safety and predictable invalidation, structure query keys using hierarchical arrays:
+
+- **Resource Scope**: Begin with the domain noun (e.g. `['wallet']`, `['sessions']`).
+- **Sub-resource & Param Scope**: Include specific sub-resources and parameters as subsequent array elements: `['wallet', 'status', userId]`.
+- **Consistency**: Never use plain un-arrayed string keys or dynamically concatenated strings (`"wallet-status-" + userId`).
+
+```typescript
+// ✅ Good: Hierarchical array query key
+useQuery({
+  queryKey: ['wallet', 'status', userId],
+  queryFn: () => fetchWalletStatus(userId),
+});
 ```
-
-**Types:**
-- `feat`: New feature
-- `fix`: Bug fix
-- `docs`: Documentation changes
-- `style`: Code style changes (formatting, semicolons, etc.)
-- `refactor`: Code refactoring
-- `test`: Adding or updating tests
-- `chore`: Maintenance tasks
-- `perf`: Performance improvements
-
-### 5. Push and Create Pull Request
-
-```bash
-git push origin feature/wallet-integration
-```
-
-Then open a pull request on GitHub with:
-- **Clear title** following conventional commit format
-- **Description** of what you changed and why
-- **Screenshots** (for UI changes)
-- **Testing notes** (how you tested the changes)
-- **Related issue**: `Closes #123` or `Fixes #456`
 
 ## 🎨 Code Style Guidelines
 
@@ -198,300 +200,7 @@ Then open a pull request on GitHub with:
 - Follow **React hooks** best practices
 - Use **functional components** over class components
 - Use **Tailwind CSS** for styling (no inline styles)
-- Use **shadcn/ui** components when available
-- **Extract reusable logic** into custom hooks
-- **PropTypes or TypeScript interfaces** for all components
-
-**Example:**
-```typescript
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-
-interface WalletConnectProps {
-  onConnect: (publicKey: string) => void;
-}
-
-export function WalletConnect({ onConnect }: WalletConnectProps) {
-  const [connected, setConnected] = useState(false);
-  
-  // Component logic here
-  
-  return (
-    <Button onClick={handleConnect}>
-      {connected ? 'Disconnect' : 'Connect Wallet'}
-    </Button>
-  );
-}
-```
-
-### Backend (Python/FastAPI)
-
-- Follow **PEP 8** style guide
-- Use **type hints** for all functions
-- Write **docstrings** for all public functions
-- Use **async/await** for I/O operations
-- **Pydantic models** for request/response validation
-- **Dependency injection** for services
-- **Environment variables** for configuration
-
-**Example:**
-```python
-from fastapi import APIRouter, Depends, HTTPException
-from app.models.payment import PaymentCreate, PaymentResponse
-from app.services.stellar.payment_service import PaymentService
-from app.api.deps import get_current_user
-
-router = APIRouter()
-
-@router.post("/payments", response_model=PaymentResponse)
-async def create_payment(
-    payment: PaymentCreate,
-    current_user = Depends(get_current_user)
-) -> PaymentResponse:
-    """
-    Create a new payment transaction on Stellar network.
-    
-    Args:
-        payment: Payment details including amount and destination
-        current_user: Currently authenticated user
-        
-    Returns:
-        PaymentResponse with transaction hash and status
-        
-    Raises:
-        HTTPException: If payment creation fails
-    """
-    service = PaymentService()
-    result = await service.create_payment(payment)
-    return result
-```
-
-### Smart Contracts (Rust/Soroban)
-
-- Follow **Rust best practices**
-- **Document all public functions**
-- Use **proper error handling**
-- **Test all functions** thoroughly
-- Keep **gas costs** in mind
-- Use **clippy** for linting
-
-**Example:**
-```rust
-#[contractimpl]
-impl SLAContract {
-    /// Calculate SLA result for an outage
-    /// 
-    /// # Arguments
-    /// * `outage_id` - Unique identifier for the outage
-    /// * `severity` - Severity level (Critical, High, Medium, Low)
-    /// * `mttr_minutes` - Mean time to repair in minutes
-    /// 
-    /// # Returns
-    /// SLAResult containing status and payment information
-    pub fn calculate_sla(
-        env: Env,
-        outage_id: Symbol,
-        severity: Severity,
-        mttr_minutes: u32,
-    ) -> SLAResult {
-        // Implementation here
-    }
-}
-```
-
-## ✅ Pull Request Guidelines
-
-### Before Submitting
-
-- [ ] Code follows the style guidelines
-- [ ] Self-review completed
-- [ ] Tests added/updated and passing
-- [ ] Documentation updated
-- [ ] No console.log or print statements
-- [ ] Environment variables in .env.example
-- [ ] Breaking changes clearly documented
-
-### PR Description Template
-
-```markdown
-## Description
-Brief description of the changes
-
-## Type of Change
-- [ ] Bug fix
-- [ ] New feature
-- [ ] Breaking change
-- [ ] Documentation update
-
-## Related Issue
-Closes #123
-
-## Testing
-- [ ] Unit tests added/updated
-- [ ] Integration tests added/updated
-- [ ] Manual testing completed
-
-## Checklist
-- [ ] Code follows style guidelines
-- [ ] Self-review completed
-- [ ] Documentation updated
-- [ ] Tests pass locally
-
-## Screenshots (if applicable)
-[Add screenshots here]
-
-## Additional Notes
-Any additional information for reviewers
-```
-
-### For Stellar Wave Contributors
-
-Include in your PR description:
-- **Testnet transaction hashes** (for blockchain features)
-- **Video/GIF** of feature working (for UI changes)
-- **Performance metrics** (if relevant)
-- **Time spent** on the issue (optional)
-
-## 🧪 Testing Guidelines
-
-### Frontend Tests
-
-```bash
-# Run all tests
-npm run test
-
-# Run tests in watch mode
-npm run test:watch
-
-# Run with coverage
-npm run test:coverage
-```
-
-**Test structure:**
-```typescript
-import { render, screen, fireEvent } from '@testing-library/react';
-import { WalletConnect } from './WalletConnect';
-
-describe('WalletConnect', () => {
-  it('should connect to Freighter wallet', async () => {
-    render(<WalletConnect onConnect={jest.fn()} />);
-    
-    const button = screen.getByText('Connect Wallet');
-    fireEvent.click(button);
-    
-    // Assertions here
-  });
-});
-```
-
-### Backend Tests
-
-```bash
-# Run all tests
-pytest
-
-# Run specific test file
-pytest tests/test_payment_service.py
-
-# Run with coverage
-pytest --cov=app --cov-report=html
-```
-
-**Test structure:**
-```python
-import pytest
-from app.services.stellar.payment_service import PaymentService
-
-@pytest.mark.asyncio
-async def test_create_payment():
-    """Test payment creation on Stellar network"""
-    service = PaymentService(network="testnet")
-    
-    result = await service.create_payment(
-        source_secret="S...",
-        destination="G...",
-        amount="10.00"
-    )
-    
-    assert result["status"] == "success"
-    assert "tx_hash" in result
-```
-
-### Smart Contract Tests
-
-```bash
-# Run tests
-cargo test
-
-# Run with output
-cargo test -- --nocapture
-```
-
-## 📖 Key Documentation
-
-- **[Architecture Map](docs/ARCHITECTURE_MD.md)** — Route-to-service dependency graph (auto-generated)
-- **[Seed Data Packs](docs/SEED_DATA.md)** — Deterministic preview data for UI review
-- **[Preview Quality Gate](docs/PREVIEW_QUALITY_GATE.md)** — Route behavior checklist for PRs
-- **[API Reference](docs/API.md)** — Full REST API documentation
-
-## 📚 Documentation Guidelines
-
-- Use **clear, concise language**
-- Include **code examples**
-- Add **screenshots** for UI features
-- Keep **up-to-date** with code changes
-- **Link to related docs** where helpful
-- Use **Markdown** for formatting
-
-## 🔒 Security Guidelines
-
-- **Never commit secrets** (API keys, private keys, passwords)
-- Use **environment variables** for sensitive data
-- Follow **principle of least privilege**
-- **Validate all inputs**
-- Use **prepared statements** for database queries
-- **Sanitize user inputs**
-- Keep **dependencies updated**
-
-
-## 🐛 Reporting Bugs
-
-Use the GitHub issue template and include:
-
-- **Clear title** describing the bug
-- **Steps to reproduce** the issue
-- **Expected behavior**
-- **Actual behavior**
-- **Screenshots** (if applicable)
-- **Environment details** (OS, browser, versions)
-- **Error messages** (full stack trace if possible)
-- **For Stellar issues**: Include network (testnet/mainnet) and transaction hash
-
-## 💡 Suggesting Features
-
-Use the GitHub issue template and include:
-
-- **Clear title** describing the feature
-- **Problem statement** (what problem does this solve?)
-- **Proposed solution**
-- **Alternative solutions** considered
-- **Additional context** (mockups, examples, etc.)
-
-
-## 📞 Getting Help
-
-- **GitHub Issues**: For bugs and feature requests
-- **Discord**: [Join our server] (link TBD)
-- **Stellar Discord**: For Stellar-specific questions
 
 ## 📜 License
 
 By contributing to NOCIQ, you agree that your contributions will be licensed under the MIT License.
-
-## 🙏 Thank You!
-
-Your contributions make NOCIQ better for everyone. We appreciate your time and effort!
-
----
-
-**Happy coding! 🚀**
