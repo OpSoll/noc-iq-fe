@@ -8,11 +8,11 @@ interface PenaltiesRewardsChartProps {
 
 const formatCurrency = (value: number) => `$${value.toLocaleString()}`;
 
-const PenaltiesRewardsChart: React.FC<PenaltiesRewardsChartProps> = ({
+export default function PenaltiesRewardsChart({
   data,
   onPenaltyClick,
   onRewardClick,
-}) => {
+}: PenaltiesRewardsChartProps) {
   return (
     <div className="rounded-xl bg-white p-5 shadow-sm">
       <h3 className="mb-4 text-sm font-semibold text-gray-600 uppercase tracking-wide">
@@ -29,13 +29,17 @@ const PenaltiesRewardsChart: React.FC<PenaltiesRewardsChartProps> = ({
             >
               <span className="text-sm font-medium text-gray-700">{point.period}</span>
               <button
+                type="button"
                 onClick={() => onPenaltyClick?.(point)}
+                disabled={!onPenaltyClick}
                 className={`rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-600 ${onPenaltyClick ? "hover:bg-red-100 transition-colors cursor-pointer" : "cursor-default"}`}
               >
                 Penalties: {formatCurrency(point.penalties)}
               </button>
               <button
+                type="button"
                 onClick={() => onRewardClick?.(point)}
+                disabled={!onRewardClick}
                 className={`rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-600 ${onRewardClick ? "hover:bg-green-100 transition-colors cursor-pointer" : "cursor-default"}`}
               >
                 Rewards: {formatCurrency(point.rewards)}
@@ -46,6 +50,4 @@ const PenaltiesRewardsChart: React.FC<PenaltiesRewardsChartProps> = ({
       </div>
     </div>
   );
-};
-
-export default PenaltiesRewardsChart;
+}

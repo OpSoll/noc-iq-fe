@@ -1,12 +1,10 @@
 'use client';
 
-import { useMemo, useState } from 'react';
 import { useUrlSync } from '@/hooks/useUrlSync';
 import { PaymentService } from '@/services/paymentService';
-import type { Payment, PaymentStatus, PaymentType } from '@/types/payment';
+import type { Payment } from '@/types/payment';
 import { useQuery } from '@tanstack/react-query';
 import { PaymentDetailDrawer } from './payment-detail-drawer';
-import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Pagination,
   PaginationContent,
@@ -25,13 +23,31 @@ const URL_DEFAULTS = {
   page: '1',
   perPage: '20',
   paymentId: '',
-  sortKey: 'createdAt',
+  sortKey: 'created_at',
   sortDir: 'desc',
 };
 
+function formatAmount(payment: Payment) {
+  const sign = payment.type === 'penalty' ? '-' : '+';
+  return `${sign}$${payment.amount}`;
+}
+
+function getStatusBadge(status: string) {
+  switch (status.toUpperCase()) {
+    case 'CONFIRMED':
+      return 'bg-green-100 text-green-700';
+    case 'RELEASED':
+      return 'bg-blue-100 text-blue-700';
+    case 'REFUNDED':
+      return 'bg-yellow-100 text-yellow-700';
+    case 'FAILED':
+      return 'bg-red-100 text-red-700';
+    default:
+      return 'bg-gray-100 text-gray-700';
+  }
+}
+
 export function PaymentsView() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
   const [urlState, setUrlState] = useUrlSync(URL_DEFAULTS);
 
   const statusFilter = urlState.status;
@@ -87,7 +103,7 @@ export function PaymentsView() {
   if (error) {
     return (
       <div className="flex items-center justify-center p-8">
-        <p className="text-red-500">Failed to load payments. Please try again.</p>
+        <p className="text-red-500">Payments unavailable. Please try again.</p>
       </div>
     );
   }
@@ -117,8 +133,9 @@ export function PaymentsView() {
             aria-label="Filter by type"
           >
             <option value="all">All Types</option>
-            <option value="COMMISSION">Commission</option>
-            <option value="MILESTONE">Milestone</option>
+            <option value="reward">Reward</option>
+            <option value="penalty">Penalty</option>
+            <option value="manual">Manual</option>
           </select>
           <input
             type="date"
@@ -142,8 +159,8 @@ export function PaymentsView() {
           <thead className="border-b bg-gray-50 text-xs uppercase text-gray-500">
             <tr>
               <th className="px-4 py-3">
-                <button onClick={() => handleSort('createdAt')} className="hover:underline" aria-sort={sortKey === 'createdAt' ? sortDir === 'asc' ? 'ascending' : 'descending' : 'none'}>
-                  Date {sortKey === 'createdAt' && (sortDir === 'asc' ? 'â†‘' : 'â†“')}
+                <button onClick={() => handleSort('created_at')} className="hover:underline" aria-sort={sortKey === 'created_at' ? sortDir === 'asc' ? 'ascending' : 'descending' : 'none'}>
+                  Date {sortKey === 'created_at' && (sortDir === 'asc' ? '↑' : '↓')}
                 </button>
               </th>
               <th className="px-4 py-3">Amount</th>
@@ -179,22 +196,14 @@ export function PaymentsView() {
                   aria-label={`View payment ${payment.id}`}
                 >
                   <td className="px-4 py-3">{new Date(payment.createdAt).toLocaleDateString()}</td>
-                  <td className="px-4 py-3 font-medium">
-                    {payment.amountUsdc} {payment.assetCode}
-                  </td>
+                  <td className="px-4 py-3 font-medium">{formatAmount(payment)}</td>
                   <td className="px-4 py-3">
-                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                      payment.status === 'CONFIRMED' ? 'bg-green-100 text-green-700' :
-                      payment.status === 'RELEASED' ? 'bg-blue-100 text-blue-700' :
-                      payment.status === 'REFUNDED' ? 'bg-yellow-100 text-yellow-700' :
-                      payment.status === 'FAILED' ? 'bg-red-100 text-red-700' :
-                      'bg-gray-100 text-gray-700'
-                    }`}>
+                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${getStatusBadge(payment.status)}`}>
                       {payment.status}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-gray-600">{payment.type ?? 'N/A'}</td>
-                  <td className="px-4 py-3 text-gray-600">{payment.commissionId?.slice(0, 8)}...</td>
+                  <td className="px-4 py-3 text-gray-600">{payment.commissionId ? `${payment.commissionId.slice(0, 8)}...` : 'N/A'}</td>
                 </tr>
               ))
             )}
@@ -250,3 +259,5 @@ export function PaymentsView() {
     </div>
   );
 }
+
+export default PaymentsView;

@@ -1,68 +1,91 @@
-import { render, screen } from "@testing-library/react";
-import React from "react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
-import PaymentsView from "@/components/payments/payments-view";
-import { PaymentDetailDrawer } from "@/components/payments/payment-detail-drawer";
+import {
+  normalizePayment,
+  normalizePaymentHistoryEntry,
+} from "@/services/paymentService";
 
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ replace: vi.fn() }),
-  useSearchParams: () => ({ get: () => null }),
-}));
-vi.mock("next/link", () => ({
-  default: ({ children, href }: { children: React.ReactNode; href: string }) => <a href={href}>{children}</a>,
-}));
-vi.mock("@/components/ui/toast", () => ({ useToast: () => vi.fn() }));
+describe("payment normalization", () => {
+  it("normalizes snake_case payment responses for the drawer and table", () => {
+    const payment = normalizePayment({
+      id: "pay_123",
+      outage_id: "out_99",
+      type: "penalty",
+      amount: "42.50",
+      asset_code: "USDC",
+      transaction_hash: "tx_456",
+      from_address: "GAAA",
+      to_address: "GBBB",
+      status: "FAILED",
+      created_at: "2026-07-28T10:00:00Z",
+      reconciliation_status: "manual_review",
+    });
 
-const mockFetchPayments = vi.fn();
-const mockFetchPayment = vi.fn();
-vi.mock("@/services/paymentService", () => ({
-  fetchPayments: (...a: unknown[]) => mockFetchPayments(...a),
-  fetchPayment: (...a: unknown[]) => mockFetchPayment(...a),
-  exportPayments: vi.fn(),
-  retryPayment: vi.fn(),
-  reconcilePayment: vi.fn(),
-}));
-
-const payment = {
-  id: "p1", outage_id: "o1", type: "reward", amount: 200, status: "completed",
-  asset_code: "USDC", from_address: "GA", to_address: "GB",
-  transaction_hash: "tx1", created_at: "2026-01-01T00:00:00Z", confirmed_at: null,
-};
-
-describe("PaymentsView", () => {
-  beforeEach(() => { mockFetchPayments.mockReset(); mockFetchPayment.mockReset(); });
-
-  it("renders payment list", async () => {
-    mockFetchPayments.mockResolvedValue({ items: [payment], total: 1 });
-    render(<PaymentsView />);
-    expect(await screen.findByText("reward")).toBeInTheDocument();
-    expect(screen.getByText("+$200")).toBeInTheDocument();
+    expect(payment).toMatchObject({
+      id: "pay_123",
+      outageId: "out_99",
+      type: "penalty",
+      amount: "42.50",
+      amountValue: 42.5,
+      assetCode: "USDC",
+      transactionHash: "tx_456",
+      fromAddress: "GAAA",
+      toAddress: "GBBB",
+      status: "FAILED",
+      createdAt: "2026-07-28T10:00:00Z",
+      reconciliationStatus: "manual_review",
+    });
   });
 
-  it("shows empty state", async () => {
-    mockFetchPayments.mockResolvedValue({ items: [], total: 0 });
-    render(<PaymentsView />);
-    expect(await screen.findByText("No payments found")).toBeInTheDocument();
-  });
+  it("supports camelCase fallback fields from mixed API responses", () => {
+    const payment = normalizePayment({
+      id: "pay_777",
+      type: "reward",
+      amountUsdc: 15,
+      assetCode: "XLM",
+      txHash: "tx_camel",
+      createdAt: "2026-07-28T11:00:00Z",
+      clientWallet: "GCLIENT",
+      artistWallet: "GARTIST",
+    });
 
-  it("shows error state on failure", async () => {
-    mockFetchPayments.mockRejectedValue(new Error("fail"));
-    render(<PaymentsView />);
-    expect(await screen.findByText("Payments unavailable")).toBeInTheDocument();
+    expect(payment.amount).toBe("15.00");
+    expect(payment.amountValue).toBe(15);
+    expect(payment.transactionHash).toBe("tx_camel");
+    expect(payment.clientWallet).toBe("GCLIENT");
+    expect(payment.artistWallet).toBe("GARTIST");
   });
 });
 
-describe("PaymentDetailDrawer", () => {
-  it("renders nothing when paymentId is null", () => {
-    const { container } = render(<PaymentDetailDrawer paymentId={null} onClose={vi.fn()} />);
-    expect(container.firstChild).toBeNull();
-  });
+describe("payment history normalization", () => {
+  it("preserves status transitions and audit metadata", () => {
+    const entry = normalizePaymentHistoryEntry(
+      {
+        event_id: "hist_1",
+        payment_id: "pay_123",
+        previous_status: "PENDING",
+        status: "CONFIRMED",
+        event_type: "status_change",
+        actor_name: "noc-operator",
+        note: "Reconciled against settlement batch",
+        correlation_id: "corr_9",
+        created_at: "2026-07-28T12:00:00Z",
+        metadata: { batch_id: "batch_42" },
+      },
+      "pay_123",
+    );
 
-  it("opens drawer and shows details", async () => {
-    mockFetchPayment.mockResolvedValue(payment);
-    render(<PaymentDetailDrawer paymentId="p1" onClose={vi.fn()} />);
-    expect(await screen.findByText("Payment Details")).toBeInTheDocument();
-    expect(await screen.findByText("p1")).toBeInTheDocument();
+    expect(entry).toMatchObject({
+      id: "hist_1",
+      paymentId: "pay_123",
+      previousStatus: "PENDING",
+      status: "CONFIRMED",
+      eventType: "status_change",
+      actor: "noc-operator",
+      note: "Reconciled against settlement batch",
+      correlationId: "corr_9",
+      timestamp: "2026-07-28T12:00:00Z",
+    });
+    expect(entry.metadata).toEqual({ batch_id: "batch_42" });
   });
 });

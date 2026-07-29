@@ -7,6 +7,8 @@ interface KPICardProps {
   subtitle?: string;
   highlight?: "green" | "red" | "blue" | "yellow";
   confidence?: KPIConfidence;
+  onClick?: () => void;
+  actionLabel?: string;
 }
 
 const highlightMap: Record<string, string> = {
@@ -29,35 +31,76 @@ const KPICard: React.FC<KPICardProps> = ({
   subtitle,
   highlight = "blue",
   confidence,
+  onClick,
+  actionLabel,
 }) => {
+  const interactive = typeof onClick === "function";
+
   return (
     <div
-      className={`rounded-xl border-l-4 p-5 shadow-sm ${highlightMap[highlight]}`}
+      className={`rounded-xl border-l-4 shadow-sm ${highlightMap[highlight]} ${interactive ? "transition-transform hover:-translate-y-0.5" : ""}`}
     >
-      <div className="flex items-start justify-between">
-        <p className="text-sm font-medium text-gray-500">{title}</p>
-        {confidence && (
-          <div className="flex flex-col items-end gap-0.5">
-            <span
-              className={`text-xs font-medium ${
-                confidence.isSparse ? "text-amber-500" : "text-gray-400"
-              }`}
-              title={confidence.warning}
-            >
-              {confidence.confidence}% conf.
-            </span>
-            <span className="text-[10px] text-gray-400">
-              n={confidence.sampleSize}
-            </span>
+      {interactive ? (
+        <button
+          type="button"
+          onClick={onClick}
+          aria-label={actionLabel ?? `Open ${title} details`}
+          className="w-full p-5 text-left focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-inset"
+        >
+          <div className="flex items-start justify-between">
+            <p className="text-sm font-medium text-gray-500">{title}</p>
+            {confidence && (
+              <div className="flex flex-col items-end gap-0.5">
+                <span
+                  className={`text-xs font-medium ${
+                    confidence.isSparse ? "text-amber-500" : "text-gray-400"
+                  }`}
+                  title={confidence.warning}
+                >
+                  {confidence.confidence}% conf.
+                </span>
+                <span className="text-[10px] text-gray-400">
+                  n={confidence.sampleSize}
+                </span>
+              </div>
+            )}
           </div>
-        )}
-      </div>
-      <p className={`mt-1 text-3xl font-bold ${valueColorMap[highlight]}`}>
-        {value}
-      </p>
-      {subtitle && <p className="mt-1 text-xs text-gray-400">{subtitle}</p>}
-      {confidence?.warning && (
-        <p className="mt-1 text-xs text-amber-500">{confidence.warning}</p>
+          <p className={`mt-1 text-3xl font-bold ${valueColorMap[highlight]}`}>
+            {value}
+          </p>
+          {subtitle && <p className="mt-1 text-xs text-gray-400">{subtitle}</p>}
+          {confidence?.warning && (
+            <p className="mt-1 text-xs text-amber-500">{confidence.warning}</p>
+          )}
+        </button>
+      ) : (
+        <div className="p-5">
+          <div className="flex items-start justify-between">
+            <p className="text-sm font-medium text-gray-500">{title}</p>
+            {confidence && (
+              <div className="flex flex-col items-end gap-0.5">
+                <span
+                  className={`text-xs font-medium ${
+                    confidence.isSparse ? "text-amber-500" : "text-gray-400"
+                  }`}
+                  title={confidence.warning}
+                >
+                  {confidence.confidence}% conf.
+                </span>
+                <span className="text-[10px] text-gray-400">
+                  n={confidence.sampleSize}
+                </span>
+              </div>
+            )}
+          </div>
+          <p className={`mt-1 text-3xl font-bold ${valueColorMap[highlight]}`}>
+            {value}
+          </p>
+          {subtitle && <p className="mt-1 text-xs text-gray-400">{subtitle}</p>}
+          {confidence?.warning && (
+            <p className="mt-1 text-xs text-amber-500">{confidence.warning}</p>
+          )}
+        </div>
       )}
     </div>
   );
