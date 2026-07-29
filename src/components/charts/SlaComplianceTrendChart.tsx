@@ -1,14 +1,16 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 // Closes #358: SLA compliance trend chart with configurable time windows
 // Closes #352: minimal locale infrastructure used for date formatting
 const LOCALE_KEY = "noc_locale";
 export function useLocale() {
-  const [locale, setLocale] = useState("en-US");
-  useEffect(() => {
-    const stored = typeof window !== "undefined" ? localStorage.getItem(LOCALE_KEY) : null;
-    if (stored) setLocale(stored);
-  }, []);
+  const [locale, setLocale] = useState(() => {
+    return (
+      (typeof window !== "undefined"
+        ? localStorage.getItem(LOCALE_KEY)
+        : null) ?? "en-US"
+    );
+  });
   const changeLocale = (next: string) => {
     setLocale(next);
     if (typeof window !== "undefined") localStorage.setItem(LOCALE_KEY, next);
@@ -18,7 +20,11 @@ export function useLocale() {
 export type SlaTrendPoint = { date: string; compliancePct: number };
 const WINDOWS = { "7d": 7, "30d": 30, "90d": 90 } as const;
 type WindowKey = keyof typeof WINDOWS;
-export function SlaComplianceTrendChart({ points }: { points: SlaTrendPoint[] }) {
+export function SlaComplianceTrendChart({
+  points,
+}: {
+  points: SlaTrendPoint[];
+}) {
   const { locale } = useLocale();
   const [windowKey, setWindowKey] = useState<WindowKey>("30d");
   const visible = points.slice(-WINDOWS[windowKey]);
@@ -34,7 +40,11 @@ export function SlaComplianceTrendChart({ points }: { points: SlaTrendPoint[] })
     <div>
       <div className="flex gap-2 mb-2 text-sm">
         {(Object.keys(WINDOWS) as WindowKey[]).map((k) => (
-          <button key={k} onClick={() => setWindowKey(k)} className={k === windowKey ? "font-bold" : ""}>
+          <button
+            key={k}
+            onClick={() => setWindowKey(k)}
+            className={k === windowKey ? "font-bold" : ""}
+          >
             {k}
           </button>
         ))}
@@ -51,7 +61,9 @@ export function SlaComplianceTrendChart({ points }: { points: SlaTrendPoint[] })
         <path d={path} fill="none" stroke="currentColor" strokeWidth={2} />
       </svg>
       {last && (
-        <p className="text-xs text-muted-foreground">{new Intl.DateTimeFormat(locale).format(new Date(last.date))}</p>
+        <p className="text-xs text-muted-foreground">
+          {new Intl.DateTimeFormat(locale).format(new Date(last.date))}
+        </p>
       )}
     </div>
   );

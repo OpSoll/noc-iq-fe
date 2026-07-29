@@ -21,7 +21,9 @@ interface AccessibilityContextValue {
 
 const STORAGE_KEY = "noc_a11y_mode";
 
-const AccessibilityContext = createContext<AccessibilityContextValue | null>(null);
+const AccessibilityContext = createContext<AccessibilityContextValue | null>(
+  null,
+);
 
 function getStoredMode(): AccessibilityMode {
   if (typeof window === "undefined") return "default";
@@ -40,13 +42,9 @@ function getStoredMode(): AccessibilityMode {
 }
 
 export function AccessibilityProvider({ children }: { children: ReactNode }) {
-  const [mode, setModeState] = useState<AccessibilityMode>("default");
-  const [hydrated, setHydrated] = useState(false);
-
-  useEffect(() => {
-    setModeState(getStoredMode());
-    setHydrated(true);
-  }, []);
+  const [mode, setModeState] = useState<AccessibilityMode>(() =>
+    getStoredMode(),
+  );
 
   const setMode = useCallback((newMode: AccessibilityMode) => {
     setModeState(newMode);
@@ -88,9 +86,6 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
     [mode, setMode],
   );
 
-  // Don't render with incorrect mode before hydration
-  if (!hydrated) return <>{children}</>;
-
   return (
     <AccessibilityContext.Provider value={value}>
       {children}
@@ -101,7 +96,9 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
 export function useAccessibility(): AccessibilityContextValue {
   const context = useContext(AccessibilityContext);
   if (!context) {
-    throw new Error("useAccessibility must be used within AccessibilityProvider");
+    throw new Error(
+      "useAccessibility must be used within AccessibilityProvider",
+    );
   }
   return context;
 }

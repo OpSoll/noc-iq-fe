@@ -39,7 +39,10 @@ export function announce(message: string) {
 
 export function LiveRegion() {
   const [message, setMessage] = useState("");
-  notify = setMessage;
+
+  useEffect(() => {
+    notify = setMessage;
+  }, []);
 
   return (
     <div aria-live="polite" role="status" className="sr-only">

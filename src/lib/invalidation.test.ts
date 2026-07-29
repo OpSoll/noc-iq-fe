@@ -9,6 +9,20 @@ describe("getInvalidations", () => {
   it("returns empty for unknown mutations", () => {
     expect(getInvalidations("unknown.mutation")).toEqual([]);
   });
+  it("outage mutations invalidate dashboard root key", () => {
+    const keys = getInvalidations("outage.create");
+    const flatKeys = keys.map((k) => JSON.stringify(k));
+    expect(flatKeys.some((k) => k.includes('"dashboard"'))).toBe(true);
+  });
+  it("wallet mutations do NOT invalidate dashboard", () => {
+    const keys = getInvalidations("wallet.create");
+    const flatKeys = keys.map((k) => JSON.stringify(k));
+    expect(flatKeys.some((k) => k.includes('"dashboard"'))).toBe(false);
+  });
+  it("payment retry and reconcile invalidate dashboard", () => {
+    expect(getInvalidations("payment.retry").length).toBeGreaterThan(0);
+    expect(getInvalidations("payment.reconcile").length).toBeGreaterThan(0);
+  });
 });
 
 describe("invalidationMap", () => {
@@ -21,7 +35,7 @@ describe("invalidationMap", () => {
   it("no full-cache blast patterns", () => {
     for (const entry of invalidationMap) {
       for (const key of entry.invalidate) {
-        expect(key).not.toEqual(["*"]);
+        expect(JSON.stringify(key)).not.toContain('"*"');
       }
     }
   });

@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback, useSearchParams } from 'next/navigation';
+import { useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 
 export function useUrlSync<T extends Record<string, string>>(defaults: T) {
   const searchParams = useSearchParams();

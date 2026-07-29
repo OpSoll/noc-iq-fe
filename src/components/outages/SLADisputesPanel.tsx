@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { Badge } from "@/components/ui/badge";
@@ -41,38 +41,20 @@ interface ResolvePayload {
   note?: string;
 }
 
-export function SLADisputesPanel({
-  outageId,
-  canResolve = false,
-}: Props) {
+export function SLADisputesPanel({ outageId, canResolve = false }: Props) {
   const queryClient = useQueryClient();
 
-  const [statusFilter, setStatusFilter] = useState<
-    DisputeStatus | ""
-  >("");
+  const [statusFilter, setStatusFilter] = useState<DisputeStatus | "">("");
   const [page, setPage] = useState(1);
   const [reason, setReason] = useState("");
-  const [noteInputs, setNoteInputs] = useState<Record<string, string>>(
-    {}
-  );
+  const [noteInputs, setNoteInputs] = useState<Record<string, string>>({});
 
   const queryKey = useMemo(
     () => ["sla-disputes", outageId, statusFilter, page],
-    [outageId, statusFilter, page]
+    [outageId, statusFilter, page],
   );
 
-  // Reset page on filter change
-  useEffect(() => {
-    setPage(1);
-  }, [statusFilter]);
-
-  const {
-    data,
-    isLoading,
-    isFetching,
-    isError,
-    error,
-  } = useQuery({
+  const { data, isLoading, isFetching, isError, error } = useQuery({
     queryKey,
     queryFn: () =>
       getDisputes({
@@ -89,10 +71,7 @@ export function SLADisputesPanel({
   const disputes: SLADispute[] = data?.items ?? [];
   const total = data?.total ?? 0;
 
-  const totalPages = Math.max(
-    1,
-    Math.ceil(total / PAGE_SIZE)
-  );
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   const invalidateDisputes = async () => {
     await queryClient.invalidateQueries({
@@ -114,11 +93,7 @@ export function SLADisputesPanel({
   });
 
   const resolveMutation = useMutation({
-    mutationFn: async ({
-      disputeId,
-      action,
-      note,
-    }: ResolvePayload) =>
+    mutationFn: async ({ disputeId, action, note }: ResolvePayload) =>
       resolveDispute(disputeId, {
         action,
         resolution_note: note,
@@ -129,10 +104,7 @@ export function SLADisputesPanel({
     },
   });
 
-  const handleAction = (
-    dispute: SLADispute,
-    action: "resolve" | "reject"
-  ) => {
+  const handleAction = (dispute: SLADispute, action: "resolve" | "reject") => {
     const note = noteInputs[dispute.id]?.trim();
 
     resolveMutation.mutate({
@@ -147,8 +119,7 @@ export function SLADisputesPanel({
     }));
   };
 
-  const isSubmitting =
-    flagMutation.isPending || resolveMutation.isPending;
+  const isSubmitting = flagMutation.isPending || resolveMutation.isPending;
 
   return (
     <Card className="md:col-span-2">
@@ -157,9 +128,7 @@ export function SLADisputesPanel({
           <CardTitle>SLA Disputes</CardTitle>
 
           {isFetching && !isLoading ? (
-            <span className="text-xs text-slate-400">
-              Refreshing...
-            </span>
+            <span className="text-xs text-slate-400">Refreshing...</span>
           ) : null}
         </div>
 
@@ -194,9 +163,7 @@ export function SLADisputesPanel({
               disabled={!reason.trim() || flagMutation.isPending}
               onClick={() => flagMutation.mutate()}
             >
-              {flagMutation.isPending
-                ? "Submitting..."
-                : "Flag dispute"}
+              {flagMutation.isPending ? "Submitting..." : "Flag dispute"}
             </Button>
           </div>
 
@@ -232,16 +199,17 @@ export function SLADisputesPanel({
               <button
                 key={status || "all"}
                 type="button"
-                onClick={() => setStatusFilter(status)}
+                onClick={() => {
+                  setStatusFilter(status);
+                  setPage(1);
+                }}
                 className={`rounded-full border px-3 py-1 text-xs font-medium capitalize transition-colors ${
                   isActive
                     ? "border-slate-900 bg-slate-900 text-white"
                     : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100"
                 }`}
               >
-                {status === ""
-                  ? "All"
-                  : status.replace("_", " ")}
+                {status === "" ? "All" : status.replace("_", " ")}
               </button>
             );
           })}
@@ -271,8 +239,7 @@ export function SLADisputesPanel({
             </p>
 
             <p className="mt-1 text-xs text-red-600">
-              {(error as Error)?.message ??
-                "Something went wrong."}
+              {(error as Error)?.message ?? "Something went wrong."}
             </p>
           </div>
         ) : null}
@@ -285,8 +252,7 @@ export function SLADisputesPanel({
             </p>
 
             <p className="mt-1 text-xs text-slate-500">
-              There are currently no disputes matching this
-              filter.
+              There are currently no disputes matching this filter.
             </p>
           </div>
         ) : null}
@@ -298,18 +264,13 @@ export function SLADisputesPanel({
 
             return (
               <div key={dispute.id}>
-                {index > 0 ? (
-                  <Separator className="my-4" />
-                ) : null}
+                {index > 0 ? <Separator className="my-4" /> : null}
 
                 <div className="space-y-3">
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-center gap-2">
                       <Badge
-                        variant={
-                          statusVariant[dispute.status] ??
-                          "outline"
-                        }
+                        variant={statusVariant[dispute.status] ?? "outline"}
                         className="capitalize"
                       >
                         {dispute.status.replace("_", " ")}
@@ -321,9 +282,7 @@ export function SLADisputesPanel({
                     </div>
 
                     <span className="text-xs text-slate-400">
-                      {new Date(
-                        dispute.created_at
-                      ).toLocaleString()}
+                      {new Date(dispute.created_at).toLocaleString()}
                     </span>
                   </div>
 
@@ -346,8 +305,7 @@ export function SLADisputesPanel({
                   ) : null}
 
                   {/* Resolver actions */}
-                  {canResolve &&
-                  dispute.status === "open" ? (
+                  {canResolve && dispute.status === "open" ? (
                     <div className="space-y-2 rounded-lg border border-slate-100 bg-slate-50 p-3">
                       <input
                         className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
@@ -356,8 +314,7 @@ export function SLADisputesPanel({
                         onChange={(e) =>
                           setNoteInputs((prev) => ({
                             ...prev,
-                            [dispute.id]:
-                              e.target.value,
+                            [dispute.id]: e.target.value,
                           }))
                         }
                         disabled={isSubmitting}
@@ -368,12 +325,7 @@ export function SLADisputesPanel({
                         <Button
                           size="sm"
                           disabled={isSubmitting}
-                          onClick={() =>
-                            handleAction(
-                              dispute,
-                              "resolve"
-                            )
-                          }
+                          onClick={() => handleAction(dispute, "resolve")}
                         >
                           {resolveMutation.isPending
                             ? "Processing..."
@@ -384,12 +336,7 @@ export function SLADisputesPanel({
                           size="sm"
                           variant="outline"
                           disabled={isSubmitting}
-                          onClick={() =>
-                            handleAction(
-                              dispute,
-                              "reject"
-                            )
-                          }
+                          onClick={() => handleAction(dispute, "reject")}
                         >
                           Reject
                         </Button>
@@ -405,12 +352,9 @@ export function SLADisputesPanel({
         {totalPages > 1 ? (
           <div className="flex flex-col gap-3 border-t border-slate-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="text-xs text-slate-500">
-              Showing page{" "}
-              <span className="font-medium">{page}</span> of{" "}
-              <span className="font-medium">
-                {totalPages}
-              </span>{" "}
-              ({total} total disputes)
+              Showing page <span className="font-medium">{page}</span> of{" "}
+              <span className="font-medium">{totalPages}</span> ({total} total
+              disputes)
             </div>
 
             <div className="flex items-center gap-2">
@@ -418,9 +362,7 @@ export function SLADisputesPanel({
                 variant="outline"
                 size="sm"
                 disabled={page <= 1}
-                onClick={() =>
-                  setPage((prev) => prev - 1)
-                }
+                onClick={() => setPage((prev) => prev - 1)}
               >
                 Previous
               </Button>
@@ -429,9 +371,7 @@ export function SLADisputesPanel({
                 variant="outline"
                 size="sm"
                 disabled={page >= totalPages}
-                onClick={() =>
-                  setPage((prev) => prev + 1)
-                }
+                onClick={() => setPage((prev) => prev + 1)}
               >
                 Next
               </Button>

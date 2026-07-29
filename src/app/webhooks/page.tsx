@@ -30,8 +30,9 @@ export default function WebhooksPage() {
   const [formEvents, setFormEvents] = useState<string[]>([]);
   const [formError, setFormError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [draftRestoreShown, setDraftRestoreShown] = useState(false);
-  const [draftRestored, setDraftRestored] = useState(false);
+  const [hasDraft] = useState(() => !!loadDraft(DRAFT_KEY));
+  const [draftRestoreShown, setDraftRestoreShown] = useState(hasDraft);
+  const [draftRestored, setDraftRestored] = useState(hasDraft);
 
   const searchParams = useSearchParams();
   const [statusFilter, setStatusFilter] = useState(
@@ -40,15 +41,6 @@ export default function WebhooksPage() {
   const [eventFilter, setEventFilter] = useState(
     searchParams.get("event") || "all",
   );
-
-  useEffect(() => {
-    if (!showForm || editingId) return;
-    const draft = loadDraft(DRAFT_KEY);
-    if (draft && !draftRestored) {
-      setDraftRestoreShown(true);
-      setDraftRestored(true);
-    }
-  }, [showForm, editingId, draftRestored]);
 
   useEffect(() => {
     if (!showForm || editingId || !draftRestored) return;
@@ -92,15 +84,12 @@ export default function WebhooksPage() {
 
   const filteredDeliveries = useMemo(() => {
     return deliveries.filter((d) => {
+      const code = d.response_code ?? -1;
       const statusMatch =
         statusFilter === "all" ||
-        (statusFilter === "success" &&
-          d.response_code >= 200 &&
-          d.response_code < 300) ||
-        (statusFilter === "client_error" &&
-          d.response_code >= 400 &&
-          d.response_code < 500) ||
-        (statusFilter === "server_error" && d.response_code >= 500);
+        (statusFilter === "success" && code >= 200 && code < 300) ||
+        (statusFilter === "client_error" && code >= 400 && code < 500) ||
+        (statusFilter === "server_error" && code >= 500);
       const eventMatch = eventFilter === "all" || d.event === eventFilter;
       return statusMatch && eventMatch;
     });

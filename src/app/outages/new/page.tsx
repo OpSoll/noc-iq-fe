@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createOutage } from "@/services/outages";
 import { saveDraft, clearDraft, loadDraft } from "@/lib/drafts";
@@ -26,27 +26,22 @@ const INITIAL_FORM = {
 
 export default function NewOutagePage() {
   const router = useRouter();
-  const [restored, setRestored] = useState(false);
+  const [hasDraft] = useState(() => !!loadDraft(DRAFT_KEY));
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [draftRestoreShown, setDraftRestoreShown] = useState(false);
+  const [draftRestoreShown, setDraftRestoreShown] = useState(hasDraft);
 
   const [form, setForm] = useState(INITIAL_FORM);
 
   useEffect(() => {
-    const draft = loadDraft(DRAFT_KEY);
-    if (draft && !restored) {
-      setDraftRestoreShown(true);
-      setRestored(true);
-    }
-  }, [restored]);
-
-  useEffect(() => {
-    if (restored) {
-      const timer = setInterval(() => saveDraft(DRAFT_KEY, form as unknown as Record<string, string>), 3000);
+    if (hasDraft) {
+      const timer = setInterval(
+        () => saveDraft(DRAFT_KEY, form as unknown as Record<string, string>),
+        3000,
+      );
       return () => clearInterval(timer);
     }
-  }, [restored, form]);
+  }, [hasDraft, form]);
 
   function restoreDraft() {
     const draft = loadDraft(DRAFT_KEY);
@@ -90,7 +85,10 @@ export default function NewOutagePage() {
       detected_at: new Date(form.detected_at).toISOString(),
       description: form.description.trim(),
       affected_services: form.affected_services
-        ? form.affected_services.split(",").map((s) => s.trim()).filter(Boolean)
+        ? form.affected_services
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean)
         : [],
       affected_subscribers: form.affected_subscribers
         ? parseInt(form.affected_subscribers, 10)
@@ -123,9 +121,19 @@ export default function NewOutagePage() {
       {draftRestoreShown && (
         <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
           <span>You have an unsaved draft. </span>
-          <button onClick={restoreDraft} className="font-medium underline hover:text-amber-900">Restore</button>
+          <button
+            onClick={restoreDraft}
+            className="font-medium underline hover:text-amber-900"
+          >
+            Restore
+          </button>
           <span> | </span>
-          <button onClick={dismissDraft} className="font-medium underline hover:text-amber-900">Discard</button>
+          <button
+            onClick={dismissDraft}
+            className="font-medium underline hover:text-amber-900"
+          >
+            Discard
+          </button>
         </div>
       )}
 
@@ -135,7 +143,10 @@ export default function NewOutagePage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+      >
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className="mb-1 block text-sm font-medium text-slate-700">
@@ -150,7 +161,9 @@ export default function NewOutagePage() {
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Site ID</label>
+            <label className="mb-1 block text-sm font-medium text-slate-700">
+              Site ID
+            </label>
             <input
               className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
               value={form.site_id}
@@ -162,19 +175,27 @@ export default function NewOutagePage() {
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Severity</label>
+            <label className="mb-1 block text-sm font-medium text-slate-700">
+              Severity
+            </label>
             <select
               className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
               value={form.severity}
               onChange={(e) => set("severity", e.target.value)}
             >
-              {(["critical", "high", "medium", "low"] as Severity[]).map((s) => (
-                <option key={s} value={s}>{s}</option>
-              ))}
+              {(["critical", "high", "medium", "low"] as Severity[]).map(
+                (s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ),
+              )}
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Status</label>
+            <label className="mb-1 block text-sm font-medium text-slate-700">
+              Status
+            </label>
             <select
               className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
               value={form.status}
@@ -187,7 +208,9 @@ export default function NewOutagePage() {
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">Detected At</label>
+          <label className="mb-1 block text-sm font-medium text-slate-700">
+            Detected At
+          </label>
           <input
             type="datetime-local"
             className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
@@ -237,7 +260,9 @@ export default function NewOutagePage() {
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Assigned To</label>
+            <label className="mb-1 block text-sm font-medium text-slate-700">
+              Assigned To
+            </label>
             <input
               className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
               value={form.assigned_to}

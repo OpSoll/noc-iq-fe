@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 
 type ErrorBudgetDataPoint = {
   date: string;
@@ -53,7 +53,7 @@ function generateMockData(days: number): ErrorBudgetDataPoint[] {
 
 function exportBudgetReport(
   data: ErrorBudgetDataPoint[],
-  config: ThresholdConfig
+  config: ThresholdConfig,
 ) {
   const totalReqs = data.reduce((sum, d) => sum + d.totalRequests, 0);
   const totalErrs = data.reduce((sum, d) => sum + d.errors, 0);
@@ -67,12 +67,16 @@ function exportBudgetReport(
       total_requests: totalReqs,
       total_errors: totalErrs,
       current_sla: +sla.toFixed(4),
-      budget_remaining_pp: +Math.max(0, sla - (100 - config.percent)).toFixed(4),
+      budget_remaining_pp: +Math.max(0, sla - (100 - config.percent)).toFixed(
+        4,
+      ),
     },
     daily_data: data,
   };
 
-  const blob = new Blob([JSON.stringify(report, null, 2)], { type: "application/json" });
+  const blob = new Blob([JSON.stringify(report, null, 2)], {
+    type: "application/json",
+  });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
@@ -82,23 +86,23 @@ function exportBudgetReport(
 }
 
 export default function ErrorBudgetPage() {
-  const [config, setConfig] = useState<ThresholdConfig>(DEFAULT_CONFIG);
-  const [loaded, setLoaded] = useState(false);
+  const [config, setConfig] = useState<ThresholdConfig>(() => loadConfig());
   const [showSettings, setShowSettings] = useState(false);
 
-  useEffect(() => {
-    setConfig(loadConfig());
-    setLoaded(true);
-  }, []);
-
-  const data = useMemo(() => generateMockData(config.windowDays), [config.windowDays]);
+  const data = useMemo(
+    () => generateMockData(config.windowDays),
+    [config.windowDays],
+  );
 
   const totalReqs = data.reduce((sum, d) => sum + d.totalRequests, 0);
   const totalErrs = data.reduce((sum, d) => sum + d.errors, 0);
-  const currentSla = totalReqs > 0 ? ((totalReqs - totalErrs) / totalReqs) * 100 : 100;
+  const currentSla =
+    totalReqs > 0 ? ((totalReqs - totalErrs) / totalReqs) * 100 : 100;
   const budgetRemaining = Math.max(0, currentSla - (100 - config.percent));
   const breaches = data.filter(
-    (d) => d.totalRequests > 0 && ((d.totalRequests - d.errors) / d.totalRequests) * 100 < config.percent
+    (d) =>
+      d.totalRequests > 0 &&
+      ((d.totalRequests - d.errors) / d.totalRequests) * 100 < config.percent,
   ).length;
 
   function updateThreshold(percent: number) {
@@ -113,13 +117,13 @@ export default function ErrorBudgetPage() {
     saveConfig(next);
   }
 
-  if (!loaded) return null;
-
   return (
     <div className="mx-auto max-w-5xl space-y-8 p-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Error Budget Dashboard</h1>
+          <h1 className="text-2xl font-bold text-slate-900">
+            Error Budget Dashboard
+          </h1>
           <p className="mt-1 text-sm text-slate-500">
             Route-level error rates and SLA budget tracking
           </p>
@@ -142,17 +146,23 @@ export default function ErrorBudgetPage() {
 
       {showSettings && (
         <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h3 className="mb-4 text-sm font-semibold text-slate-700">Configuration</h3>
+          <h3 className="mb-4 text-sm font-semibold text-slate-700">
+            Configuration
+          </h3>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <label className="space-y-1 text-xs">
-              <span className="font-medium text-slate-600">SLA Threshold (%)</span>
+              <span className="font-medium text-slate-600">
+                SLA Threshold (%)
+              </span>
               <input
                 type="number"
                 min={90}
                 max={100}
                 step={0.1}
                 value={config.percent}
-                onChange={(e) => updateThreshold(parseFloat(e.target.value) || 99.5)}
+                onChange={(e) =>
+                  updateThreshold(parseFloat(e.target.value) || 99.5)
+                }
                 className="w-full rounded border border-slate-200 bg-white px-3 py-2 text-sm"
               />
             </label>
@@ -164,7 +174,9 @@ export default function ErrorBudgetPage() {
                 className="w-full rounded border border-slate-200 bg-white px-3 py-2 text-sm"
               >
                 {[7, 14, 30, 60, 90].map((d) => (
-                  <option key={d} value={d}>{d} days</option>
+                  <option key={d} value={d}>
+                    {d} days
+                  </option>
                 ))}
               </select>
             </label>
@@ -178,26 +190,38 @@ export default function ErrorBudgetPage() {
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <div className="rounded-xl border bg-white p-5 shadow-sm">
           <p className="text-xs text-slate-500">Current SLA</p>
-          <p className={`mt-1 text-3xl font-bold ${currentSla >= config.percent ? "text-green-600" : "text-red-600"}`}>
+          <p
+            className={`mt-1 text-3xl font-bold ${currentSla >= config.percent ? "text-green-600" : "text-red-600"}`}
+          >
             {currentSla.toFixed(2)}%
           </p>
           <p className="text-xs text-slate-400">threshold: {config.percent}%</p>
         </div>
         <div className="rounded-xl border bg-white p-5 shadow-sm">
           <p className="text-xs text-slate-500">Budget Remaining</p>
-          <p className={`mt-1 text-3xl font-bold ${budgetRemaining > 0 ? "text-green-600" : "text-red-600"}`}>
+          <p
+            className={`mt-1 text-3xl font-bold ${budgetRemaining > 0 ? "text-green-600" : "text-red-600"}`}
+          >
             {budgetRemaining.toFixed(2)}pp
           </p>
-          <p className="text-xs text-slate-400">of {(100 - config.percent).toFixed(1)}pp allowed</p>
+          <p className="text-xs text-slate-400">
+            of {(100 - config.percent).toFixed(1)}pp allowed
+          </p>
         </div>
         <div className="rounded-xl border bg-white p-5 shadow-sm">
           <p className="text-xs text-slate-500">Total Requests</p>
-          <p className="mt-1 text-3xl font-bold text-slate-900">{totalReqs.toLocaleString()}</p>
-          <p className="text-xs text-slate-400">over {config.windowDays} days</p>
+          <p className="mt-1 text-3xl font-bold text-slate-900">
+            {totalReqs.toLocaleString()}
+          </p>
+          <p className="text-xs text-slate-400">
+            over {config.windowDays} days
+          </p>
         </div>
         <div className="rounded-xl border bg-white p-5 shadow-sm">
           <p className="text-xs text-slate-500">Threshold Breaches</p>
-          <p className={`mt-1 text-3xl font-bold ${breaches === 0 ? "text-green-600" : "text-red-600"}`}>
+          <p
+            className={`mt-1 text-3xl font-bold ${breaches === 0 ? "text-green-600" : "text-red-600"}`}
+          >
             {breaches}
           </p>
           <p className="text-xs text-slate-400">of {config.windowDays} days</p>
@@ -205,7 +229,9 @@ export default function ErrorBudgetPage() {
       </div>
 
       <div className="rounded-xl border bg-white p-6 shadow-sm">
-        <h3 className="mb-4 text-sm font-semibold text-slate-700">Daily Error Rate Trend</h3>
+        <h3 className="mb-4 text-sm font-semibold text-slate-700">
+          Daily Error Rate Trend
+        </h3>
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
             <thead className="border-b bg-slate-50 text-left text-xs font-semibold uppercase text-slate-500">
@@ -219,18 +245,31 @@ export default function ErrorBudgetPage() {
             </thead>
             <tbody className="divide-y">
               {data.slice(-14).map((d) => {
-                const sla = d.totalRequests > 0 ? ((d.totalRequests - d.errors) / d.totalRequests) * 100 : 100;
+                const sla =
+                  d.totalRequests > 0
+                    ? ((d.totalRequests - d.errors) / d.totalRequests) * 100
+                    : 100;
                 const passed = sla >= config.percent;
                 return (
                   <tr key={d.date} className="hover:bg-slate-50">
-                    <td className="px-3 py-2 font-medium text-slate-700">{d.date}</td>
-                    <td className="px-3 py-2 text-right text-slate-600">{d.totalRequests.toLocaleString()}</td>
-                    <td className="px-3 py-2 text-right text-slate-600">{d.errors}</td>
-                    <td className={`px-3 py-2 text-right font-medium ${passed ? "text-green-600" : "text-red-600"}`}>
+                    <td className="px-3 py-2 font-medium text-slate-700">
+                      {d.date}
+                    </td>
+                    <td className="px-3 py-2 text-right text-slate-600">
+                      {d.totalRequests.toLocaleString()}
+                    </td>
+                    <td className="px-3 py-2 text-right text-slate-600">
+                      {d.errors}
+                    </td>
+                    <td
+                      className={`px-3 py-2 text-right font-medium ${passed ? "text-green-600" : "text-red-600"}`}
+                    >
                       {sla.toFixed(2)}%
                     </td>
                     <td className="px-3 py-2 text-right">
-                      <span className={`rounded px-2 py-0.5 text-xs font-medium ${passed ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                      <span
+                        className={`rounded px-2 py-0.5 text-xs font-medium ${passed ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
+                      >
                         {passed ? "OK" : "BREACH"}
                       </span>
                     </td>
@@ -241,7 +280,10 @@ export default function ErrorBudgetPage() {
           </table>
         </div>
         {data.length > 14 && (
-          <p className="mt-2 text-xs text-slate-400">Showing last 14 of {data.length} days. Export full report for all data.</p>
+          <p className="mt-2 text-xs text-slate-400">
+            Showing last 14 of {data.length} days. Export full report for all
+            data.
+          </p>
         )}
       </div>
     </div>

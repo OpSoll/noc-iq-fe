@@ -16,6 +16,7 @@ import {
 import { useUrlSync } from "@/hooks/useUrlSync";
 import { fetchDashboardMetrics, type DashboardFilters } from "@/services/dashboardService";
 import type { DashboardMetrics, TrendPoint } from "@/types/dashboard";
+import { queryKeys } from "@/lib/queryKeys";
 
 function delta(a: number, b: number) {
   const d = a - b;
@@ -29,6 +30,8 @@ const DASHBOARD_DEFAULTS = {
   severity: "",
   site: "",
   compare: "0",
+  compare_from: "",
+  compare_to: "",
 };
 
 export default function SLADashboardView() {
@@ -45,6 +48,51 @@ export default function SLADashboardView() {
     }),
     [urlState],
   );
+
+  /**
+   * Build comparison filters. If explicit compare_from/compare_to are set, use them.
+   * Otherwise, mirror the primary window length shifted back by the same duration.
+   */
+  const compareFilters = useMemo<DashboardFilters>(() => {
+    if (!compareMode) return {};
+    if (urlState.compare_from || urlState.compare_to) {
+      return {
+        date_from: urlState.compare_from || undefined,
+        date_to: urlState.compare_to || undefined,
+        severity: urlState.severity || undefined,
+        site: urlState.site || undefined,
+      };
+    }
+    // Auto-shift: compute previous period of same length
+    if (filters.date_from && filters.date_to) {
+      const fromMs = new Date(filters.date_from).getTime();
+      const toMs = new Date(filters.date_to).getTime();
+      const span = toMs - fromMs;
+      if (span > 0) {
+        const prevTo = new Date(fromMs - 86400000).toISOString().slice(0, 10);
+        const prevFrom = new Date(fromMs - span - 86400000).toISOString().slice(0, 10);
+        return {
+          date_from: prevFrom,
+          date_to: prevTo,
+          severity: filters.severity,
+          site: filters.site,
+        };
+      }
+    }
+    return { severity: filters.severity, site: filters.site };
+  }, [compareMode, urlState.compare_from, urlState.compare_to, filters]);
+
+  const compareLabel = useMemo(() => {
+    if (urlState.compare_from || urlState.compare_to) {
+      const f = urlState.compare_from || "…";
+      const t = urlState.compare_to || "…";
+      return `${f} → ${t}`;
+    }
+    if (compareFilters.date_from && compareFilters.date_to) {
+      return `${compareFilters.date_from} → ${compareFilters.date_to}`;
+    }
+    return "Previous period";
+  }, [urlState.compare_from, urlState.compare_to, compareFilters]);
 
   function set(key: keyof DashboardFilters, value: string) {
     setUrlState({ [key]: value || "", compare: compareMode ? "1" : "0" });
@@ -150,14 +198,14 @@ export default function SLADashboardView() {
   }
 
   const primary = useQuery<DashboardMetrics>({
-    queryKey: ["dashboard-metrics", filters],
+    queryKey: queryKeys.dashboard.metrics(filters as Record<string, unknown>),
     queryFn: () => fetchDashboardMetrics(filters),
     staleTime: 30_000,
   });
 
   const secondary = useQuery<DashboardMetrics>({
-    queryKey: ["dashboard-metrics-compare", compareMode],
-    queryFn: () => fetchDashboardMetrics(),
+    queryKey: queryKeys.dashboard.compare(compareFilters as Record<string, unknown>),
+    queryFn: () => fetchDashboardMetrics(compareFilters),
     staleTime: 30_000,
     enabled: compareMode,
   });
@@ -242,6 +290,7 @@ export default function SLADashboardView() {
         </div>
       </div>
 
+
       {compareMode && secondary.isLoading ? (
         <p className="text-sm text-gray-400">Loading comparison window…</p>
       ) : null}
@@ -252,6 +301,7 @@ export default function SLADashboardView() {
         <button type="button" onClick={() => applyPreset("month")} className="hover:underline">This Month</button>
         <button type="button" onClick={() => applyPreset("ytd")} className="hover:underline">Year to Date</button>
       </div>
+
 
       <div className="grid grid-cols-2 gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-4">
         <label className="space-y-1 text-xs">
@@ -273,6 +323,37 @@ export default function SLADashboardView() {
           <input type="text" placeholder="e.g. site-a" className="w-full rounded border border-slate-200 bg-white px-2 py-1.5 text-sm" value={filters.site ?? ""} onChange={(e) => set("site", e.target.value)} />
         </label>
       </div>
+
+      {compareMode ? (
+        <div className="grid grid-cols-2 gap-3 rounded-xl border border-blue-200 bg-blue-50/50 p-4 shadow-sm md:grid-cols-4">
+          <p className="col-span-full text-xs font-medium text-blue-700">
+            Comparison window: {compareLabel}
+          </p>
+          <label className="space-y-1 text-xs">
+            <span className="font-medium text-slate-600">Compare from</span>
+            <input
+              type="date"
+              className="w-full rounded border border-slate-200 bg-white px-2 py-1.5 text-sm"
+              value={urlState.compare_from}
+              onChange={(e) => setUrlState({ compare_from: e.target.value })}
+              placeholder="Auto if empty"
+            />
+          </label>
+          <label className="space-y-1 text-xs">
+            <span className="font-medium text-slate-600">Compare to</span>
+            <input
+              type="date"
+              className="w-full rounded border border-slate-200 bg-white px-2 py-1.5 text-sm"
+              value={urlState.compare_to}
+              onChange={(e) => setUrlState({ compare_to: e.target.value })}
+              placeholder="Auto if empty"
+            />
+          </label>
+          <p className="col-span-2 text-xs text-slate-500 self-center">
+            Leave blank to auto-compare against the previous period of equal length.
+          </p>
+        </div>
+      ) : null}
 
       {isEmptyDataset ? (
         <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
@@ -326,7 +407,9 @@ export default function SLADashboardView() {
 
       {cmp && cmp.trends.length > 0 ? (
         <div>
-          <p className="mb-3 text-sm font-semibold text-gray-500 uppercase tracking-wide">Comparison Window</p>
+          <p className="mb-3 text-sm font-semibold text-gray-500 uppercase tracking-wide">
+            Comparison Window — {compareLabel}
+          </p>
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <SLATrendChart data={cmp.trends} />
             <PenaltiesRewardsChart data={cmp.trends} />
@@ -334,8 +417,25 @@ export default function SLADashboardView() {
         </div>
       ) : null}
 
-      {compareMode && cmp && cmp.trends.length === 0 ? (
-        <p className="rounded-lg bg-yellow-50 px-4 py-2 text-sm text-yellow-700">No data available for the comparison window.</p>
+      {compareMode && secondary.isLoading ? (
+        <div className="rounded-lg border border-dashed border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-600">
+          Loading comparison data for {compareLabel}…
+        </div>
+      ) : null}
+
+      {compareMode && cmp && cmp.trends.length === 0 && !secondary.isLoading ? (
+        <div className="rounded-lg border border-dashed border-yellow-200 bg-yellow-50 px-4 py-3 text-sm text-yellow-700">
+          No data available for the comparison window ({compareLabel}). Adjust the comparison dates or disable compare mode.
+        </div>
+      ) : null}
+
+      {compareMode && secondary.isError ? (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          Failed to load comparison data.{' '}
+          <button type="button" onClick={() => void secondary.refetch()} className="font-medium hover:underline">
+            Retry
+          </button>
+        </div>
       ) : null}
     </div>
   );
