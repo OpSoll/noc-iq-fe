@@ -2,7 +2,41 @@
 
 import React, { useMemo, useState, useCallback } from "react";
 
-export type TimelineEventType = "user_action" | "backend_response" | "error" | "webhook" | "payment" | "outage";
+const TimelineEventItem = React.memo(
+  ({ event, isLast }: { event: TimelineEvent; isLast: boolean }) => {
+    return (
+      <div className="flex items-start gap-3">
+        <div className="flex flex-col items-center">
+          <span className="text-lg">{typeIcon[event.type]}</span>
+          {!isLast && <div className="mt-1 h-4 w-0.5 bg-gray-300" />}
+        </div>
+        <div
+          className={`flex-1 rounded-md border p-3 ${
+            severityColor[event.severity ?? "info"]
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium">{event.label}</span>
+            <span className="text-xs text-gray-500">
+              {new Date(event.timestamp).toLocaleTimeString()}
+            </span>
+          </div>
+          <p className="mt-1 text-xs">{event.detail}</p>
+        </div>
+      </div>
+    );
+  },
+);
+
+import React, { useMemo, useState, useCallback } from "react";
+
+export type TimelineEventType =
+  | "user_action"
+  | "backend_response"
+  | "error"
+  | "webhook"
+  | "payment"
+  | "outage";
 
 export interface TimelineEvent {
   id: string;
@@ -76,18 +110,33 @@ export default function IncidentTimeline({
   paymentId,
   webhookId,
 }: IncidentTimelineProps) {
-  const [filterType, setFilterType] = useState<TimelineEventType | "all">("all");
+  const [filterType, setFilterType] = useState<TimelineEventType | "all">(
+    "all",
+  );
+  const [visibleCount, setVisibleCount] = useState(50);
 
   const filteredEvents = useMemo(() => {
     let result = events;
     if (outageId) result = result.filter((e) => e.outageId === outageId);
     if (paymentId) result = result.filter((e) => e.paymentId === paymentId);
     if (webhookId) result = result.filter((e) => e.webhookId === webhookId);
-    if (filterType !== "all") result = result.filter((e) => e.type === filterType);
-    return result.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+    if (filterType !== "all")
+      result = result.filter((e) => e.type === filterType);
+    return result.sort(
+      (a, b) =>
+        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
+    );
   }, [events, filterType, outageId, paymentId, webhookId]);
 
-  const chains = useMemo(() => causalityChain(filteredEvents), [filteredEvents]);
+  const chains = useMemo(
+    () => causalityChain(filteredEvents),
+    [filteredEvents],
+  );
+
+  const visibleChains = useMemo(() => {
+    if (chains.length <= 50) return chains;
+    return chains.slice(0, visibleCount);
+  }, [chains, visibleCount]);
 
   const handleExport = useCallback(() => {
     const json = exportToJson(filteredEvents);
@@ -103,7 +152,9 @@ export default function IncidentTimeline({
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-gray-900">Incident Timeline</h2>
+        <h2 className="text-lg font-semibold text-gray-900">
+          Incident Timeline
+        </h2>
         <button
           onClick={handleExport}
           className="rounded-md bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-200"
@@ -115,7 +166,9 @@ export default function IncidentTimeline({
       <div className="mb-4 flex gap-2">
         <select
           value={filterType}
-          onChange={(e) => setFilterType(e.target.value as TimelineEventType | "all")}
+          onChange={(e) =>
+            setFilterType(e.target.value as TimelineEventType | "all")
+          }
           className="rounded-md border border-gray-300 px-2 py-1 text-sm"
         >
           <option value="all">All types</option>
@@ -129,36 +182,42 @@ export default function IncidentTimeline({
       </div>
 
       {filteredEvents.length === 0 ? (
-        <p className="py-8 text-center text-sm text-gray-400">No events match the current filters.</p>
+        <p className="py-8 text-center text-sm text-gray-400">
+          No events match the current filters.
+        </p>
       ) : (
         <div className="space-y-3">
-          {chains.map((chain, chainIdx) => (
+          {visibleChains.map((chain, chainIdx) => (
             <div key={chainIdx} className="relative">
               {chain.map((event, idx) => (
-                <div key={event.id} className="flex items-start gap-3">
-                  <div className="flex flex-col items-center">
-                    <span className="text-lg">{typeIcon[event.type]}</span>
-                    {idx < chain.length - 1 && (
-                      <div className="mt-1 h-4 w-0.5 bg-gray-300" />
-                    )}
-                  </div>
-                  <div
-                    className={`flex-1 rounded-md border p-3 ${
-                      severityColor[event.severity ?? "info"]
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">{event.label}</span>
-                      <span className="text-xs text-gray-500">
-                        {new Date(event.timestamp).toLocaleTimeString()}
-                      </span>
-                    </div>
-                    <p className="mt-1 text-xs">{event.detail}</p>
-                  </div>
-                </div>
+                <TimelineEventItem
+                  key={event.id}
+                  event={event}
+                  isLast={idx === chain.length - 1}
+                />
               ))}
             </div>
           ))}
+        </div>
+      )}
+
+      {chains.length > 50 && (
+        <div className="mt-4 flex justify-center">
+          {visibleCount < chains.length ? (
+            <button
+              onClick={() => setVisibleCount(visibleCount + 50)}
+              className="text-sm font-medium text-blue-600 hover:underline"
+            >
+              Load more events
+            </button>
+          ) : (
+            <button
+              onClick={() => setVisibleCount(50)}
+              className="text-sm font-medium text-blue-600 hover:underline"
+            >
+              Show less
+            </button>
+          )}
         </div>
       )}
 
