@@ -5,8 +5,27 @@ import { PaymentService } from "@/services/paymentService";
 import type { Payment } from "@/types/payment";
 import { useQuery } from "@tanstack/react-query";
 import { PaymentDetailDrawer } from "./payment-detail-drawer";
+
+import { queryKeys } from "@/lib/queryKeys";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationPrevious,
+  PaginationNext,
+  PaginationEllipsis,
+} from "@/components/ui/pagination";
+import {
+  explorerLink,
+  STELLAR_NETWORK_LABEL,
+  type ExplorerEntityType,
+} from "@/lib/explorer";
+import { ExternalLink } from "lucide-react";
+
 import { Inbox } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
+
 
 const URL_DEFAULTS = {
   status: "all",
@@ -40,6 +59,32 @@ function getStatusBadge(status: string) {
   }
 }
 
+function SafeExplorerLink({
+  type,
+  value,
+  label,
+}: {
+  type: ExplorerEntityType;
+  value: string | null | undefined;
+  label?: string;
+}) {
+  const href = explorerLink(type, value);
+  if (!href || !value) return <span className="text-gray-400">—</span>;
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noreferrer"
+      className="inline-flex items-center gap-1 font-mono text-xs text-blue-600 hover:underline"
+      title={value}
+      onClick={(e) => e.stopPropagation()}
+    >
+      {label ?? `${value.slice(0, 8)}…`}
+      <ExternalLink className="h-3 w-3" />
+    </a>
+  );
+}
+
 export function PaymentsView() {
   const [urlState, setUrlState] = useUrlSync(URL_DEFAULTS);
 
@@ -54,6 +99,18 @@ export function PaymentsView() {
   const selectedPaymentId = urlState.paymentId || null;
 
   const { data, isLoading, error } = useQuery({
+
+    queryKey: queryKeys.payments.list({
+      statusFilter,
+      typeFilter,
+      dateFrom,
+      dateTo,
+      page,
+      perPage,
+      sortKey,
+      sortDir,
+    }),
+
     queryKey: [
       "payments",
       {
@@ -67,6 +124,7 @@ export function PaymentsView() {
         sortDir,
       },
     ],
+
     queryFn: () =>
       PaymentService.fetchPayments({
         status: statusFilter !== "all" ? statusFilter : undefined,
@@ -85,7 +143,11 @@ export function PaymentsView() {
   const totalPages = Math.ceil(total / perPage);
 
   const handleFilterChange = (key: string, value: string) => {
+
+    setUrlState({ [key]: value, page: "1" } as Partial<typeof URL_DEFAULTS>);
+
     setUrlState({ [key]: value, page: "1" } as any);
+
   };
 
   const handlePageChange = (newPage: number) => {
@@ -116,7 +178,15 @@ export function PaymentsView() {
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-bold">Payments</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-bold">Payments</h1>
+          <span
+            className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-xs font-medium text-slate-600"
+            title="Stellar network context for this view"
+          >
+            {STELLAR_NETWORK_LABEL}
+          </span>
+        </div>
         <div className="flex flex-wrap items-center gap-2">
           <select
             value={statusFilter}
@@ -182,6 +252,7 @@ export function PaymentsView() {
               <th className="px-4 py-3">Amount</th>
               <th className="px-4 py-3">Status</th>
               <th className="px-4 py-3">Type</th>
+              <th className="px-4 py-3">Tx</th>
               <th className="px-4 py-3">Commission</th>
             </tr>
           </thead>
@@ -189,13 +260,17 @@ export function PaymentsView() {
             {isLoading ? (
               Array.from({ length: 5 }).map((_, i) => (
                 <tr key={i} className="border-b">
-                  <td colSpan={5} className="px-4 py-3">
+                  <td colSpan={6} className="px-4 py-3">
                     <div className="h-4 animate-pulse rounded bg-gray-200" />
                   </td>
                 </tr>
               ))
             ) : payments.length === 0 ? (
               <tr>
+
+                <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
+                  No payments found.
+
                 <td colSpan={5} className="px-4 py-8">
                   <EmptyState
                     icon={Inbox}
@@ -227,6 +302,7 @@ export function PaymentsView() {
                         : undefined
                     }
                   />
+
                 </td>
               </tr>
             ) : (
@@ -261,6 +337,14 @@ export function PaymentsView() {
                   <td className="px-4 py-3 text-gray-600">
                     {payment.type ?? "N/A"}
                   </td>
+
+                  <td className="px-4 py-3">
+                    <SafeExplorerLink
+                      type="tx"
+                      value={payment.transactionHash}
+                    />
+                  </td>
+
                   <td className="px-4 py-3 text-gray-600">
                     {payment.commissionId
                       ? `${payment.commissionId.slice(0, 8)}...`

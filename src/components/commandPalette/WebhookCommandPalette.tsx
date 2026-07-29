@@ -78,14 +78,6 @@ export default function WebhookCommandPalette({
     return () => window.removeEventListener("keydown", handler);
   }, [isOpen, onClose]);
 
-  useEffect(() => {
-    if (isOpen) {
-      setQuery("");
-      setSelectedIndex(0);
-      setTimeout(() => inputRef.current?.focus(), 50);
-    }
-  }, [isOpen]);
-
   if (!isOpen) return null;
 
   return (
@@ -114,6 +106,7 @@ export default function WebhookCommandPalette({
             className="w-full text-sm text-slate-800 placeholder-slate-400 focus:outline-none"
             autoComplete="off"
             aria-label="Search commands"
+            autoFocus
           />
         </div>
         <div className="max-h-64 overflow-y-auto p-2">
@@ -158,13 +151,22 @@ export default function WebhookCommandPalette({
         <div className="border-t border-slate-100 px-4 py-2">
           <div className="flex gap-4 text-[10px] text-slate-400">
             <span>
-              <kbd className="rounded border border-slate-200 px-1 font-mono">↑↓</kbd> Navigate
+              <kbd className="rounded border border-slate-200 px-1 font-mono">
+                ↑↓
+              </kbd>{" "}
+              Navigate
             </span>
             <span>
-              <kbd className="rounded border border-slate-200 px-1 font-mono">↵</kbd> Select
+              <kbd className="rounded border border-slate-200 px-1 font-mono">
+                ↵
+              </kbd>{" "}
+              Select
             </span>
             <span>
-              <kbd className="rounded border border-slate-200 px-1 font-mono">Esc</kbd> Close
+              <kbd className="rounded border border-slate-200 px-1 font-mono">
+                Esc
+              </kbd>{" "}
+              Close
             </span>
           </div>
         </div>

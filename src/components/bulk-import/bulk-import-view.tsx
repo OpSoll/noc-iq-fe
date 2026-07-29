@@ -1,6 +1,5 @@
 "use client";
 
-import { toast } from "sonner";
 import Link from "next/link";
 import { useRef, useState, useCallback, useId } from "react";
 
@@ -512,7 +511,6 @@ export default function BulkImportView() {
       const validation = validateFile(nextFile);
       if (!validation.valid) {
         setFileError(validation.error ?? "Invalid file");
-        toast.error(validation.error ?? "Invalid file"); // Added toast
         setFile(null);
         setPreview(null);
         return;
@@ -580,9 +578,6 @@ export default function BulkImportView() {
       const files = event.dataTransfer.files;
       if (files.length > 1) {
         setFileError("Please upload only one file at a time.");
-        toast.error("Multiple files selected", {
-          description: "You can only import one file at a time.",
-        });
         return;
       }
 

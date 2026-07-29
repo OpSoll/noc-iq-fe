@@ -17,18 +17,18 @@ export function useDebouncedOutageSearch(delayMs = 300) {
 const LAYOUT_KEY = "noc_dashboard_widget_order";
 
 export function useDashboardWidgetLayout(defaultOrder: string[]) {
-  const [order, setOrder] = useState(defaultOrder);
-
-  useEffect(() => {
+  const [order, setOrder] = useState<string[]>(() => {
+    if (typeof window === "undefined") return defaultOrder;
     const stored = localStorage.getItem(LAYOUT_KEY);
     if (stored) {
       try {
-        setOrder(JSON.parse(stored));
+        return JSON.parse(stored);
       } catch {
         // ignore malformed stored layout, keep default
       }
     }
-  }, []);
+    return defaultOrder;
+  });
 
   function moveWidget(id: string, toIndex: number) {
     setOrder((prev) => {

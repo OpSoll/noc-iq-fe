@@ -15,7 +15,7 @@ vi.mock("@/lib/api", () => ({
   clearTokens: vi.fn(),
   setTokens: vi.fn(),
 }));
-vi.mock("@/lib/explorer", () => ({ explorerLink: () => null }));
+vi.mock("@/lib/explorer", () => ({ explorerLink: () => null, STELLAR_NETWORK_LABEL: "Testnet" }));
 vi.mock("@/hooks/useSession", () => ({
   useSession: () => ({ state: "unauthenticated", user: null, logout: vi.fn() }),
 }));

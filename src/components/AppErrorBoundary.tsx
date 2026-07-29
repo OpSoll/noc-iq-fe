@@ -21,7 +21,8 @@ export class AppErrorBoundary extends Component<BoundaryProps, BoundaryState> {
       return (
         this.props.fallback ?? (
           <div role="alert" className="p-4 text-sm text-destructive">
-            Something went wrong{this.props.section ? ` in ${this.props.section}` : ""}.
+            Something went wrong
+            {this.props.section ? ` in ${this.props.section}` : ""}.
           </div>
         )
       );
@@ -32,12 +33,11 @@ export class AppErrorBoundary extends Component<BoundaryProps, BoundaryState> {
 
 const DARK_MODE_KEY = "noc_dark_mode";
 export function useDarkMode() {
-  const [isDark, setIsDark] = useState(false);
-  useEffect(() => {
+  const [isDark, setIsDark] = useState(() => {
     const stored = localStorage.getItem(DARK_MODE_KEY);
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    setIsDark(stored ? stored === "true" : prefersDark);
-  }, []);
+    if (stored) return stored === "true";
+    return window.matchMedia("(prefers-color-scheme: dark)").matches;
+  });
   useEffect(() => {
     document.documentElement.classList.toggle("dark", isDark);
   }, [isDark]);

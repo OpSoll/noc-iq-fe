@@ -6,10 +6,13 @@ import { useWalletDetail, useWalletStatus, useWalletBalance } from "@/hooks/useW
 import { useCreateWallet, useLinkWallet } from "@/hooks/useWalletMutations";
 import { WalletAddress } from "@/components/wallet/WalletAddress";
 import { WalletHealthBadge } from "@/components/wallet/WalletHealthBadge";
+import FreshnessIndicator from "@/components/dashboard/FreshnessIndicator";
 import { AccountProfileCard } from "./components/AccountProfileCard";
 import { SessionManagementCard } from "./components/SessionManagementCard";
 import { WalletReadinessCard } from "./components/WalletReadinessCard";
 import { AccountSessionFormCard } from "./components/AccountSessionFormCard";
+import { STELLAR_NETWORK_LABEL } from "@/lib/explorer";
+import { RefreshCcw } from "lucide-react";
 
 type AuthUser = {
   id: string;
@@ -126,6 +129,22 @@ export default function SettingsPage() {
     toast("Wallet balance loaded.", "success");
   }
 
+  function handleRefreshWalletStatus() {
+    if (!activeUserId) {
+      toast("Provide a user ID or log in before refreshing wallet status.", "error");
+      return;
+    }
+    setRequestedUserId(activeUserId);
+    void walletStatusQuery.refetch();
+    void walletQuery.refetch();
+    toast("Wallet status refreshed.", "success");
+  }
+
+  const walletStatusUpdatedAt = walletStatus?.last_updated
+    ? new Date(walletStatus.last_updated)
+    : null;
+  const isWalletRefreshing = walletStatusQuery.isFetching || walletQuery.isFetching;
+
   return (
     <div className="mx-auto max-w-6xl space-y-6 px-4 py-8">
       <div className="space-y-1">
@@ -196,12 +215,25 @@ export default function SettingsPage() {
         <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="flex items-start justify-between">
             <div>
-              <h2 className="text-xl font-semibold text-slate-900">Wallet Status</h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-xl font-semibold text-slate-900">Wallet Status</h2>
+                <span
+                  className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-medium text-slate-500"
+                  title="Stellar network"
+                >
+                  {STELLAR_NETWORK_LABEL}
+                </span>
+              </div>
               <p className="text-sm text-slate-500">
                 Create, link, and inspect the operator wallet through the backend bridge.
               </p>
             </div>
-            <WalletHealthBadge status={walletStatus} />
+            <div className="flex flex-col items-end gap-2">
+              <WalletHealthBadge status={walletStatus} />
+              {walletStatusUpdatedAt ? (
+                <FreshnessIndicator lastUpdated={walletStatusUpdatedAt} />
+              ) : null}
+            </div>
           </div>
 
           <div className="grid gap-3">
@@ -266,6 +298,14 @@ export default function SettingsPage() {
             >
               {walletBalanceQuery.isFetching ? "Loading..." : "Load balance"}
             </button>
+            <button
+              onClick={handleRefreshWalletStatus}
+              disabled={isWalletRefreshing}
+              className="inline-flex items-center justify-center gap-2 rounded-md border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-100 disabled:opacity-60 sm:col-span-2"
+            >
+              <RefreshCcw className={`h-4 w-4 ${isWalletRefreshing ? "animate-spin" : ""}`} />
+              {isWalletRefreshing ? "Refreshing status…" : "Refresh wallet status"}
+            </button>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
@@ -281,11 +321,15 @@ export default function SettingsPage() {
                   </div>
                   <div className="flex justify-between gap-4">
                     <dt>Funded</dt>
-                    <dd className="font-medium text-slate-900">{wallet.funded ? "Yes" : "No"}</dd>
+                    <dd className={`font-medium ${wallet.funded ? "text-emerald-700" : "text-amber-600"}`}>
+                      {wallet.funded ? "Yes" : "No"}
+                    </dd>
                   </div>
                   <div className="flex justify-between gap-4">
                     <dt>Trustline</dt>
-                    <dd className="font-medium text-slate-900">{wallet.trustline_ready ? "Ready" : "Missing"}</dd>
+                    <dd className={`font-medium ${wallet.trustline_ready ? "text-emerald-700" : "text-amber-600"}`}>
+                      {wallet.trustline_ready ? "Ready" : "Missing"}
+                    </dd>
                   </div>
                 </dl>
               ) : (
@@ -299,11 +343,27 @@ export default function SettingsPage() {
                 <dl className="mt-3 grid gap-2 text-slate-600">
                   <div className="flex justify-between gap-4">
                     <dt>Active</dt>
-                    <dd className="font-medium text-slate-900">{walletStatus.active ? "Yes" : "No"}</dd>
+                    <dd className={`font-medium ${walletStatus.active ? "text-emerald-700" : "text-red-600"}`}>
+                      {walletStatus.active ? "Yes" : "No"}
+                    </dd>
+                  </div>
+                  <div className="flex justify-between gap-4">
+                    <dt>Funded</dt>
+                    <dd className={`font-medium ${walletStatus.funded ? "text-emerald-700" : "text-amber-600"}`}>
+                      {walletStatus.funded ? "Yes" : "Funding required"}
+                    </dd>
+                  </div>
+                  <div className="flex justify-between gap-4">
+                    <dt>Trustline</dt>
+                    <dd className={`font-medium ${walletStatus.trustline_ready ? "text-emerald-700" : "text-amber-600"}`}>
+                      {walletStatus.trustline_ready ? "Ready" : "Missing"}
+                    </dd>
                   </div>
                   <div className="flex justify-between gap-4">
                     <dt>Usable</dt>
-                    <dd className="font-medium text-slate-900">{walletStatus.usable ? "Ready" : "Not ready"}</dd>
+                    <dd className={`font-medium ${walletStatus.usable ? "text-emerald-700" : "text-red-600"}`}>
+                      {walletStatus.usable ? "Ready" : "Not ready"}
+                    </dd>
                   </div>
                   <div className="flex justify-between gap-4">
                     <dt>Last updated</dt>
@@ -337,7 +397,12 @@ export default function SettingsPage() {
         </section>
       </div>
 
-      <WalletReadinessCard walletStatus={walletStatus} />
+      <WalletReadinessCard
+        walletStatus={walletStatus}
+        onRefresh={handleRefreshWalletStatus}
+        isRefreshing={isWalletRefreshing}
+        lastUpdated={walletStatus?.last_updated ?? null}
+      />
     </div>
   );
 }
