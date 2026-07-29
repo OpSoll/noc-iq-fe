@@ -19,12 +19,35 @@
     --background: #0a0a0a;
     --foreground: #ededed;
   }
+
+  /* WCAG 2.1 AA Compliant Dark Mode Text Contrast Ratios (>= 4.5:1 against dark backgrounds) */
+  .text-slate-400,
+  .text-gray-400 {
+    color: #cbd5e1 !important; /* slate-300: contrast ratio > 7.2:1 */
+  }
+
+  .text-slate-500,
+  .text-gray-500 {
+    color: #94a3b8 !important; /* slate-400: contrast ratio > 4.8:1 */
+  }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Global high-visibility focus indicator rings for keyboard navigation */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid #6366f1 !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.4) !important;
 }
 
 /* Accessibility mode styles */
@@ -112,7 +135,6 @@ html.a11y-reduced-motion .transition-transform {
 
 /* Print styles for outage reports and SLA summaries */
 @media print {
-  /* Hide navigation and UI chrome */
   nav,
   footer,
   .no-print,
@@ -120,7 +142,6 @@ html.a11y-reduced-motion .transition-transform {
     display: none !important;
   }
 
-  /* Stop animations and transitions */
   *,
   *::before,
   *::after {
@@ -128,7 +149,6 @@ html.a11y-reduced-motion .transition-transform {
     transition: none !important;
   }
 
-  /* Optimize text for printing */
   body {
     background: white;
     color: black;
@@ -136,23 +156,19 @@ html.a11y-reduced-motion .transition-transform {
     line-height: 1.5;
   }
 
-  /* Prevent content from being split across pages */
   .print-avoid-break {
     page-break-inside: avoid;
   }
 
-  /* Page break handling for large sections */
   .print-page-break {
     page-break-before: always;
   }
 
-  /* Ensure links are visible */
   a {
     text-decoration: underline;
     color: black;
   }
 
-  /* Hide spinners/loading states */
   .animate-spin,
   .animate-pulse,
   [role="status"],
