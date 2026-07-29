@@ -39,7 +39,15 @@ export function SlaComplianceTrendChart({ points }: { points: SlaTrendPoint[] })
           </button>
         ))}
       </div>
-      <svg width={300} height={80} role="img" aria-label="SLA compliance trend">
+      <svg 
+        width={300} 
+        height={80} 
+        role="group" 
+        aria-label="SLA compliance trend"
+        tabIndex={0}
+      >
+        <title>SLA Compliance Trend Chart</title>
+        <desc>Line chart showing the SLA compliance trend over {windowKey}</desc>
         <path d={path} fill="none" stroke="currentColor" strokeWidth={2} />
       </svg>
       {last && (
