@@ -13,7 +13,7 @@ import type {
 // ─── Constants ───────────────────────────────────────────────────────────────
 const ACCEPTED_TYPES = ["text/csv", "application/json"] as const;
 const ACCEPTED_EXTENSIONS = [".csv", ".json"] as const;
-const MAX_PREVIEW_ROWS = 5;
+const MAX_PREVIEW_ROWS = 100;
 const MAX_FILE_SIZE_MB = 5;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 
@@ -100,6 +100,11 @@ function parseCSV(text: string): ParsedCSV {
 }
 
 // ─── Validation ──────────────────────────────────────────────────────────────
+function isValidDate(dateString: string): boolean {
+  const d = new Date(dateString);
+  return d instanceof Date && !isNaN(d.getTime());
+}
+
 function validateCSV(
   headers: string[],
   rows: string[][],
@@ -122,17 +127,49 @@ function validateCSV(
       });
     }
 
-    // Validate required fields have values
+    // Validate required fields have values and correct formats
     REQUIRED_FIELDS.forEach((field) => {
       const colIndex = headers.indexOf(field);
-      if (colIndex !== -1 && (!row[colIndex] || row[colIndex].trim() === "")) {
-        errors.push({
-          row: i + 2,
-          field,
-          message: `Required field "${field}" is empty`,
-        });
+      if (colIndex !== -1) {
+        if (!row[colIndex] || row[colIndex].trim() === "") {
+          errors.push({
+            row: i + 2,
+            field,
+            message: `Required field "${field}" is empty`,
+          });
+        } else if (field === "start_time" || field === "end_time") {
+          if (!isValidDate(row[colIndex])) {
+            errors.push({
+              row: i + 2,
+              field,
+              message: `Invalid date format for "${field}"`,
+            });
+          }
+        }
       }
     });
+
+    // Check if end_time is after start_time
+    const startTimeIndex = headers.indexOf("start_time");
+    const endTimeIndex = headers.indexOf("end_time");
+    if (
+      startTimeIndex !== -1 &&
+      endTimeIndex !== -1 &&
+      row[startTimeIndex] &&
+      row[endTimeIndex] &&
+      isValidDate(row[startTimeIndex]) &&
+      isValidDate(row[endTimeIndex])
+    ) {
+      const startTime = new Date(row[startTimeIndex]);
+      const endTime = new Date(row[endTimeIndex]);
+      if (startTime >= endTime) {
+        errors.push({
+          row: i + 2,
+          field: "end_time",
+          message: "End time must be after start time",
+        });
+      }
+    }
   });
 
   return errors;
@@ -356,6 +393,70 @@ function ValidationList({ errors }: { errors: ImportValidationError[] }) {
   );
 }
 
+function ValidationTable({
+  headers,
+  rows,
+  errors,
+}: {
+  headers: string[];
+  rows: string[][];
+  errors: ImportValidationError[];
+}) {
+  const getCellError = (rowIndex: number, field: string) => {
+    return errors.find((e) => e.row === rowIndex + 2 && e.field === field)
+      ?.message;
+  };
+
+  return (
+    <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+      <table className="min-w-full divide-y divide-gray-200 text-sm">
+        <thead className="bg-gray-50">
+          <tr>
+            <th className="px-4 py-2 text-left font-semibold text-gray-600">
+              Row
+            </th>
+            {headers.map((h) => (
+              <th
+                key={h}
+                className="px-4 py-2 text-left font-semibold text-gray-600"
+              >
+                {h}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-200">
+          {rows.map((row, i) => {
+            const hasRowError = errors.some((e) => e.row === i + 2);
+            return (
+              <tr key={`row-${i}`} className={hasRowError ? "bg-red-50" : ""}>
+                <td className="px-4 py-2 text-gray-500">{i + 2}</td>
+                {headers.map((h, j) => {
+                  const cellError = getCellError(i, h);
+                  return (
+                    <td
+                      key={`${h}-${j}`}
+                      className={`px-4 py-2 ${
+                        cellError ? "relative bg-red-100" : "text-gray-700"
+                      }`}
+                      title={cellError}
+                    >
+                      {cellError && (
+                        <div className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-red-500" />
+                      )}
+                      {row[j]}
+                    </td>
+                  );
+                })}
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 // ─── Main Component ──────────────────────────────────────────────────────────
 export default function BulkImportView() {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -370,6 +471,7 @@ export default function BulkImportView() {
   const [result, setResult] = useState<BulkImportResult | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
+  const [showValidationTable, setShowValidationTable] = useState(false);
 
   const id = useId();
   const fileInputId = `file-input-${id}`;
@@ -692,12 +794,39 @@ export default function BulkImportView() {
         <div className="space-y-3">
           {/* Errors */}
           {preview.errors.length > 0 && (
-            <Alert
-              type="error"
-              title={`${preview.errors.length} blocking error${preview.errors.length > 1 ? "s" : ""} — fix before uploading`}
-            >
-              <ValidationList errors={preview.errors} />
+            <Alert type="error">
+              <div className="flex items-center justify-between">
+                <p className="font-semibold">
+                  {preview.errors.length} validation error
+                  {preview.errors.length > 1 ? "s" : ""} found
+                </p>
+                <button
+                  onClick={() => setShowValidationTable(!showValidationTable)}
+                  className="text-xs font-medium text-blue-600 hover:underline"
+                >
+                  {showValidationTable ? "Show as list" : "Show in table"}
+                </button>
+              </div>
+              <div className="mt-2">
+                {showValidationTable ? (
+                  <p className="text-xs text-gray-600">
+                    Invalid rows and cells are highlighted below. Hover over a
+                    cell for details.
+                  </p>
+                ) : (
+                  <ValidationList errors={preview.errors} />
+                )}
+              </div>
             </Alert>
+          )}
+
+          {/* Table */}
+          {showValidationTable && (
+            <ValidationTable
+              headers={preview.headers}
+              rows={preview.rows}
+              errors={preview.errors}
+            />
           )}
 
           {/* Warnings */}
