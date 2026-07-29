@@ -1,77 +1,32 @@
 "use client";
 
 import { useMemo, useState } from "react";
-
-import { api } from "@/lib/api";
-import { useSession } from "@/hooks/useSession";
-import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/toast";
 import { useWalletDetail, useWalletStatus, useWalletBalance } from "@/hooks/useWallet";
 import { useCreateWallet, useLinkWallet } from "@/hooks/useWalletMutations";
-import { useMutationToast } from "@/hooks/useMutationToast";
 import { WalletAddress } from "@/components/wallet/WalletAddress";
 import { WalletHealthBadge } from "@/components/wallet/WalletHealthBadge";
+import { AccountProfileCard } from "./components/AccountProfileCard";
+import { SessionManagementCard } from "./components/SessionManagementCard";
+import { WalletReadinessCard } from "./components/WalletReadinessCard";
+import { AccountSessionFormCard } from "./components/AccountSessionFormCard";
 
 type AuthUser = {
   id: string;
   email: string;
   full_name?: string | null;
   role: string;
-  stellar_wallet?: string | null;
-  created_at: string;
 };
 
 type AuthSessionResponse = {
   access_token: string;
-  refresh_token: string;
-  token_type: string;
-  expires_in: number;
   user: AuthUser;
 };
 
-function getErrorMessage(error: unknown) {
-  return error instanceof Error ? error.message : "Something went wrong";
-}
-
 export default function SettingsPage() {
-  const { state: sessionState, user: sessionUser, logout } = useSession();
-  const router = useRouter();
   const toast = useToast();
-  const [sessionActionLoading, setSessionActionLoading] = useState<string | null>(null);
-
   const createWalletMutation = useCreateWallet();
   const linkWalletMutation = useLinkWallet();
-
-  const signOutMutation = useMutationToast({
-    mutationFn: async () => {
-      await logout();
-      return true;
-    },
-    successMessage: "Signed out successfully.",
-    errorMessage: () => "Sign out failed. Please try again.",
-    onSuccess: () => {
-      router.replace("/login");
-    },
-  });
-
-  const logoutAllMutation = useMutationToast({
-    mutationFn: async () => {
-      try {
-        await api.post("/auth/logout-all");
-      } catch (err) {
-        if ((err as { response?: { status?: number } }).response?.status !== 404) {
-          throw new Error("Could not revoke all sessions.");
-        }
-      }
-      await logout();
-      return true;
-    },
-    successMessage: "All sessions revoked successfully.",
-    errorMessage: () => "Could not revoke all sessions. Please try again.",
-    onSuccess: () => {
-      router.replace("/login");
-    },
-  });
 
   const [session, setSession] = useState<AuthSessionResponse | null>(null);
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
@@ -80,17 +35,6 @@ export default function SettingsPage() {
     public_key: "",
     funded: false,
     trustline_ready: false,
-  });
-
-  const [registerForm, setRegisterForm] = useState({
-    email: "operator@example.com",
-    password: "secure123",
-    full_name: "NOC Operator",
-    role: "engineer",
-  });
-  const [loginForm, setLoginForm] = useState({
-    email: "operator@example.com",
-    password: "secure123",
   });
 
   const activeUserId = useMemo(
@@ -113,6 +57,7 @@ export default function SettingsPage() {
     () => Object.keys(walletBalance?.balances ?? {}).length,
     [walletBalance],
   );
+
   const walletReadinessLabel = useMemo(() => {
     if (!walletStatus) return "Not loaded";
     if (!walletStatus.active) return "Inactive";
@@ -120,87 +65,13 @@ export default function SettingsPage() {
     if (!walletStatus.trustline_ready) return "Trustline missing";
     return walletStatus.usable ? "Ready" : "Review required";
   }, [walletStatus]);
+
   const walletReadinessTone = useMemo(() => {
     if (!walletStatus) return "text-slate-900";
     return walletStatus.usable ? "text-emerald-600" : "text-amber-600";
   }, [walletStatus]);
+
   const walletAddress = wallet?.public_key ?? walletStatus?.public_key ?? walletForm.public_key;
-
-  async function handleSignOut() {
-    setSessionActionLoading("signout");
-    signOutMutation.mutate(undefined);
-    setSessionActionLoading(null);
-  }
-
-  async function handleLogoutAll() {
-    setSessionActionLoading("logout-all");
-    logoutAllMutation.mutate(undefined);
-    setSessionActionLoading(null);
-  }
-
-  async function handleRegister() {
-    try {
-      const response = await api.post<AuthUser>("/auth/register", registerForm);
-      setCurrentUser(response.data);
-      setWalletForm((current) => ({
-        ...current,
-        user_id: response.data.id,
-      }));
-      toast("Account registered successfully.", "success");
-    } catch (issue) {
-      toast(getErrorMessage(issue), "error");
-    }
-  }
-
-  async function handleLogin() {
-    try {
-      const response = await api.post<AuthSessionResponse>("/auth/login", loginForm);
-      setSession(response.data);
-      setCurrentUser(response.data.user);
-      setWalletForm((current) => ({
-        ...current,
-        user_id: response.data.user.id,
-      }));
-      toast("Signed in successfully.", "success");
-    } catch (issue) {
-      toast(getErrorMessage(issue), "error");
-    }
-  }
-
-  async function handleLoadSession() {
-    if (!session?.access_token) {
-      toast("Login first to load the current session.", "error");
-      return;
-    }
-    try {
-      const response = await api.get<AuthUser>("/auth/me", {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
-      setCurrentUser(response.data);
-      toast("Session refreshed from the backend.", "success");
-    } catch (issue) {
-      toast(getErrorMessage(issue), "error");
-    }
-  }
-
-  async function handleLogout() {
-    if (!session?.access_token) {
-      setSession(null);
-      setCurrentUser(null);
-      toast("Local session cleared.", "info");
-      return;
-    }
-    try {
-      await api.post("/auth/logout", {}, {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
-      setSession(null);
-      setCurrentUser(null);
-      toast("Logged out successfully.", "success");
-    } catch (issue) {
-      toast(getErrorMessage(issue), "error");
-    }
-  }
 
   function handleCreateWallet() {
     if (!activeUserId) {
@@ -266,92 +137,8 @@ export default function SettingsPage() {
         </p>
       </div>
 
-      {/* FE-056: Account profile section */}
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-xl font-semibold text-slate-900">Account Profile</h2>
-        <p className="mt-1 text-sm text-slate-500">Current session identity and metadata.</p>
-        {sessionState === "loading" && (
-          <p className="mt-4 text-sm text-slate-400">Loading session…</p>
-        )}
-        {sessionState === "unauthenticated" && (
-          <p className="mt-4 text-sm text-slate-500">Not signed in.</p>
-        )}
-        {sessionState === "authenticated" && sessionUser && (
-          <dl className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 text-sm">
-            {[
-              { label: "Email", value: sessionUser.email },
-              { label: "Role", value: sessionUser.role },
-              { label: "Full name", value: sessionUser.full_name ?? "—" },
-              { label: "User ID", value: sessionUser.id },
-              { label: "Wallet", value: sessionUser.stellar_wallet ?? "Not linked" },
-              {
-                label: "Member since",
-                value: sessionUser.created_at
-                  ? new Date(sessionUser.created_at).toLocaleDateString()
-                  : "—",
-              },
-            ].map(({ label, value }) => (
-              <div key={label} className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3">
-                <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</dt>
-                <dd className="mt-1 truncate font-medium text-slate-900">{value}</dd>
-              </div>
-            ))}
-          </dl>
-        )}
-      </section>
-
-      {/* FE-008: Session management */}
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-xl font-semibold text-slate-900">Session Management</h2>
-        <p className="mt-1 text-sm text-slate-500">
-          Control your active session and understand token refresh behaviour.
-        </p>
-
-        <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 text-sm space-y-3">
-            <h3 className="font-medium text-slate-900">Sign out of this session</h3>
-            <p className="text-slate-500">
-              Ends your current session and clears stored tokens from this browser. You will be
-              redirected to the sign-in page.
-            </p>
-            <button
-              onClick={() => void handleSignOut()}
-              disabled={sessionState !== "authenticated" || sessionActionLoading !== null}
-              className="rounded-md border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-50"
-            >
-              {sessionActionLoading === "signout" ? "Signing out…" : "Sign out"}
-            </button>
-          </div>
-
-          <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 text-sm space-y-3">
-            <h3 className="font-medium text-slate-900">Revoke all sessions</h3>
-            <p className="text-slate-500">
-              Invalidates all active refresh tokens for your account across every device. Use this
-              if you suspect unauthorised access.
-            </p>
-            <button
-              onClick={() => void handleLogoutAll()}
-              disabled={sessionState !== "authenticated" || sessionActionLoading !== null}
-              className="rounded-md border border-red-200 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
-            >
-              {sessionActionLoading === "logout-all" ? "Revoking…" : "Revoke all sessions"}
-            </button>
-          </div>
-        </div>
-
-        <div className="mt-4 rounded-xl border border-blue-100 bg-blue-50 p-4 text-sm text-blue-800 space-y-1">
-          <p className="font-medium">How session refresh works</p>
-          <p>
-            Your access token is short-lived. When it expires the app automatically exchanges your
-            refresh token for a new pair — you stay signed in without any action required.
-          </p>
-          <p>
-            If the refresh fails (token revoked, network error, or server restart) you will see a
-            &ldquo;Session expired&rdquo; message and be redirected to sign in again. No data is
-            lost; simply sign back in to continue.
-          </p>
-        </div>
-      </section>
+      <AccountProfileCard />
+      <SessionManagementCard />
 
       <div className="grid gap-4 md:grid-cols-4">
         <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -398,129 +185,13 @@ export default function SettingsPage() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div>
-            <h2 className="text-xl font-semibold text-slate-900">Account Session</h2>
-            <p className="text-sm text-slate-500">
-              Register, sign in, and validate the active backend session.
-            </p>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-3 rounded-xl bg-slate-50 p-4">
-              <h3 className="font-medium text-slate-900">Register</h3>
-              <input
-                className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
-                value={registerForm.full_name}
-                onChange={(event) =>
-                  setRegisterForm((current) => ({
-                    ...current,
-                    full_name: event.target.value,
-                  }))
-                }
-                placeholder="Full name"
-              />
-              <input
-                className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
-                value={registerForm.email}
-                onChange={(event) =>
-                  setRegisterForm((current) => ({
-                    ...current,
-                    email: event.target.value,
-                  }))
-                }
-                placeholder="Email"
-              />
-              <input
-                className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
-                type="password"
-                value={registerForm.password}
-                onChange={(event) =>
-                  setRegisterForm((current) => ({
-                    ...current,
-                    password: event.target.value,
-                  }))
-                }
-                placeholder="Password"
-              />
-              <button
-                onClick={handleRegister}
-                className="w-full rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
-              >
-                Register account
-              </button>
-            </div>
-
-            <div className="space-y-3 rounded-xl bg-slate-50 p-4">
-              <h3 className="font-medium text-slate-900">Login</h3>
-              <input
-                className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
-                value={loginForm.email}
-                onChange={(event) =>
-                  setLoginForm((current) => ({
-                    ...current,
-                    email: event.target.value,
-                  }))
-                }
-                placeholder="Email"
-              />
-              <input
-                className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
-                type="password"
-                value={loginForm.password}
-                onChange={(event) =>
-                  setLoginForm((current) => ({
-                    ...current,
-                    password: event.target.value,
-                  }))
-                }
-                placeholder="Password"
-              />
-              <button
-                onClick={handleLogin}
-                className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60"
-              >
-                Sign in
-              </button>
-              <div className="flex gap-2">
-                <button
-                  onClick={handleLoadSession}
-                  className="flex-1 rounded-md border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
-                >
-                  Refresh session
-                </button>
-                <button
-                  onClick={handleLogout}
-                  className="flex-1 rounded-md border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
-                >
-                  Logout
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm">
-            <h3 className="font-medium text-slate-900">Current user</h3>
-            {currentUser ? (
-              <dl className="mt-3 grid gap-2 text-slate-600">
-                <div className="flex justify-between gap-4">
-                  <dt>User ID</dt>
-                  <dd className="font-medium text-slate-900">{currentUser.id}</dd>
-                </div>
-                <div className="flex justify-between gap-4">
-                  <dt>Email</dt>
-                  <dd className="font-medium text-slate-900">{currentUser.email}</dd>
-                </div>
-                <div className="flex justify-between gap-4">
-                  <dt>Role</dt>
-                  <dd className="font-medium text-slate-900">{currentUser.role}</dd>
-                </div>
-              </dl>
-            ) : (
-              <p className="mt-3 text-slate-500">No active user loaded yet.</p>
-            )}
-          </div>
-        </section>
+        <AccountSessionFormCard
+          currentUser={currentUser}
+          setCurrentUser={setCurrentUser}
+          session={session}
+          setSession={setSession}
+          onUserSelected={(userId) => setWalletForm((current) => ({ ...current, user_id: userId }))}
+        />
 
         <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="flex items-start justify-between">
@@ -537,23 +208,13 @@ export default function SettingsPage() {
             <input
               className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
               value={walletForm.user_id}
-              onChange={(event) =>
-                setWalletForm((current) => ({
-                  ...current,
-                  user_id: event.target.value,
-                }))
-              }
+              onChange={(event) => setWalletForm((current) => ({ ...current, user_id: event.target.value }))}
               placeholder="User ID"
             />
             <input
               className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
               value={walletForm.public_key}
-              onChange={(event) =>
-                setWalletForm((current) => ({
-                  ...current,
-                  public_key: event.target.value,
-                }))
-              }
+              onChange={(event) => setWalletForm((current) => ({ ...current, public_key: event.target.value }))}
               placeholder="Public key"
             />
             <div className="flex flex-wrap gap-4 text-sm text-slate-600">
@@ -561,12 +222,7 @@ export default function SettingsPage() {
                 <input
                   type="checkbox"
                   checked={walletForm.funded}
-                  onChange={(event) =>
-                    setWalletForm((current) => ({
-                      ...current,
-                      funded: event.target.checked,
-                    }))
-                  }
+                  onChange={(event) => setWalletForm((current) => ({ ...current, funded: event.target.checked }))}
                 />
                 Funded
               </label>
@@ -574,12 +230,7 @@ export default function SettingsPage() {
                 <input
                   type="checkbox"
                   checked={walletForm.trustline_ready}
-                  onChange={(event) =>
-                    setWalletForm((current) => ({
-                      ...current,
-                      trustline_ready: event.target.checked,
-                    }))
-                  }
+                  onChange={(event) => setWalletForm((current) => ({ ...current, trustline_ready: event.target.checked }))}
                 />
                 Trustline ready
               </label>
@@ -630,15 +281,11 @@ export default function SettingsPage() {
                   </div>
                   <div className="flex justify-between gap-4">
                     <dt>Funded</dt>
-                    <dd className="font-medium text-slate-900">
-                      {wallet.funded ? "Yes" : "No"}
-                    </dd>
+                    <dd className="font-medium text-slate-900">{wallet.funded ? "Yes" : "No"}</dd>
                   </div>
                   <div className="flex justify-between gap-4">
                     <dt>Trustline</dt>
-                    <dd className="font-medium text-slate-900">
-                      {wallet.trustline_ready ? "Ready" : "Missing"}
-                    </dd>
+                    <dd className="font-medium text-slate-900">{wallet.trustline_ready ? "Ready" : "Missing"}</dd>
                   </div>
                 </dl>
               ) : (
@@ -652,21 +299,15 @@ export default function SettingsPage() {
                 <dl className="mt-3 grid gap-2 text-slate-600">
                   <div className="flex justify-between gap-4">
                     <dt>Active</dt>
-                    <dd className="font-medium text-slate-900">
-                      {walletStatus.active ? "Yes" : "No"}
-                    </dd>
+                    <dd className="font-medium text-slate-900">{walletStatus.active ? "Yes" : "No"}</dd>
                   </div>
                   <div className="flex justify-between gap-4">
                     <dt>Usable</dt>
-                    <dd className="font-medium text-slate-900">
-                      {walletStatus.usable ? "Ready" : "Not ready"}
-                    </dd>
+                    <dd className="font-medium text-slate-900">{walletStatus.usable ? "Ready" : "Not ready"}</dd>
                   </div>
                   <div className="flex justify-between gap-4">
                     <dt>Last updated</dt>
-                    <dd className="font-medium text-slate-900">
-                      {new Date(walletStatus.last_updated).toLocaleString()}
-                    </dd>
+                    <dd className="font-medium text-slate-900">{new Date(walletStatus.last_updated).toLocaleString()}</dd>
                   </div>
                 </dl>
               ) : (
@@ -696,43 +337,7 @@ export default function SettingsPage() {
         </section>
       </div>
 
-      {/* FE-022: Wallet readiness guidance */}
-      {walletStatus && !walletStatus.usable && (
-        <section className="rounded-2xl border border-amber-200 bg-amber-50 p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-amber-900">Wallet Not Ready — Next Steps</h2>
-          <p className="mt-1 text-sm text-amber-700">
-            Your wallet must be funded and have a trustline set up before payments can be processed.
-          </p>
-          <ul className="mt-4 space-y-3">
-            {!walletStatus.active && (
-              <li className="flex items-start gap-3 text-sm text-amber-800">
-                <span className="mt-0.5 h-5 w-5 shrink-0 rounded-full bg-amber-200 text-center text-xs font-bold leading-5 text-amber-900">1</span>
-                <span><strong>Activate your wallet.</strong> The wallet is currently inactive. Contact your administrator or re-link the wallet via the Wallet Status panel above.</span>
-              </li>
-            )}
-            {walletStatus.active && !walletStatus.funded && (
-              <li className="flex items-start gap-3 text-sm text-amber-800">
-                <span className="mt-0.5 h-5 w-5 shrink-0 rounded-full bg-amber-200 text-center text-xs font-bold leading-5 text-amber-900">2</span>
-                <span><strong>Fund your wallet.</strong> Send at least 1 XLM to <code className="rounded bg-amber-100 px-1 font-mono text-xs">{walletStatus.public_key}</code> on the Stellar network to activate the account.</span>
-              </li>
-            )}
-            {walletStatus.active && walletStatus.funded && !walletStatus.trustline_ready && (
-              <li className="flex items-start gap-3 text-sm text-amber-800">
-                <span className="mt-0.5 h-5 w-5 shrink-0 rounded-full bg-amber-200 text-center text-xs font-bold leading-5 text-amber-900">3</span>
-                <span><strong>Set up a trustline.</strong> Your wallet is funded but missing a trustline for the payment asset. Use the Stellar Laboratory or your wallet app to add a trustline for the required asset.</span>
-              </li>
-            )}
-          </ul>
-        </section>
-      )}
-
-      {walletStatus?.usable && (
-        <section className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 shadow-sm">
-          <p className="text-sm font-medium text-emerald-800">
-            ✓ Wallet is fully ready — funded, trustline active, and usable for payments.
-          </p>
-        </section>
-      )}
+      <WalletReadinessCard walletStatus={walletStatus} />
     </div>
   );
 }
