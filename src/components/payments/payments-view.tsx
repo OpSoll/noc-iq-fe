@@ -7,6 +7,15 @@ import { useQuery } from "@tanstack/react-query";
 import { PaymentDetailDrawer } from "./payment-detail-drawer";
 import { Inbox } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 const URL_DEFAULTS = {
   status: "all",
@@ -40,6 +49,49 @@ function getStatusBadge(status: string) {
   }
 }
 
+type SortDirection = "asc" | "desc";
+
+function SortableHeader({
+  columnKey,
+  label,
+  activeKey,
+  activeDir,
+  onSort,
+}: {
+  columnKey: string;
+  label: string;
+  activeKey: string;
+  activeDir: SortDirection;
+  onSort: (key: string) => void;
+}) {
+  const isActive = activeKey === columnKey;
+
+  return (
+    <th
+      className="px-4 py-3"
+      aria-sort={
+        isActive ? (activeDir === "asc" ? "ascending" : "descending") : "none"
+      }
+    >
+      <button
+        type="button"
+        onClick={() => onSort(columnKey)}
+        className="inline-flex items-center gap-1 uppercase hover:underline"
+      >
+        {label}
+        {/* Hidden from the a11y tree so the button's name stays the plain label;
+            aria-sort on the th already conveys direction. */}
+        <span
+          aria-hidden="true"
+          className={isActive ? "text-gray-900" : "text-gray-300"}
+        >
+          {isActive ? (activeDir === "asc" ? "↑" : "↓") : "↕"}
+        </span>
+      </button>
+    </th>
+  );
+}
+
 export function PaymentsView() {
   const [urlState, setUrlState] = useUrlSync(URL_DEFAULTS);
 
@@ -50,7 +102,7 @@ export function PaymentsView() {
   const page = parseInt(urlState.page, 10);
   const perPage = parseInt(urlState.perPage, 10);
   const sortKey = urlState.sortKey;
-  const sortDir = urlState.sortDir as "asc" | "desc";
+  const sortDir = urlState.sortDir as SortDirection;
   const selectedPaymentId = urlState.paymentId || null;
 
   const { data, isLoading, error } = useQuery({
@@ -102,7 +154,8 @@ export function PaymentsView() {
 
   const handleSort = (key: string) => {
     const newDir = sortKey === key && sortDir === "asc" ? "desc" : "asc";
-    setUrlState({ sortKey: key, sortDir: newDir });
+    // Reset to the first page — row 1 of the new ordering is what the user wants.
+    setUrlState({ sortKey: key, sortDir: newDir, page: "1" });
   };
 
   if (error) {
@@ -163,24 +216,27 @@ export function PaymentsView() {
         <table className="w-full text-left text-sm">
           <thead className="border-b bg-gray-50 text-xs uppercase text-gray-500">
             <tr>
-              <th className="px-4 py-3">
-                <button
-                  onClick={() => handleSort("created_at")}
-                  className="hover:underline"
-                  aria-sort={
-                    sortKey === "created_at"
-                      ? sortDir === "asc"
-                        ? "ascending"
-                        : "descending"
-                      : "none"
-                  }
-                >
-                  Date{" "}
-                  {sortKey === "created_at" && (sortDir === "asc" ? "↑" : "↓")}
-                </button>
-              </th>
-              <th className="px-4 py-3">Amount</th>
-              <th className="px-4 py-3">Status</th>
+              <SortableHeader
+                columnKey="created_at"
+                label="Date"
+                activeKey={sortKey}
+                activeDir={sortDir}
+                onSort={handleSort}
+              />
+              <SortableHeader
+                columnKey="amount"
+                label="Amount"
+                activeKey={sortKey}
+                activeDir={sortDir}
+                onSort={handleSort}
+              />
+              <SortableHeader
+                columnKey="status"
+                label="Status"
+                activeKey={sortKey}
+                activeDir={sortDir}
+                onSort={handleSort}
+              />
               <th className="px-4 py-3">Type</th>
               <th className="px-4 py-3">Commission</th>
             </tr>
