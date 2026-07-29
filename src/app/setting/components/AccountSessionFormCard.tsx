@@ -3,6 +3,9 @@
 import { useState } from "react";
 import { api } from "@/lib/api";
 import { useToast } from "@/components/ui/toast";
+import usePasswordValidation from "@/hooks/usePasswordValidation";
+import PasswordStrength from "@/components/auth/PasswordStrength";
+import PasswordValidation from "@/components/auth/PasswordValidation";
 
 type AuthUser = {
   id: string;
@@ -47,6 +50,10 @@ export function AccountSessionFormCard({
     password: "secure123",
   });
 
+  const { password_strength, validation_result } = usePasswordValidation(
+    registerForm.password,
+  );
+
   async function handleRegister() {
     try {
       const response = await api.post<AuthUser>("/auth/register", registerForm);
@@ -60,7 +67,10 @@ export function AccountSessionFormCard({
 
   async function handleLogin() {
     try {
-      const response = await api.post<AuthSessionResponse>("/auth/login", loginForm);
+      const response = await api.post<AuthSessionResponse>(
+        "/auth/login",
+        loginForm,
+      );
       setSession(response.data);
       setCurrentUser(response.data.user);
       onUserSelected(response.data.user.id);
@@ -94,9 +104,13 @@ export function AccountSessionFormCard({
       return;
     }
     try {
-      await api.post("/auth/logout", {}, {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
+      await api.post(
+        "/auth/logout",
+        {},
+        {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        },
+      );
       setSession(null);
       setCurrentUser(null);
       toast("Logged out successfully.", "success");
@@ -108,7 +122,9 @@ export function AccountSessionFormCard({
   return (
     <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
       <div>
-        <h2 className="text-xl font-semibold text-slate-900">Account Session</h2>
+        <h2 className="text-xl font-semibold text-slate-900">
+          Account Session
+        </h2>
         <p className="text-sm text-slate-500">
           Register, sign in, and validate the active backend session.
         </p>
@@ -120,25 +136,54 @@ export function AccountSessionFormCard({
           <input
             className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
             value={registerForm.full_name}
-            onChange={(event) => setRegisterForm((current) => ({ ...current, full_name: event.target.value }))}
+            onChange={(event) =>
+              setRegisterForm((current) => ({
+                ...current,
+                full_name: event.target.value,
+              }))
+            }
             placeholder="Full name"
           />
           <input
             className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
             value={registerForm.email}
-            onChange={(event) => setRegisterForm((current) => ({ ...current, email: event.target.value }))}
+            onChange={(event) =>
+              setRegisterForm((current) => ({
+                ...current,
+                email: event.target.value,
+              }))
+            }
             placeholder="Email"
           />
           <input
             className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
             type="password"
             value={registerForm.password}
-            onChange={(event) => setRegisterForm((current) => ({ ...current, password: event.target.value }))}
+            onChange={(event) =>
+              setRegisterForm((current) => ({
+                ...current,
+                password: event.target.value,
+              }))
+            }
             placeholder="Password"
+            aria-describedby="password-strength-feedback-register"
           />
+          <div
+            id="password-strength-feedback-register"
+            aria-live="polite"
+            className="text-sm text-gray-500"
+          >
+            {registerForm.password.length > 0 && (
+              <div className="mt-2 space-y-2">
+                <PasswordStrength password_strength={password_strength} />
+                <PasswordValidation validation_result={validation_result} />
+              </div>
+            )}
+          </div>
           <button
             onClick={handleRegister}
-            className="w-full rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+            disabled={password_strength < 4}
+            className="w-full rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
           >
             Register account
           </button>
@@ -149,19 +194,30 @@ export function AccountSessionFormCard({
           <input
             className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
             value={loginForm.email}
-            onChange={(event) => setLoginForm((current) => ({ ...current, email: event.target.value }))}
+            onChange={(event) =>
+              setLoginForm((current) => ({
+                ...current,
+                email: event.target.value,
+              }))
+            }
             placeholder="Email"
           />
           <input
             className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
             type="password"
             value={loginForm.password}
-            onChange={(event) => setLoginForm((current) => ({ ...current, password: event.target.value }))}
+            onChange={(event) =>
+              setLoginForm((current) => ({
+                ...current,
+                password: event.target.value,
+              }))
+            }
             placeholder="Password"
           />
           <button
             onClick={handleLogin}
-            className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            disabled={loginForm.password.length < 8}
+            className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
           >
             Sign in
           </button>
@@ -192,7 +248,9 @@ export function AccountSessionFormCard({
             </div>
             <div className="flex justify-between gap-4">
               <dt>Email</dt>
-              <dd className="font-medium text-slate-900">{currentUser.email}</dd>
+              <dd className="font-medium text-slate-900">
+                {currentUser.email}
+              </dd>
             </div>
             <div className="flex justify-between gap-4">
               <dt>Role</dt>
