@@ -1,5 +1,6 @@
 import axios from "axios";
 import { getCorrelationId } from "@/lib/telemetry/tracer";
+import { networkEvents } from "@/lib/network-events";
 
 export const TOKEN_KEY = "noc_access_token";
 export const REFRESH_KEY = "noc_refresh_token";
@@ -68,10 +69,24 @@ async function doRefresh(): Promise<string> {
 
 // Auto-refresh on 401 with single-flight dedup
 api.interceptors.response.use(
-  (res) => res,
+  (res) => {
+    // On successful response, notify that we are online
+    networkEvents.emit(true);
+    return res;
+  },
   async (err: unknown) => {
-    const axiosErr = err as { response?: { status?: number }; config?: object };
+    const axiosErr = err as {
+      response?: { status?: number };
+      config?: object;
+      code?: string;
+    };
     const config = axiosErr?.config;
+
+    // Handle network errors (e.g., backend unreachable)
+    if (axiosErr.code === "ECONNABORTED" || axiosErr.code === "ERR_NETWORK") {
+      networkEvents.emit(false);
+      return Promise.reject(normalizeApiError(err));
+    }
 
     if (axiosErr?.response?.status === 401 && config && !retried.has(config)) {
       retried.add(config);
@@ -83,14 +98,19 @@ api.interceptors.response.use(
         }
         const newToken = await refreshPromise;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (config as any).headers = { ...((config as any).headers ?? {}), Authorization: `Bearer ${newToken}` };
+        (config as any).headers = {
+          ...((config as any).headers ?? {}),
+          Authorization: `Bearer ${newToken}`,
+        };
         return api(config as unknown as Parameters<typeof api>[0]);
       } catch {
         clearTokens();
         if (typeof window !== "undefined") {
           window.dispatchEvent(new Event("auth:logout"));
         }
-        return Promise.reject(new Error("Session expired. Please sign in again."));
+        return Promise.reject(
+          new Error("Session expired. Please sign in again."),
+        );
       }
     }
 
@@ -108,15 +128,20 @@ export interface NormalizedApiError {
 
 export function normalizeApiError(err: unknown): NormalizedApiError {
   const e = err as {
-    response?: { status?: number; data?: { detail?: string | { msg: string }[]; message?: string } };
+    response?: {
+      status?: number;
+      data?: { detail?: string | { msg: string }[]; message?: string };
+    };
     message?: string;
   };
   const status = e?.response?.status;
   const detail = e?.response?.data?.detail;
-  const message =
-    Array.isArray(detail)
-      ? detail.map((d) => d.msg).join("; ")
-      : detail ?? e?.response?.data?.message ?? e?.message ?? "Unexpected API error";
+  const message = Array.isArray(detail)
+    ? detail.map((d) => d.msg).join("; ")
+    : (detail ??
+      e?.response?.data?.message ??
+      e?.message ??
+      "Unexpected API error");
 
   const kind: ApiErrorKind =
     status === 401 || status === 403

@@ -1,49 +1,42 @@
-'use client';
+"use client";
 
-import { useUrlSync } from '@/hooks/useUrlSync';
-import { PaymentService } from '@/services/paymentService';
-import type { Payment } from '@/types/payment';
-import { useQuery } from '@tanstack/react-query';
-import { PaymentDetailDrawer } from './payment-detail-drawer';
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationPrevious,
-  PaginationNext,
-  PaginationEllipsis,
-} from '@/components/ui/pagination';
+import { useUrlSync } from "@/hooks/useUrlSync";
+import { PaymentService } from "@/services/paymentService";
+import type { Payment } from "@/types/payment";
+import { useQuery } from "@tanstack/react-query";
+import { PaymentDetailDrawer } from "./payment-detail-drawer";
+import { Inbox } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 
 const URL_DEFAULTS = {
-  status: 'all',
-  type: 'all',
-  dateFrom: '',
-  dateTo: '',
-  page: '1',
-  perPage: '20',
-  paymentId: '',
-  sortKey: 'created_at',
-  sortDir: 'desc',
+  status: "all",
+  type: "all",
+  dateFrom: "",
+  dateTo: "",
+  page: "1",
+  perPage: "20",
+  paymentId: "",
+  sortKey: "created_at",
+  sortDir: "desc",
 };
 
 function formatAmount(payment: Payment) {
-  const sign = payment.type === 'penalty' ? '-' : '+';
+  const sign = payment.type === "penalty" ? "-" : "+";
   return `${sign}$${payment.amount}`;
 }
 
 function getStatusBadge(status: string) {
   switch (status.toUpperCase()) {
-    case 'CONFIRMED':
-      return 'bg-green-100 text-green-700';
-    case 'RELEASED':
-      return 'bg-blue-100 text-blue-700';
-    case 'REFUNDED':
-      return 'bg-yellow-100 text-yellow-700';
-    case 'FAILED':
-      return 'bg-red-100 text-red-700';
+    case "CONFIRMED":
+      return "bg-green-100 text-green-700";
+    case "RELEASED":
+      return "bg-blue-100 text-blue-700";
+    case "REFUNDED":
+      return "bg-yellow-100 text-yellow-700";
+    case "FAILED":
+      return "bg-red-100 text-red-700";
     default:
-      return 'bg-gray-100 text-gray-700';
+      return "bg-gray-100 text-gray-700";
   }
 }
 
@@ -57,15 +50,27 @@ export function PaymentsView() {
   const page = parseInt(urlState.page, 10);
   const perPage = parseInt(urlState.perPage, 10);
   const sortKey = urlState.sortKey;
-  const sortDir = urlState.sortDir as 'asc' | 'desc';
+  const sortDir = urlState.sortDir as "asc" | "desc";
   const selectedPaymentId = urlState.paymentId || null;
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['payments', { statusFilter, typeFilter, dateFrom, dateTo, page, perPage, sortKey, sortDir }],
+    queryKey: [
+      "payments",
+      {
+        statusFilter,
+        typeFilter,
+        dateFrom,
+        dateTo,
+        page,
+        perPage,
+        sortKey,
+        sortDir,
+      },
+    ],
     queryFn: () =>
       PaymentService.fetchPayments({
-        status: statusFilter !== 'all' ? statusFilter : undefined,
-        type: typeFilter !== 'all' ? typeFilter : undefined,
+        status: statusFilter !== "all" ? statusFilter : undefined,
+        type: typeFilter !== "all" ? typeFilter : undefined,
         date_from: dateFrom || undefined,
         date_to: dateTo || undefined,
         page,
@@ -80,7 +85,7 @@ export function PaymentsView() {
   const totalPages = Math.ceil(total / perPage);
 
   const handleFilterChange = (key: string, value: string) => {
-    setUrlState({ [key]: value, page: '1' } as any);
+    setUrlState({ [key]: value, page: "1" } as any);
   };
 
   const handlePageChange = (newPage: number) => {
@@ -92,11 +97,11 @@ export function PaymentsView() {
   };
 
   const handleCloseDrawer = () => {
-    setUrlState({ paymentId: '' });
+    setUrlState({ paymentId: "" });
   };
 
   const handleSort = (key: string) => {
-    const newDir = sortKey === key && sortDir === 'asc' ? 'desc' : 'asc';
+    const newDir = sortKey === key && sortDir === "asc" ? "desc" : "asc";
     setUrlState({ sortKey: key, sortDir: newDir });
   };
 
@@ -115,7 +120,7 @@ export function PaymentsView() {
         <div className="flex flex-wrap items-center gap-2">
           <select
             value={statusFilter}
-            onChange={(e) => handleFilterChange('status', e.target.value)}
+            onChange={(e) => handleFilterChange("status", e.target.value)}
             className="rounded border px-3 py-1.5 text-sm"
             aria-label="Filter by status"
           >
@@ -128,7 +133,7 @@ export function PaymentsView() {
           </select>
           <select
             value={typeFilter}
-            onChange={(e) => handleFilterChange('type', e.target.value)}
+            onChange={(e) => handleFilterChange("type", e.target.value)}
             className="rounded border px-3 py-1.5 text-sm"
             aria-label="Filter by type"
           >
@@ -140,14 +145,14 @@ export function PaymentsView() {
           <input
             type="date"
             value={dateFrom}
-            onChange={(e) => handleFilterChange('dateFrom', e.target.value)}
+            onChange={(e) => handleFilterChange("dateFrom", e.target.value)}
             className="rounded border px-3 py-1.5 text-sm"
             aria-label="Date from"
           />
           <input
             type="date"
             value={dateTo}
-            onChange={(e) => handleFilterChange('dateTo', e.target.value)}
+            onChange={(e) => handleFilterChange("dateTo", e.target.value)}
             className="rounded border px-3 py-1.5 text-sm"
             aria-label="Date to"
           />
@@ -159,8 +164,19 @@ export function PaymentsView() {
           <thead className="border-b bg-gray-50 text-xs uppercase text-gray-500">
             <tr>
               <th className="px-4 py-3">
-                <button onClick={() => handleSort('created_at')} className="hover:underline" aria-sort={sortKey === 'created_at' ? sortDir === 'asc' ? 'ascending' : 'descending' : 'none'}>
-                  Date {sortKey === 'created_at' && (sortDir === 'asc' ? '↑' : '↓')}
+                <button
+                  onClick={() => handleSort("created_at")}
+                  className="hover:underline"
+                  aria-sort={
+                    sortKey === "created_at"
+                      ? sortDir === "asc"
+                        ? "ascending"
+                        : "descending"
+                      : "none"
+                  }
+                >
+                  Date{" "}
+                  {sortKey === "created_at" && (sortDir === "asc" ? "↑" : "↓")}
                 </button>
               </th>
               <th className="px-4 py-3">Amount</th>
@@ -180,8 +196,37 @@ export function PaymentsView() {
               ))
             ) : payments.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
-                  No payments found.
+                <td colSpan={5} className="px-4 py-8">
+                  <EmptyState
+                    icon={Inbox}
+                    title="No payments found"
+                    description={
+                      statusFilter !== "all" ||
+                      typeFilter !== "all" ||
+                      dateFrom ||
+                      dateTo
+                        ? "Try adjusting your filters or clearing them to see all payments."
+                        : "As soon as payments are processed, they will appear here."
+                    }
+                    action={
+                      statusFilter !== "all" ||
+                      typeFilter !== "all" ||
+                      dateFrom ||
+                      dateTo
+                        ? {
+                            label: "Clear Filters",
+                            onClick: () =>
+                              setUrlState({
+                                status: "all",
+                                type: "all",
+                                dateFrom: "",
+                                dateTo: "",
+                                page: "1",
+                              }),
+                          }
+                        : undefined
+                    }
+                  />
                 </td>
               </tr>
             ) : (
@@ -191,19 +236,36 @@ export function PaymentsView() {
                   className="cursor-pointer border-b hover:bg-gray-50"
                   onClick={() => handleRowClick(payment.id)}
                   tabIndex={0}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleRowClick(payment.id); } }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      handleRowClick(payment.id);
+                    }
+                  }}
                   role="button"
                   aria-label={`View payment ${payment.id}`}
                 >
-                  <td className="px-4 py-3">{new Date(payment.createdAt).toLocaleDateString()}</td>
-                  <td className="px-4 py-3 font-medium">{formatAmount(payment)}</td>
                   <td className="px-4 py-3">
-                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${getStatusBadge(payment.status)}`}>
+                    {new Date(payment.createdAt).toLocaleDateString()}
+                  </td>
+                  <td className="px-4 py-3 font-medium">
+                    {formatAmount(payment)}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${getStatusBadge(payment.status)}`}
+                    >
                       {payment.status}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-gray-600">{payment.type ?? 'N/A'}</td>
-                  <td className="px-4 py-3 text-gray-600">{payment.commissionId ? `${payment.commissionId.slice(0, 8)}...` : 'N/A'}</td>
+                  <td className="px-4 py-3 text-gray-600">
+                    {payment.type ?? "N/A"}
+                  </td>
+                  <td className="px-4 py-3 text-gray-600">
+                    {payment.commissionId
+                      ? `${payment.commissionId.slice(0, 8)}...`
+                      : "N/A"}
+                  </td>
                 </tr>
               ))
             )}
@@ -219,7 +281,11 @@ export function PaymentsView() {
                 <PaginationPrevious
                   onClick={() => page > 1 && handlePageChange(page - 1)}
                   aria-disabled={page <= 1}
-                  className={page <= 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                  className={
+                    page <= 1
+                      ? "pointer-events-none opacity-50"
+                      : "cursor-pointer"
+                  }
                 />
               </PaginationItem>
               {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
@@ -243,9 +309,15 @@ export function PaymentsView() {
               )}
               <PaginationItem>
                 <PaginationNext
-                  onClick={() => page < totalPages && handlePageChange(page + 1)}
+                  onClick={() =>
+                    page < totalPages && handlePageChange(page + 1)
+                  }
                   aria-disabled={page >= totalPages}
-                  className={page >= totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                  className={
+                    page >= totalPages
+                      ? "pointer-events-none opacity-50"
+                      : "cursor-pointer"
+                  }
                 />
               </PaginationItem>
             </PaginationContent>
@@ -254,7 +326,10 @@ export function PaymentsView() {
       )}
 
       {selectedPaymentId && (
-        <PaymentDetailDrawer paymentId={selectedPaymentId} onClose={handleCloseDrawer} />
+        <PaymentDetailDrawer
+          paymentId={selectedPaymentId}
+          onClose={handleCloseDrawer}
+        />
       )}
     </div>
   );
