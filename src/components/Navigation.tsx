@@ -18,24 +18,26 @@ const Navigation = () => {
   const { mode, setMode } = useAccessibility();
   const isAdmin = user?.role === "admin";
 
+  const linkClass = "rounded px-1.5 py-0.5 hover:underline focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none";
+
   return (
     <nav style={{ padding: "1rem", borderBottom: "1px solid #ccc" }} className="flex items-center justify-between">
       <div className="flex flex-wrap gap-3 text-sm">
-        <Link href="/">Dashboard</Link>
+        <Link href="/" className={linkClass}>Dashboard</Link>
         <span>|</span>
-        <Link href="/outages">Outages</Link>
+        <Link href="/outages" className={linkClass}>Outages</Link>
         <span>|</span>
-        <Link href="/bulk-import">Bulk Import</Link>
+        <Link href="/bulk-import" className={linkClass}>Bulk Import</Link>
         <span>|</span>
-        <Link href="/payments">Payments</Link>
+        <Link href="/payments" className={linkClass}>Payments</Link>
         <span>|</span>
-        <Link href="/setting">Settings</Link>
+        <Link href="/setting" className={linkClass}>Settings</Link>
         {isAdmin && (
           <>
             <span>|</span>
-            <Link href="/config">SLA Config</Link>
+            <Link href="/config" className={linkClass}>SLA Config</Link>
             <span>|</span>
-            <Link href="/webhooks">Webhooks</Link>
+            <Link href="/webhooks" className={linkClass}>Webhooks</Link>
           </>
         )}
       </div>
@@ -44,7 +46,7 @@ const Navigation = () => {
         <select
           value={mode}
           onChange={(e) => setMode(e.target.value as AccessibilityMode)}
-          className="rounded border border-slate-200 bg-white px-2 py-1 text-xs text-slate-500"
+          className="rounded border border-slate-200 bg-white px-2 py-1 text-xs text-slate-500 focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none"
           aria-label="Accessibility mode"
         >
           {A11Y_MODES.map((m) => (
@@ -67,7 +69,7 @@ const Navigation = () => {
             )}
             <button
               onClick={() => void logout()}
-              className="rounded border border-slate-200 px-2 py-0.5 text-xs hover:bg-slate-100"
+              className="rounded border border-slate-200 px-2 py-0.5 text-xs hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none"
             >
               Sign out
             </button>
@@ -76,7 +78,7 @@ const Navigation = () => {
         {state === "unauthenticated" && (
           <Link
             href="/login"
-            className="rounded border border-slate-200 px-2 py-0.5 text-xs hover:bg-slate-100"
+            className="rounded border border-slate-200 px-2 py-0.5 text-xs hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none"
           >
             Sign in
           </Link>
