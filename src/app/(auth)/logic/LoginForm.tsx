@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { getRedirect, clearRedirect } from "@/lib/auth/redirectStorage";
+import usePasswordValidation from "@/hooks/usePasswordValidation";
+import PasswordStrength from "@/components/auth/PasswordStrength";
+import PasswordValidation from "@/components/auth/PasswordValidation";
 
 export function LoginForm() {
   const router = useRouter();
@@ -12,6 +15,8 @@ export function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const { password_strength, validation_result } =
+    usePasswordValidation(password);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -24,7 +29,9 @@ export function LoginForm() {
       router.push(redirect ?? "/");
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed. Please try again.");
+      setError(
+        err instanceof Error ? err.message : "Login failed. Please try again.",
+      );
     } finally {
       setLoading(false);
     }
@@ -34,12 +41,17 @@ export function LoginForm() {
     <div className="mx-auto max-w-sm space-y-6 p-8 pt-16">
       <div className="space-y-1">
         <h1 className="text-2xl font-bold text-gray-800">Sign in</h1>
-        <p className="text-sm text-gray-500">Enter your credentials to continue.</p>
+        <p className="text-sm text-gray-500">
+          Enter your credentials to continue.
+        </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-1">
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+          <label
+            htmlFor="email"
+            className="block text-sm font-medium text-gray-700"
+          >
             Email
           </label>
           <input
@@ -54,7 +66,10 @@ export function LoginForm() {
         </div>
 
         <div className="space-y-1">
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+          <label
+            htmlFor="password"
+            className="block text-sm font-medium text-gray-700"
+          >
             Password
           </label>
           <input
@@ -65,16 +80,31 @@ export function LoginForm() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            aria-describedby="password-strength-feedback"
           />
+          <div
+            id="password-strength-feedback"
+            aria-live="polite"
+            className="text-sm text-gray-500"
+          >
+            {password.length > 0 && (
+              <div className="mt-2 space-y-2">
+                <PasswordStrength password_strength={password_strength} />
+                <PasswordValidation validation_result={validation_result} />
+              </div>
+            )}
+          </div>
         </div>
 
         {error && (
-          <p className="rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600">{error}</p>
+          <p className="rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600">
+            {error}
+          </p>
         )}
 
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || password.length < 8}
           className="w-full rounded-lg bg-blue-600 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
         >
           {loading ? "Signing in…" : "Sign in"}

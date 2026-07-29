@@ -1,8 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useSession } from "@/hooks/useSession";
-import { useAccessibility, type AccessibilityMode } from "@/providers/accessibility";
+import {
+  useAccessibility,
+  type AccessibilityMode,
+} from "@/providers/accessibility";
 
 // Routes only visible to admin users
 const ADMIN_ROUTES = ["/webhooks", "/config"];
@@ -17,27 +21,78 @@ const Navigation = () => {
   const { state, user, logout } = useSession();
   const { mode, setMode } = useAccessibility();
   const isAdmin = user?.role === "admin";
+  const pathname = usePathname();
 
-  const linkClass = "rounded px-1.5 py-0.5 hover:underline focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none";
+  const linkClass =
+    "rounded px-1.5 py-0.5 hover:underline focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none";
+
+  const getLinkClass = (path: string) => {
+    return pathname === path ? `${linkClass} font-bold` : linkClass;
+  };
 
   return (
-    <nav style={{ padding: "1rem", borderBottom: "1px solid #ccc" }} className="flex items-center justify-between">
+    <nav
+      style={{ padding: "1rem", borderBottom: "1px solid #ccc" }}
+      className="flex items-center justify-between"
+    >
       <div className="flex flex-wrap gap-3 text-sm">
-        <Link href="/" className={linkClass}>Dashboard</Link>
+        <Link
+          href="/"
+          className={getLinkClass("/")}
+          aria-current={pathname === "/" ? "page" : undefined}
+        >
+          Dashboard
+        </Link>
         <span>|</span>
-        <Link href="/outages" className={linkClass}>Outages</Link>
+        <Link
+          href="/outages"
+          className={getLinkClass("/outages")}
+          aria-current={pathname === "/outages" ? "page" : undefined}
+        >
+          Outages
+        </Link>
         <span>|</span>
-        <Link href="/bulk-import" className={linkClass}>Bulk Import</Link>
+        <Link
+          href="/bulk-import"
+          className={getLinkClass("/bulk-import")}
+          aria-current={pathname === "/bulk-import" ? "page" : undefined}
+        >
+          Bulk Import
+        </Link>
         <span>|</span>
-        <Link href="/payments" className={linkClass}>Payments</Link>
+        <Link
+          href="/payments"
+          className={getLinkClass("/payments")}
+          aria-current={pathname === "/payments" ? "page" : undefined}
+        >
+          Payments
+        </Link>
         <span>|</span>
-        <Link href="/setting" className={linkClass}>Settings</Link>
+        <Link
+          href="/setting"
+          className={getLinkClass("/setting")}
+          aria-current={pathname === "/setting" ? "page" : undefined}
+        >
+          Settings
+        </Link>
         {isAdmin && (
           <>
             <span>|</span>
-            <Link href="/config" className={linkClass}>SLA Config</Link>
+            <Link
+              href="/config"
+              className={getLinkClass("/config")}
+              aria-current={pathname === "/config" ? "page" : undefined}
+            >
+              SLA Config
+            </Link>
             <span>|</span>
-            <Link href="/webhooks" className={linkClass}>Webhooks</Link>
+            <Link
+              href="/webhooks"
+              className={getLinkClass("/webhooks")}
+              aria-current={pathname === "/webhooks" ? "page" : undefined}
+            >
+              Webhooks
+            </Link>
           </>
         )}
       </div>

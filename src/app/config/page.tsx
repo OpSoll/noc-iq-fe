@@ -4,7 +4,12 @@ import { useEffect, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { RouteErrorState, RouteLoadingState } from "@/components/ui/route-state";
+import {
+  RouteErrorState,
+  RouteLoadingState,
+} from "@/components/ui/route-state";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Settings } from "lucide-react";
 import { api } from "@/lib/api";
 
 type Severity = "critical" | "high" | "medium" | "low";
@@ -22,7 +27,9 @@ type EditableConfig = SLASeverityConfig & {
 };
 
 function getErrorMessage(error: unknown) {
-  return error instanceof Error ? error.message : "An unexpected error occurred";
+  return error instanceof Error
+    ? error.message
+    : "An unexpected error occurred";
 }
 
 function getSeverityVariant(severity: Severity) {
@@ -36,7 +43,9 @@ export default function SlaConfigPage() {
   const [configs, setConfigs] = useState<EditableConfig[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [editingConfig, setEditingConfig] = useState<EditableConfig | null>(null);
+  const [editingConfig, setEditingConfig] = useState<EditableConfig | null>(
+    null,
+  );
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [formData, setFormData] = useState<SLASeverityConfig>({
@@ -87,6 +96,21 @@ export default function SlaConfigPage() {
   }
 
   function handleCancel() {
+    if (editingConfig) {
+      const isDirty =
+        formData.threshold_minutes !== editingConfig.threshold_minutes ||
+        formData.penalty_per_minute !== editingConfig.penalty_per_minute ||
+        formData.reward_base !== editingConfig.reward_base;
+
+      if (
+        isDirty &&
+        !window.confirm(
+          "You have unsaved changes. Are you sure you want to discard them?",
+        )
+      ) {
+        return;
+      }
+    }
     setEditingConfig(null);
     setSaveError(null);
   }
@@ -143,14 +167,19 @@ export default function SlaConfigPage() {
       <RouteErrorState
         title="Configuration unavailable"
         description={error}
-        primaryAction={{ label: "Try again", onClick: () => void fetchConfigs() }}
+        primaryAction={{
+          label: "Try again",
+          onClick: () => void fetchConfigs(),
+        }}
       />
     );
   }
 
   return (
     <div className="container mx-auto max-w-5xl px-4 py-8">
-      <h1 className="mb-6 text-3xl font-bold tracking-tight">SLA Configuration Management</h1>
+      <h1 className="mb-6 text-3xl font-bold tracking-tight">
+        SLA Configuration Management
+      </h1>
 
       <Card>
         <CardHeader>
@@ -165,17 +194,26 @@ export default function SlaConfigPage() {
                   <th className="border-b p-3 font-medium">Threshold (mins)</th>
                   <th className="border-b p-3 font-medium">Reward Base</th>
                   <th className="border-b p-3 font-medium">Penalty / Minute</th>
-                  <th className="border-b p-3 text-right font-medium">Action</th>
+                  <th className="border-b p-3 text-right font-medium">
+                    Action
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {configs.map((config) => (
-                  <tr key={config.severity} className="border-b transition-colors hover:bg-muted/30">
+                  <tr
+                    key={config.severity}
+                    className="border-b transition-colors hover:bg-muted/30"
+                  >
                     <td className="p-3 capitalize">
-                      <Badge variant={getSeverityVariant(config.severity)}>{config.severity}</Badge>
+                      <Badge variant={getSeverityVariant(config.severity)}>
+                        {config.severity}
+                      </Badge>
                     </td>
                     <td className="p-3">{config.threshold_minutes}</td>
-                    <td className="p-3 font-medium text-emerald-600">{config.reward_base}</td>
+                    <td className="p-3 font-medium text-emerald-600">
+                      {config.reward_base}
+                    </td>
                     <td className="p-3 font-medium text-red-600">
                       {config.penalty_per_minute}
                     </td>
@@ -192,9 +230,11 @@ export default function SlaConfigPage() {
               </tbody>
             </table>
             {configs.length === 0 ? (
-              <div className="p-6 text-center italic text-muted-foreground">
-                No configurations found.
-              </div>
+              <EmptyState
+                icon={Settings}
+                title="No configurations found"
+                description="SLA configurations will appear here once they are created."
+              />
             ) : null}
           </div>
         </CardContent>
@@ -235,7 +275,10 @@ export default function SlaConfigPage() {
                 />
               </div>
               <div>
-                <label htmlFor="sla-reward-base" className="mb-1 block text-sm font-medium">
+                <label
+                  htmlFor="sla-reward-base"
+                  className="mb-1 block text-sm font-medium"
+                >
                   Reward Base
                 </label>
                 <input

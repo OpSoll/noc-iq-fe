@@ -253,6 +253,21 @@ export default function SLADashboardView() {
     metrics.penalties.count === 0 &&
     metrics.rewards.count === 0;
 
+  function applyPreset(days: number | "month" | "ytd") {
+    const to = new Date();
+    const from = new Date();
+    if (typeof days === "number") {
+      from.setDate(from.getDate() - days);
+    } else if (days === "month") {
+      from.setDate(1);
+    } else if (days === "ytd") {
+      from.setMonth(0, 1);
+    }
+    const toStr = to.toISOString().split("T")[0];
+    const fromStr = from.toISOString().split("T")[0];
+    setUrlState({ ...urlState, date_from: fromStr, date_to: toStr, compare: compareMode ? "1" : "0" });
+  }
+
   return (
     <div className="space-y-6 p-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -274,6 +289,19 @@ export default function SLADashboardView() {
           <button type="button" onClick={() => void primary.refetch()} className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50">Refresh</button>
         </div>
       </div>
+
+
+      {compareMode && secondary.isLoading ? (
+        <p className="text-sm text-gray-400">Loading comparison window…</p>
+      ) : null}
+
+      <div className="flex gap-2 text-sm text-slate-600 mb-2">
+        <button type="button" onClick={() => applyPreset(7)} className="hover:underline">Last 7 Days</button>
+        <button type="button" onClick={() => applyPreset(30)} className="hover:underline">Last 30 Days</button>
+        <button type="button" onClick={() => applyPreset("month")} className="hover:underline">This Month</button>
+        <button type="button" onClick={() => applyPreset("ytd")} className="hover:underline">Year to Date</button>
+      </div>
+
 
       <div className="grid grid-cols-2 gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-4">
         <label className="space-y-1 text-xs">

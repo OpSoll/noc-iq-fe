@@ -5,6 +5,7 @@ import { PaymentService } from "@/services/paymentService";
 import type { Payment } from "@/types/payment";
 import { useQuery } from "@tanstack/react-query";
 import { PaymentDetailDrawer } from "./payment-detail-drawer";
+
 import { queryKeys } from "@/lib/queryKeys";
 import {
   Pagination,
@@ -21,6 +22,10 @@ import {
   type ExplorerEntityType,
 } from "@/lib/explorer";
 import { ExternalLink } from "lucide-react";
+
+import { Inbox } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
+
 
 const URL_DEFAULTS = {
   status: "all",
@@ -94,6 +99,7 @@ export function PaymentsView() {
   const selectedPaymentId = urlState.paymentId || null;
 
   const { data, isLoading, error } = useQuery({
+
     queryKey: queryKeys.payments.list({
       statusFilter,
       typeFilter,
@@ -104,6 +110,21 @@ export function PaymentsView() {
       sortKey,
       sortDir,
     }),
+
+    queryKey: [
+      "payments",
+      {
+        statusFilter,
+        typeFilter,
+        dateFrom,
+        dateTo,
+        page,
+        perPage,
+        sortKey,
+        sortDir,
+      },
+    ],
+
     queryFn: () =>
       PaymentService.fetchPayments({
         status: statusFilter !== "all" ? statusFilter : undefined,
@@ -122,7 +143,11 @@ export function PaymentsView() {
   const totalPages = Math.ceil(total / perPage);
 
   const handleFilterChange = (key: string, value: string) => {
+
     setUrlState({ [key]: value, page: "1" } as Partial<typeof URL_DEFAULTS>);
+
+    setUrlState({ [key]: value, page: "1" } as any);
+
   };
 
   const handlePageChange = (newPage: number) => {
@@ -242,8 +267,42 @@ export function PaymentsView() {
               ))
             ) : payments.length === 0 ? (
               <tr>
+
                 <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
                   No payments found.
+
+                <td colSpan={5} className="px-4 py-8">
+                  <EmptyState
+                    icon={Inbox}
+                    title="No payments found"
+                    description={
+                      statusFilter !== "all" ||
+                      typeFilter !== "all" ||
+                      dateFrom ||
+                      dateTo
+                        ? "Try adjusting your filters or clearing them to see all payments."
+                        : "As soon as payments are processed, they will appear here."
+                    }
+                    action={
+                      statusFilter !== "all" ||
+                      typeFilter !== "all" ||
+                      dateFrom ||
+                      dateTo
+                        ? {
+                            label: "Clear Filters",
+                            onClick: () =>
+                              setUrlState({
+                                status: "all",
+                                type: "all",
+                                dateFrom: "",
+                                dateTo: "",
+                                page: "1",
+                              }),
+                          }
+                        : undefined
+                    }
+                  />
+
                 </td>
               </tr>
             ) : (
@@ -278,12 +337,14 @@ export function PaymentsView() {
                   <td className="px-4 py-3 text-gray-600">
                     {payment.type ?? "N/A"}
                   </td>
+
                   <td className="px-4 py-3">
                     <SafeExplorerLink
                       type="tx"
                       value={payment.transactionHash}
                     />
                   </td>
+
                   <td className="px-4 py-3 text-gray-600">
                     {payment.commissionId
                       ? `${payment.commissionId.slice(0, 8)}...`

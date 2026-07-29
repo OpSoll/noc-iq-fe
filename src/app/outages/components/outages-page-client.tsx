@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { WifiOff } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 
 type Outage = {
   id: string;
@@ -30,7 +32,7 @@ export default function OutagesPageClient({ data = [] }: Props) {
     // Search
     if (search) {
       result = result.filter((item) =>
-        item.title.toLowerCase().includes(search.toLowerCase())
+        item.title.toLowerCase().includes(search.toLowerCase()),
       );
     }
 
@@ -38,8 +40,7 @@ export default function OutagesPageClient({ data = [] }: Props) {
     if (sortBy === "date") {
       result.sort(
         (a, b) =>
-          new Date(b.createdAt).getTime() -
-          new Date(a.createdAt).getTime()
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
       );
     }
 
@@ -55,9 +56,7 @@ export default function OutagesPageClient({ data = [] }: Props) {
   // -----------------------------
   function toggleSelect(id: string) {
     setSelectedIds((prev) =>
-      prev.includes(id)
-        ? prev.filter((i) => i !== id)
-        : [...prev, id]
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
     );
   }
 
@@ -87,9 +86,7 @@ export default function OutagesPageClient({ data = [] }: Props) {
         <div className="flex gap-2">
           <select
             value={sortBy}
-            onChange={(e) =>
-              setSortBy(e.target.value as "date" | "title")
-            }
+            onChange={(e) => setSortBy(e.target.value as "date" | "title")}
             className="border rounded-md px-3 py-2"
           >
             <option value="date">Newest</option>
@@ -116,34 +113,54 @@ export default function OutagesPageClient({ data = [] }: Props) {
       {/* List */}
       <div className="overflow-x-auto">
         <div className="grid gap-4">
-          {filteredData.map((item) => (
-            <div
-              key={item.id}
-              className="border rounded-lg p-4 flex items-center justify-between"
-              tabIndex={0}
-              role="button"
-              aria-label={`View outage: ${item.title}`}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  toggleSelect(item.id);
-                }
-              }}
-            >
-              <div>
-                <h3 className="font-medium">{item.title}</h3>
-                <p className="text-sm text-muted-foreground">
-                  {new Date(item.createdAt).toLocaleString()}
-                </p>
-              </div>
+          {filteredData.length > 0 ? (
+            filteredData.map((item) => (
+              <div
+                key={item.id}
+                className="border rounded-lg p-4 flex items-center justify-between"
+                tabIndex={0}
+                role="button"
+                aria-label={`View outage: ${item.title}`}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    toggleSelect(item.id);
+                  }
+                }}
+              >
+                <div>
+                  <h3 className="font-medium">{item.title}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {new Date(item.createdAt).toLocaleString()}
+                  </p>
+                </div>
 
-              <input
-                type="checkbox"
-                checked={selectedIds.includes(item.id)}
-                onChange={() => toggleSelect(item.id)}
-              />
-            </div>
-          ))}
+                <input
+                  type="checkbox"
+                  checked={selectedIds.includes(item.id)}
+                  onChange={() => toggleSelect(item.id)}
+                />
+              </div>
+            ))
+          ) : (
+            <EmptyState
+              icon={WifiOff}
+              title="No outages to display"
+              description={
+                search
+                  ? "Try adjusting your search query to find what you're looking for."
+                  : "All systems are currently operational."
+              }
+              action={
+                search
+                  ? {
+                      label: "Clear Search",
+                      onClick: () => setSearch(""),
+                    }
+                  : undefined
+              }
+            />
+          )}
         </div>
       </div>
     </div>

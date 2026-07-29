@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import { Copy, Check } from "lucide-react";
 import { explorerLink } from "@/lib/explorer";
+import { useToast } from "@/components/ui/toast";
 
 interface WalletAddressProps {
   address: string | null | undefined;
@@ -16,12 +17,14 @@ export function WalletAddress({
   className = "",
 }: WalletAddressProps) {
   const [copied, setCopied] = useState(false);
+  const { toast } = useToast();
 
   const handleCopy = useCallback(async () => {
     if (!address) return;
     try {
       await navigator.clipboard.writeText(address);
       setCopied(true);
+      toast("Wallet address copied to clipboard", "success");
       setTimeout(() => setCopied(false), 2000);
     } catch {
       // Fallback for environments without clipboard API
@@ -34,9 +37,10 @@ export function WalletAddress({
       document.execCommand("copy");
       document.body.removeChild(textarea);
       setCopied(true);
+      toast("Wallet address copied to clipboard", "success");
       setTimeout(() => setCopied(false), 2000);
     }
-  }, [address]);
+  }, [address, toast]);
 
   if (!address) {
     return (
@@ -61,7 +65,10 @@ export function WalletAddress({
           {address}
         </a>
       ) : (
-        <span className="truncate font-mono text-sm text-slate-900" title={address}>
+        <span
+          className="truncate font-mono text-sm text-slate-900"
+          title={address}
+        >
           {address}
         </span>
       )}
