@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "bundle-hygiene": "npx tsx scripts/bundle-hygiene.ts"
+    "bundle-hygiene": "npx tsx scripts/bundle-hygiene.ts",
+    "check:schema": "npx tsx scripts/check-schema-drift.ts"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.23",
