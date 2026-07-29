@@ -62,7 +62,11 @@ export function useBatchOperations(): UseBatchOperationsReturn {
     (
       operation: BatchOperation,
       total: number,
-      response: { success_count: number; failure_count: number; errors?: Array<{ id: string; error: string }> },
+      response: {
+        success_count: number;
+        failure_count: number;
+        errors?: Array<{ id: string; error: string }>;
+      },
     ): BatchResult => ({
       total,
       success: response.success_count,
@@ -87,7 +91,15 @@ export function useBatchOperations(): UseBatchOperationsReturn {
       try {
         const data = await apiCall();
         setProgress({ total, processed: total, operation });
-        const res = buildResult(operation, total, data as any);
+        const res = buildResult(
+          operation,
+          total,
+          data as {
+            success_count: number;
+            failure_count: number;
+            errors?: Array<{ id: string; error: string }>;
+          },
+        );
         setResult(res);
         onSuccess(data);
         return res;
@@ -98,7 +110,8 @@ export function useBatchOperations(): UseBatchOperationsReturn {
           failure: total,
           errors: ids.map((id) => ({
             id,
-            error: error instanceof Error ? error.message : "Batch operation failed",
+            error:
+              error instanceof Error ? error.message : "Batch operation failed",
           })),
           operation,
         };
@@ -125,7 +138,13 @@ export function useBatchOperations(): UseBatchOperationsReturn {
   });
 
   const resolveMutation = useMutation({
-    mutationFn: async ({ ids, mttrMinutes }: { ids: string[]; mttrMinutes?: number }) => {
+    mutationFn: async ({
+      ids,
+      mttrMinutes,
+    }: {
+      ids: string[];
+      mttrMinutes?: number;
+    }) => {
       return executeWithProgress(
         "resolve",
         ids,

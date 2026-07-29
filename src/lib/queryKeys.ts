@@ -15,7 +15,14 @@ export const queryKeys = {
     detail: (id: string) => ["webhooks", "detail", id] as const,
   },
   dashboard: {
-    metrics: (filters?: Record<string, unknown>) => ["dashboard-metrics", filters] as const,
+    /** Root key – invalidating this clears every dashboard query. */
+    all: ["dashboard"] as const,
+    /** Primary metrics keyed by filter set. */
+    metrics: (filters?: Record<string, unknown>) =>
+      ["dashboard", "metrics", filters] as const,
+    /** Comparison-window metrics keyed by filter set. */
+    compare: (filters?: Record<string, unknown>) =>
+      ["dashboard", "compare", filters] as const,
   },
   sla: {
     config: () => ["sla", "config"] as const,

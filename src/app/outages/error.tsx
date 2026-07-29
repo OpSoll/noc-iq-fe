@@ -2,7 +2,11 @@
 
 import { ErrorState } from "@/components/shared/ErrorState";
 
-export default function Error({ error }: { error: any }) {
+export default function Error({
+  error,
+}: {
+  error: Error & { correlationId?: string };
+}) {
   return (
     <div className="p-6">
       <ErrorState
