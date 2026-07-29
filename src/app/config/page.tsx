@@ -87,6 +87,16 @@ export default function SlaConfigPage() {
   }
 
   function handleCancel() {
+    if (editingConfig) {
+      const isDirty = 
+        formData.threshold_minutes !== editingConfig.threshold_minutes ||
+        formData.penalty_per_minute !== editingConfig.penalty_per_minute ||
+        formData.reward_base !== editingConfig.reward_base;
+        
+      if (isDirty && !window.confirm("You have unsaved changes. Are you sure you want to discard them?")) {
+        return;
+      }
+    }
     setEditingConfig(null);
     setSaveError(null);
   }
