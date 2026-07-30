@@ -30,6 +30,6 @@ describe("Cross-Route Shared Resource Consistency", () => {
 
   it("detects type mismatch in shared resource shape", () => {
     const result = checkShape({ id: 123, site_name: "Site B", severity: "low", status: "open" } as unknown as Record<string, unknown>, { id: "string" });
-    expect(result).toContEqual(expect.stringContaining("id"));
+    expect(result).toContainEqual(expect.stringContaining("id"));
   });
 });

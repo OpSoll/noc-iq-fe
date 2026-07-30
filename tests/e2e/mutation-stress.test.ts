@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { createMockApi } from "@/tests/mocks/apiMock";
+import { createMockApi } from "../mocks/apiMock";
 import type { Outage } from "@/types/outages";
 
 interface MutationResult<T> {

@@ -6,7 +6,18 @@ const mockSearchParamsGet = vi.fn();
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockRouterPush }),
-  useSearchParams: () => ({ get: mockSearchParamsGet }),
+  useSearchParams: () => ({
+    get: mockSearchParamsGet,
+    toString: () => {
+      const keys = ["page", "page_size", "severity", "status", "search", "sort_field", "sort_order"];
+      const parts: string[] = [];
+      for (const k of keys) {
+        const v = mockSearchParamsGet(k);
+        if (v) parts.push(`${k}=${encodeURIComponent(v)}`);
+      }
+      return parts.join("&");
+    },
+  }),
 }));
 
 // Import after mocks are set up

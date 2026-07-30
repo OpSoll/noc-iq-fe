@@ -21,20 +21,34 @@ import {
   STELLAR_NETWORK_LABEL,
   type ExplorerEntityType,
 } from "@/lib/explorer";
-import { ExternalLink } from "lucide-react";
-
-import { Inbox } from "lucide-react";
+import { Inbox, ExternalLink } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
 
+type SortDirection = "asc" | "desc";
+
+function SortableHeader({
+  columnKey,
+  label,
+  activeKey,
+  activeDir,
+  onSort,
+}: {
+  columnKey: string;
+  label: string;
+  activeKey: string;
+  activeDir: SortDirection;
+  onSort: (key: string) => void;
+}) {
+  const isActive = activeKey === columnKey;
+  return (
+    <th className="px-4 py-3 cursor-pointer hover:bg-gray-100" onClick={() => onSort(columnKey)}>
+      <div className="flex items-center gap-1">
+        <span>{label}</span>
+        {isActive && (<span>{activeDir === "asc" ? "↑" : "↓"}</span>)}
+      </div>
+    </th>
+  );
+}
 
 const URL_DEFAULTS = {
   status: "all",
@@ -108,7 +122,6 @@ export function PaymentsView() {
   const selectedPaymentId = urlState.paymentId || null;
 
   const { data, isLoading, error } = useQuery({
-
     queryKey: queryKeys.payments.list({
       statusFilter,
       typeFilter,
@@ -119,20 +132,6 @@ export function PaymentsView() {
       sortKey,
       sortDir,
     }),
-
-    queryKey: [
-      "payments",
-      {
-        statusFilter,
-        typeFilter,
-        dateFrom,
-        dateTo,
-        page,
-        perPage,
-        sortKey,
-        sortDir,
-      },
-    ],
 
     queryFn: () =>
       PaymentService.fetchPayments({
@@ -152,11 +151,7 @@ export function PaymentsView() {
   const totalPages = Math.ceil(total / perPage);
 
   const handleFilterChange = (key: string, value: string) => {
-
     setUrlState({ [key]: value, page: "1" } as Partial<typeof URL_DEFAULTS>);
-
-    setUrlState({ [key]: value, page: "1" } as any);
-
   };
 
   const handlePageChange = (newPage: number) => {
@@ -280,11 +275,7 @@ export function PaymentsView() {
               ))
             ) : payments.length === 0 ? (
               <tr>
-
-                <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
-                  No payments found.
-
-                <td colSpan={5} className="px-4 py-8">
+                <td colSpan={6} className="px-4 py-8">
                   <EmptyState
                     icon={Inbox}
                     title="No payments found"

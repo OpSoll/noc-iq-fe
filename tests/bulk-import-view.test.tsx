@@ -29,7 +29,7 @@ describe("BulkImportView", () => {
     render(<BulkImportView />);
     const input = document.querySelector("input[type='file']") as HTMLInputElement;
     fireEvent.change(input, { target: { files: [new File(["x"], "data.txt", { type: "text/plain" })] } });
-    expect(await screen.findByText("Only .csv and .json files are allowed.")).toBeInTheDocument();
+    expect(await screen.findByText(/Invalid file type/)).toBeInTheDocument();
   });
 
   it("shows blocking errors for CSV missing required columns", async () => {

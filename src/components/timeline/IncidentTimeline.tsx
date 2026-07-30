@@ -2,34 +2,6 @@
 
 import React, { useMemo, useState, useCallback } from "react";
 
-const TimelineEventItem = React.memo(
-  ({ event, isLast }: { event: TimelineEvent; isLast: boolean }) => {
-    return (
-      <div className="flex items-start gap-3">
-        <div className="flex flex-col items-center">
-          <span className="text-lg">{typeIcon[event.type]}</span>
-          {!isLast && <div className="mt-1 h-4 w-0.5 bg-gray-300" />}
-        </div>
-        <div
-          className={`flex-1 rounded-md border p-3 ${
-            severityColor[event.severity ?? "info"]
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">{event.label}</span>
-            <span className="text-xs text-gray-500">
-              {new Date(event.timestamp).toLocaleTimeString()}
-            </span>
-          </div>
-          <p className="mt-1 text-xs">{event.detail}</p>
-        </div>
-      </div>
-    );
-  },
-);
-
-import React, { useMemo, useState, useCallback } from "react";
-
 export type TimelineEventType =
   | "user_action"
   | "backend_response"
@@ -72,6 +44,33 @@ const severityColor: Record<string, string> = {
   warning: "border-yellow-300 bg-yellow-50 text-yellow-800",
   error: "border-red-300 bg-red-50 text-red-800",
 };
+
+const TimelineEventItem = React.memo(
+  ({ event, isLast }: { event: TimelineEvent; isLast: boolean }) => {
+    return (
+      <div className="flex items-start gap-3">
+        <div className="flex flex-col items-center">
+          <span className="text-lg">{typeIcon[event.type]}</span>
+          {!isLast && <div className="mt-1 h-4 w-0.5 bg-gray-300" />}
+        </div>
+        <div
+          className={`flex-1 rounded-md border p-3 ${
+            severityColor[event.severity ?? "info"]
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium">{event.label}</span>
+            <span className="text-xs text-gray-500">
+              {new Date(event.timestamp).toLocaleTimeString()}
+            </span>
+          </div>
+          <p className="mt-1 text-xs">{event.detail}</p>
+        </div>
+      </div>
+    );
+  },
+);
+TimelineEventItem.displayName = "TimelineEventItem";
 
 function exportToJson(events: TimelineEvent[]): string {
   return JSON.stringify(events, null, 2);

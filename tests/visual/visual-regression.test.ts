@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { createMockApi } from "@/tests/mocks/apiMock";
+import { createMockApi } from "../mocks/apiMock";
 
 interface SnapshotBaseline {
   route: string;

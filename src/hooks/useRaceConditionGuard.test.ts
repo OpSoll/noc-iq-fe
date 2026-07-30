@@ -30,11 +30,16 @@ describe("useRaceConditionGuard", () => {
     it("transitions to pending when execute is called", async () => {
       const { result } = renderHook(() => useRaceConditionGuard());
 
-      const promise = result.current.execute(() => Promise.resolve("done"));
+      let promise!: Promise<string>;
+      act(() => {
+        promise = result.current.execute(() => Promise.resolve("done"));
+      });
 
       expect(result.current.state).toBe("pending");
 
-      await promise;
+      await act(async () => {
+        await promise;
+      });
     });
 
     it("transitions to resolved on successful execution", async () => {
@@ -94,17 +99,23 @@ describe("useRaceConditionGuard", () => {
 
       // First request that never resolves
       let resolveFirst!: (v: string) => void;
-      const firstPromise = result.current.execute(
-        () => new Promise<string>((resolve) => { resolveFirst = resolve; }),
-      );
+      let firstPromise!: Promise<string>;
+      act(() => {
+        firstPromise = result.current.execute(
+          () => new Promise<string>((resolve) => { resolveFirst = resolve; }),
+        );
+      });
 
       expect(result.current.state).toBe("pending");
 
       // Second request fires before first resolves
       let resolveSecond!: (v: string) => void;
-      const secondPromise = result.current.execute(
-        () => new Promise<string>((resolve) => { resolveSecond = resolve; }),
-      );
+      let secondPromise!: Promise<string>;
+      act(() => {
+        secondPromise = result.current.execute(
+          () => new Promise<string>((resolve) => { resolveSecond = resolve; }),
+        );
+      });
 
       // Resolve the second one first
       await act(async () => {

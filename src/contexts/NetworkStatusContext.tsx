@@ -1,6 +1,6 @@
 "use client";
 
-import { networkEvents } from "@/lib/network-events";
+import {
   createContext,
   useContext,
   useState,
@@ -8,6 +8,7 @@ import { networkEvents } from "@/lib/network-events";
   useEffect,
   useMemo,
 } from "react";
+import { networkEvents } from "@/lib/network-events";
 
 interface NetworkStatusState {
   isOnline: boolean;
@@ -24,8 +25,10 @@ export function NetworkStatusProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const [isOnline, setIsOnline] = useState(true);
-  const [retry, setRetry] = useState(0);
+  const [isOnline, setIsOnline] = useState(() =>
+    typeof window !== "undefined" ? navigator.onLine : true,
+  );
+  const [, setRetry] = useState(0);
 
   const triggerRetry = useCallback(() => {
     setRetry((c) => c + 1);
@@ -40,9 +43,6 @@ export function NetworkStatusProvider({
 
     const unsubscribe = networkEvents.subscribe(setIsOnline);
 
-    // Initial check
-    setIsOnline(navigator.onLine);
-
     return () => {
       window.removeEventListener("online", onlineHandler);
       window.removeEventListener("offline", offlineHandler);
@@ -51,8 +51,8 @@ export function NetworkStatusProvider({
   }, []);
 
   const value = useMemo(
-    () => ({ isOnline, triggerRetry }),
-    [isOnline, triggerRetry],
+    () => ({ isOnline, triggerRetry, setIsOnline }),
+    [isOnline, triggerRetry, setIsOnline],
   );
 
   return (

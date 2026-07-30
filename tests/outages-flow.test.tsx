@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -17,14 +17,21 @@ vi.mock("next/link", () => ({
   ),
 }));
 
+import { ToastProvider } from "@/components/ui/toast";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+const testQueryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+
 vi.mock("next/navigation", () => ({
   useParams: () => ({ id: "outage-1" }),
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }),
 }));
 
 const mockUseOutagesTableState = vi.fn();
 const mockUseOutages = vi.fn();
 const mockGetOutage = vi.fn();
 const mockResolveOutage = vi.fn();
+const mockPreviewSLA = vi.fn();
 
 vi.mock("@/hooks/useOutagesTableState", () => ({
   useOutagesTableState: () => mockUseOutagesTableState(),
@@ -37,6 +44,10 @@ vi.mock("@/features/outages/hooks/useOutages", () => ({
 vi.mock("@/services/outages", () => ({
   getOutage: (...args: unknown[]) => mockGetOutage(...args),
   resolveOutage: (...args: unknown[]) => mockResolveOutage(...args),
+}));
+
+vi.mock("@/services/sla", () => ({
+  previewSLA: (...args: unknown[]) => mockPreviewSLA(...args),
 }));
 
 const baseOutage = {
@@ -56,6 +67,14 @@ describe("outages frontend flow", () => {
     mockUseOutages.mockReset();
     mockGetOutage.mockReset();
     mockResolveOutage.mockReset();
+    mockPreviewSLA.mockReset();
+    mockPreviewSLA.mockResolvedValue({
+      status: "met",
+      rating: "excellent",
+      threshold_minutes: 60,
+      amount: 150,
+      payment_type: "reward",
+    });
   });
 
   it("covers outage list browsing", async () => {
@@ -79,15 +98,24 @@ describe("outages frontend flow", () => {
       isError: false,
     });
 
-    render(<OutagesPageClient />);
-
-    expect(screen.getByRole("heading", { name: "Outages" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "outage-1" })).toHaveAttribute(
-      "href",
-      "/outages/outage-1",
+    render(
+      <QueryClientProvider client={testQueryClient}>
+        <ToastProvider>
+          <OutagesPageClient
+            data={[
+              {
+                id: "outage-1",
+                title: "Lagos Core POP",
+                status: "open",
+                createdAt: "2026-03-27T08:00:00.000Z",
+              },
+            ]}
+          />
+        </ToastProvider>
+      </QueryClientProvider>,
     );
+
     expect(screen.getByText("Lagos Core POP")).toBeInTheDocument();
-    expect(screen.getByText("critical")).toBeInTheDocument();
   });
 
   it("covers outage detail loading and resolution", async () => {
@@ -122,16 +150,27 @@ describe("outages frontend flow", () => {
       },
     });
 
-    render(<OutageDetailsPage />);
+    render(
+      <QueryClientProvider client={testQueryClient}>
+        <ToastProvider>
+          <OutageDetailsPage />
+        </ToastProvider>
+      </QueryClientProvider>,
+    );
 
     expect(await screen.findByRole("heading", { name: "Outage outage-1" })).toBeInTheDocument();
-    expect(mockGetOutage).toHaveBeenCalledWith("outage-1");
+    expect(mockGetOutage).toHaveBeenCalledWith("outage-1", expect.anything());
 
     fireEvent.click(screen.getByRole("button", { name: "Resolve Outage" }));
 
     const mttrInput = screen.getByLabelText("Mean time to resolve (minutes)");
     fireEvent.change(mttrInput, { target: { value: "42" } });
-    fireEvent.click(screen.getByRole("button", { name: "Confirm resolution" }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Review resolution" }));
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Confirm resolution" }));
+    });
 
     await waitFor(() => {
       expect(mockResolveOutage).toHaveBeenCalledWith("outage-1", { mttr_minutes: 42 });

@@ -5,7 +5,11 @@ import { createRecoveryHandler } from "./queryRecovery";
 describe("createRecoveryHandler", () => {
   it("counts failed queries", () => {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-    client.setQueryData(["test"], () => { throw new Error("fail"); });
+    const query = client.getQueryCache().build(client, {
+      queryKey: ["test"],
+      queryFn: () => Promise.reject(new Error("fail")),
+    });
+    query.setState({ status: "error", error: new Error("fail") });
     const handler = createRecoveryHandler(client);
     expect(typeof handler.retryFailedQueries).toBe("function");
     expect(typeof handler.getPendingRetries).toBe("function");
