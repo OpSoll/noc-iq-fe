@@ -6,12 +6,20 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { useToast } from "@/components/ui/toast";
 import { downloadCsv } from "@/lib/urlSyncAndExport";
 import { deleteOutage } from "@/services/outages";
+import { SeverityBadge } from "@/components/shared/SeverityBadgeAndShortcuts";
+import type { Severity, OutageStatus } from "@/types/outages";
 
 type Outage = {
   id: string;
   title: string;
-  status: string;
+  severity: Severity;
+  status: OutageStatus;
   createdAt: string;
+};
+
+const STATUS_STYLE: Record<OutageStatus, string> = {
+  open: "bg-amber-100 text-amber-800",
+  resolved: "bg-emerald-100 text-emerald-800",
 };
 
 type Props = {
@@ -183,6 +191,7 @@ export default function OutagesPageClient({
         filteredData.map((item) => ({
           ID: item.id,
           Title: item.title,
+          Severity: item.severity,
           Status: item.status,
           "Created At": new Date(item.createdAt).toISOString(),
         })),
@@ -288,8 +297,14 @@ export default function OutagesPageClient({
                   }
                 }}
               >
-                <div>
-                  <h3 className="font-medium">{item.title}</h3>
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="font-medium">{item.title}</h3>
+                    <SeverityBadge severity={item.severity} />
+                    <span className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-medium uppercase ${STATUS_STYLE[item.status]}`}>
+                      {item.status}
+                    </span>
+                  </div>
                   <p className="text-sm text-muted-foreground">
                     {new Date(item.createdAt).toLocaleString()}
                   </p>
