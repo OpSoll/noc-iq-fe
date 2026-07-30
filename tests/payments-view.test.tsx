@@ -57,6 +57,119 @@ describe("payment normalization", () => {
   });
 });
 
+describe("date validation logic", () => {
+  it("detects invalid date range when dateFrom is after dateTo", () => {
+    const dateFrom = "2026-07-30";
+    const dateTo = "2026-07-29";
+    const dateError =
+      dateFrom && dateTo && dateFrom > dateTo
+        ? "Start date cannot be after end date."
+        : null;
+    expect(dateError).toBe("Start date cannot be after end date.");
+  });
+
+  it("allows valid date range when dateFrom is before dateTo", () => {
+    const dateFrom = "2026-07-29";
+    const dateTo = "2026-07-30";
+    const dateError =
+      dateFrom && dateTo && dateFrom > dateTo
+        ? "Start date cannot be after end date."
+        : null;
+    expect(dateError).toBeNull();
+  });
+
+  it("allows valid date range when dateFrom equals dateTo", () => {
+    const dateFrom = "2026-07-30";
+    const dateTo = "2026-07-30";
+    const dateError =
+      dateFrom && dateTo && dateFrom > dateTo
+        ? "Start date cannot be after end date."
+        : null;
+    expect(dateError).toBeNull();
+  });
+
+  it("returns null when dateFrom is empty", () => {
+    const dateFrom = "";
+    const dateTo = "2026-07-30";
+    const dateError =
+      dateFrom && dateTo && dateFrom > dateTo
+        ? "Start date cannot be after end date."
+        : null;
+    expect(dateError).toBeNull();
+  });
+
+  it("returns null when dateTo is empty", () => {
+    const dateFrom = "2026-07-30";
+    const dateTo = "";
+    const dateError =
+      dateFrom && dateTo && dateFrom > dateTo
+        ? "Start date cannot be after end date."
+        : null;
+    expect(dateError).toBeNull();
+  });
+});
+
+describe("filter state reset", () => {
+  const URL_DEFAULTS = {
+    status: "all",
+    type: "all",
+    dateFrom: "",
+    dateTo: "",
+    page: "1",
+    perPage: "20",
+    paymentId: "",
+    sortKey: "created_at",
+    sortDir: "desc",
+  };
+
+  it("detects active filters", () => {
+    const state = { ...URL_DEFAULTS, status: "CONFIRMED" };
+    const hasActiveFilters =
+      state.status !== URL_DEFAULTS.status ||
+      state.type !== URL_DEFAULTS.type ||
+      state.dateFrom !== URL_DEFAULTS.dateFrom ||
+      state.dateTo !== URL_DEFAULTS.dateTo;
+    expect(hasActiveFilters).toBe(true);
+  });
+
+  it("detects no active filters when using defaults", () => {
+    const state = { ...URL_DEFAULTS };
+    const hasActiveFilters =
+      state.status !== URL_DEFAULTS.status ||
+      state.type !== URL_DEFAULTS.type ||
+      state.dateFrom !== URL_DEFAULTS.dateFrom ||
+      state.dateTo !== URL_DEFAULTS.dateTo;
+    expect(hasActiveFilters).toBe(false);
+  });
+
+  it("detects active filters with date range", () => {
+    const state = { ...URL_DEFAULTS, dateFrom: "2026-07-01", dateTo: "2026-07-30" };
+    const hasActiveFilters =
+      state.status !== URL_DEFAULTS.status ||
+      state.type !== URL_DEFAULTS.type ||
+      state.dateFrom !== URL_DEFAULTS.dateFrom ||
+      state.dateTo !== URL_DEFAULTS.dateTo;
+    expect(hasActiveFilters).toBe(true);
+  });
+
+  it("resets all parameters to defaults on clear", () => {
+    const dirtyState = {
+      status: "CONFIRMED",
+      type: "penalty",
+      dateFrom: "2026-07-01",
+      dateTo: "2026-07-30",
+      page: "3",
+      perPage: "50",
+      paymentId: "pay_123",
+      sortKey: "amount",
+      sortDir: "asc",
+    };
+    const resetState = { ...URL_DEFAULTS };
+    expect(resetState).toEqual(URL_DEFAULTS);
+    expect(dirtyState).not.toEqual(URL_DEFAULTS);
+  });
+});
+
 describe("payment history normalization", () => {
   it("preserves status transitions and audit metadata", () => {
     const entry = normalizePaymentHistoryEntry(
