@@ -2,6 +2,7 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 
 import { useSession } from "@/hooks/useSession";
+import { SessionProvider } from "@/providers/session";
 
 const mockGet = vi.fn();
 const mockPost = vi.fn();
@@ -45,7 +46,7 @@ describe("useSession", () => {
       mockGetAccessToken.mockReturnValue("valid-token");
       mockGet.mockResolvedValue({ data: mockUser });
 
-      const { result } = renderHook(() => useSession());
+      const { result } = renderHook(() => useSession(), { wrapper: SessionProvider });
 
       expect(result.current.state).toBe("loading");
 
@@ -65,7 +66,7 @@ describe("useSession", () => {
       mockGetAccessToken.mockReturnValue("expired-token");
       mockGet.mockRejectedValue(new Error("401 Unauthorized"));
 
-      const { result } = renderHook(() => useSession());
+      const { result } = renderHook(() => useSession(), { wrapper: SessionProvider });
 
       await waitFor(() => {
         expect(result.current.state).toBe("unauthenticated");
@@ -79,7 +80,7 @@ describe("useSession", () => {
     it("is unauthenticated when no token exists", async () => {
       mockGetAccessToken.mockReturnValue(null);
 
-      const { result } = renderHook(() => useSession());
+      const { result } = renderHook(() => useSession(), { wrapper: SessionProvider });
 
       await waitFor(() => {
         expect(result.current.state).toBe("unauthenticated");
@@ -95,7 +96,7 @@ describe("useSession", () => {
     it("stores session and updates authenticated state", async () => {
       mockGetAccessToken.mockReturnValue(null);
 
-      const { result } = renderHook(() => useSession());
+      const { result } = renderHook(() => useSession(), { wrapper: SessionProvider });
 
       await waitFor(() => {
         expect(result.current.state).toBe("unauthenticated");
@@ -129,7 +130,7 @@ describe("useSession", () => {
 
       mockPost.mockResolvedValue({});
 
-      const { result } = renderHook(() => useSession());
+      const { result } = renderHook(() => useSession(), { wrapper: SessionProvider });
 
       await waitFor(() => {
         expect(result.current.state).toBe("authenticated");
@@ -156,7 +157,7 @@ describe("useSession", () => {
 
       mockPost.mockRejectedValue(new Error("Network Error"));
 
-      const { result } = renderHook(() => useSession());
+      const { result } = renderHook(() => useSession(), { wrapper: SessionProvider });
 
       await waitFor(() => {
         expect(result.current.state).toBe("authenticated");
@@ -181,7 +182,7 @@ describe("useSession", () => {
         data: null,
       });
 
-      const { result } = renderHook(() => useSession());
+      const { result } = renderHook(() => useSession(), { wrapper: SessionProvider });
 
       await waitFor(() => {
         expect(result.current.state).toBe("authenticated");
@@ -193,7 +194,7 @@ describe("useSession", () => {
     it("does not call clearTokens unnecessarily", async () => {
       mockGetAccessToken.mockReturnValue(null);
 
-      renderHook(() => useSession());
+      renderHook(() => useSession(), { wrapper: SessionProvider });
 
       await waitFor(() => {
         expect(mockClearTokens).not.toHaveBeenCalled();

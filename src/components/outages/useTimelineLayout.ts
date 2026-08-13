@@ -30,16 +30,17 @@ const toDate = (value: string | Date): Date => {
   return value instanceof Date ? value : new Date(value);
 };
 
-export function useTimelineLayout(
+export function calculateTimelineLayout(
   outages: OutageTimelineItem[],
   viewWindow: TimelineViewWindow,
-  options: UseTimelineLayoutOptions,
+  options: UseTimelineLayoutOptions | number,
 ): TimelineLayoutResult {
+  const opts = typeof options === "number" ? { width: options } : options;
   const {
     width,
     rowHeight = TIMELINE_ROW_HEIGHT,
     barHeight = TIMELINE_BAR_HEIGHT,
-  } = options;
+  } = opts;
 
   const windowStart = viewWindow.start.getTime();
   const windowEnd = viewWindow.end.getTime();
@@ -117,4 +118,12 @@ export function useTimelineLayout(
     contentHeight: outages.length * rowHeight,
     getXPosition,
   };
+}
+
+export function useTimelineLayout(
+  outages: OutageTimelineItem[],
+  viewWindow: TimelineViewWindow,
+  options: UseTimelineLayoutOptions,
+): TimelineLayoutResult {
+  return calculateTimelineLayout(outages, viewWindow, options);
 }

@@ -8,7 +8,7 @@ import {
 
 import {
   calculateTimelineLayout,
-} from '../timelineLayout';
+} from '../useTimelineLayout';
 
 describe(
   'calculateTimelineLayout',

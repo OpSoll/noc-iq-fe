@@ -21,8 +21,8 @@ const ToastWithProgress = ({
   const [isPaused, setIsPaused] = useState(false);
   const [width, setWidth] = useState(100);
   const remaining = useRef(DURATION);
-  const timer = useRef<NodeJS.Timeout>();
-  const start = useRef(Date.now());
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const start = useRef(0);
 
   const variantClass: Record<ToastVariant, string> = {
     success: "border-emerald-200 bg-emerald-50 text-emerald-800",
@@ -59,9 +59,13 @@ const ToastWithProgress = ({
   }, [isPaused]);
 
   useEffect(() => {
-    resume();
-    return pause;
-  }, [pause, resume]);
+    start.current = Date.now();
+    timer.current = setTimeout(onDismiss, remaining.current);
+    return () => {
+      clearTimeout(timer.current);
+      remaining.current -= Date.now() - start.current;
+    };
+  }, [onDismiss]);
 
   return (
     <div

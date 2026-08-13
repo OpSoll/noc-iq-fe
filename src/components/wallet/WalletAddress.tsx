@@ -17,7 +17,7 @@ export function WalletAddress({
   className = "",
 }: WalletAddressProps) {
   const [copied, setCopied] = useState(false);
-  const { toast } = useToast();
+  const toast = useToast();
 
   const handleCopy = useCallback(async () => {
     if (!address) return;

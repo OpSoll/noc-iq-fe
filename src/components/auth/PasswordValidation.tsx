@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircledIcon, CrossCircledIcon } from "@radix-ui/react-icons";
+import { CheckCircle, XCircle } from "lucide-react";
 
 interface PasswordValidationProps {
   validation_result: {
@@ -18,33 +18,33 @@ const PasswordValidation: React.FC<PasswordValidationProps> = ({
     <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
       <div className="flex items-center">
         {validation_result.length ? (
-          <CheckCircledIcon className="mr-1.5 text-green-500" />
+          <CheckCircle className="mr-1.5 h-4 w-4 text-green-500" />
         ) : (
-          <CrossCircledIcon className="mr-1.5 text-red-500" />
+          <XCircle className="mr-1.5 h-4 w-4 text-red-500" />
         )}
         <p>8+ characters</p>
       </div>
       <div className="flex items-center">
         {validation_result.uppercase ? (
-          <CheckCircledIcon className="mr-1.5 text-green-500" />
+          <CheckCircle className="mr-1.5 h-4 w-4 text-green-500" />
         ) : (
-          <CrossCircledIcon className="mr-1.5 text-red-500" />
+          <XCircle className="mr-1.5 h-4 w-4 text-red-500" />
         )}
         <p>1 uppercase</p>
       </div>
       <div className="flex items-center">
         {validation_result.number ? (
-          <CheckCircledIcon className="mr-1.5 text-green-500" />
+          <CheckCircle className="mr-1.5 h-4 w-4 text-green-500" />
         ) : (
-          <CrossCircledIcon className="mr-1.5 text-red-500" />
+          <XCircle className="mr-1.5 h-4 w-4 text-red-500" />
         )}
         <p>1 number</p>
       </div>
       <div className="flex items-center">
         {validation_result.specialChar ? (
-          <CheckCircledIcon className="mr-1.5 text-green-500" />
+          <CheckCircle className="mr-1.5 h-4 w-4 text-green-500" />
         ) : (
-          <CrossCircledIcon className="mr-1.5 text-red-500" />
+          <XCircle className="mr-1.5 h-4 w-4 text-red-500" />
         )}
         <p>1 special</p>
       </div>

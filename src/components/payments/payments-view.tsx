@@ -22,7 +22,7 @@ import {
   PaginationNext,
   PaginationEllipsis,
 } from "@/components/ui/pagination";
-
+import { queryKeys } from "@/lib/queryKeys";
 
 type SortDirection = "asc" | "desc";
 
@@ -142,19 +142,16 @@ export function PaymentsView() {
     dateTo !== URL_DEFAULTS.dateTo;
 
   const { data, isLoading, error } = useQuery({
-    queryKey: [
-      "payments",
-      {
-        statusFilter,
-        typeFilter,
-        dateFrom,
-        dateTo,
-        page,
-        perPage,
-        sortKey,
-        sortDir,
-      },
-    ],
+    queryKey: queryKeys.payments.list({
+      statusFilter,
+      typeFilter,
+      dateFrom,
+      dateTo,
+      page,
+      perPage,
+      sortKey,
+      sortDir,
+    }),
     queryFn: () =>
       PaymentService.fetchPayments({
         status: statusFilter !== "all" ? statusFilter : undefined,

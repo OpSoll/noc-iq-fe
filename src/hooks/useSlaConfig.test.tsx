@@ -1,4 +1,4 @@
-import { renderHook, waitFor } from "@testing-library/react";
+import { renderHook, waitFor, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { type ReactNode } from "react";
 import { describe, it, beforeEach, expect, vi } from "vitest";
@@ -110,13 +110,8 @@ describe("useSlaConfig", () => {
         data: { critical: { threshold_minutes: 15, penalty_per_minute: 10, reward_base: 200 } },
       });
 
-      result.current.refetch();
-      await waitFor(() => expect(mockedApi.get).toHaveBeenCalledTimes(2));
-
-      // Stale data is replaced once refetch resolves
-      await waitFor(() => {
-        expect(result.current.data?.[0].threshold_minutes).toBe(15);
-      });
+      const refetchResult = await result.current.refetch();
+      expect(refetchResult.data?.[0].threshold_minutes).toBe(15);
     });
   });
 

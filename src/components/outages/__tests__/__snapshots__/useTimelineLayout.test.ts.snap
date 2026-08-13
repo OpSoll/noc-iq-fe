@@ -1,0 +1,45 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`calculateTimelineLayout > calculates deterministic positions for outage bars 1`] = `
+{
+  "bars": [
+    {
+      "durationMs": 14400000,
+      "end": 2026-01-01T06:00:00.000Z,
+      "height": 28,
+      "outage": {
+        "id": "OUT-001",
+        "resolvedAt": "2026-01-01T06:00:00.000Z",
+        "service": "API Gateway",
+        "severity": "critical",
+        "startedAt": "2026-01-01T02:00:00.000Z",
+        "status": "resolved",
+      },
+      "start": 2026-01-01T02:00:00.000Z,
+      "width": 170,
+      "x": 265,
+      "y": 10,
+    },
+    {
+      "durationMs": 21600000,
+      "end": 2026-01-01T10:00:00.000Z,
+      "height": 28,
+      "outage": {
+        "id": "OUT-002",
+        "resolvedAt": "2026-01-01T10:00:00.000Z",
+        "service": "Database",
+        "severity": "high",
+        "startedAt": "2026-01-01T04:00:00.000Z",
+        "status": "monitoring",
+      },
+      "start": 2026-01-01T04:00:00.000Z,
+      "width": 255,
+      "x": 350,
+      "y": 58,
+    },
+  ],
+  "contentHeight": 96,
+  "contentWidth": 1200,
+  "getXPosition": [Function],
+}
+`;

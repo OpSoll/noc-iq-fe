@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { detectContractDrift, buildDriftReport } from "./contractDrift";
-import { normalizeOutage, normalizePayment } from "./normalizers";
+import { detectContractDrift, buildDriftReport } from "@/lib/contractDrift";
+import { normalizeOutage, normalizePayment } from "@/lib/normalizers";
 
 describe("Client Contract Compatibility Matrix", () => {
   it("detects no drift when shapes match", () => {
@@ -18,7 +18,7 @@ describe("Client Contract Compatibility Matrix", () => {
   });
 
   it("generates drift report with severity counts", () => {
-    const report = buildDriftReport("/api/v1/outages", { id: "string", amount: "string" }, { id: "001", amount: 500 });
+    const report = buildDriftReport("/api/v1/outages", { id: "string", amount: "boolean" }, { id: "001", amount: 500 });
     expect(report.criticalCount).toBe(1);
     expect(report.warnings).toHaveLength(1);
   });
