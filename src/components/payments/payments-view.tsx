@@ -6,7 +6,13 @@ import type { Payment } from "@/types/payment";
 import { useQuery } from "@tanstack/react-query";
 import { PaymentDetailDrawer } from "./payment-detail-drawer";
 
-import { queryKeys } from "@/lib/queryKeys";
+import {
+  explorerLink,
+  STELLAR_NETWORK_LABEL,
+  type ExplorerEntityType,
+} from "@/lib/explorer";
+import { ExternalLink, Inbox } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   Pagination,
   PaginationContent,
@@ -16,13 +22,7 @@ import {
   PaginationNext,
   PaginationEllipsis,
 } from "@/components/ui/pagination";
-import {
-  explorerLink,
-  STELLAR_NETWORK_LABEL,
-  type ExplorerEntityType,
-} from "@/lib/explorer";
-import { Inbox, ExternalLink } from "lucide-react";
-import { EmptyState } from "@/components/ui/empty-state";
+import { queryKeys } from "@/lib/queryKeys";
 
 type SortDirection = "asc" | "desc";
 
@@ -36,16 +36,25 @@ function SortableHeader({
   columnKey: string;
   label: string;
   activeKey: string;
-  activeDir: SortDirection;
+  activeDir: string;
   onSort: (key: string) => void;
 }) {
   const isActive = activeKey === columnKey;
   return (
-    <th className="px-4 py-3 cursor-pointer hover:bg-gray-100" onClick={() => onSort(columnKey)}>
-      <div className="flex items-center gap-1">
-        <span>{label}</span>
-        {isActive && (<span>{activeDir === "asc" ? "↑" : "↓"}</span>)}
-      </div>
+    <th
+      className="cursor-pointer px-4 py-3 select-none"
+      onClick={() => onSort(columnKey)}
+      role="columnheader"
+      aria-sort={
+        isActive ? (activeDir === "asc" ? "ascending" : "descending") : "none"
+      }
+    >
+      {label}
+      {isActive && (
+        <span className="ml-1 text-xs" aria-hidden>
+          {activeDir === "asc" ? "\u25B2" : "\u25BC"}
+        </span>
+      )}
     </th>
   );
 }
@@ -121,6 +130,17 @@ export function PaymentsView() {
   const sortDir = urlState.sortDir as SortDirection;
   const selectedPaymentId = urlState.paymentId || null;
 
+  const dateError =
+    dateFrom && dateTo && dateFrom > dateTo
+      ? "Start date cannot be after end date."
+      : null;
+
+  const hasActiveFilters =
+    statusFilter !== URL_DEFAULTS.status ||
+    typeFilter !== URL_DEFAULTS.type ||
+    dateFrom !== URL_DEFAULTS.dateFrom ||
+    dateTo !== URL_DEFAULTS.dateTo;
+
   const { data, isLoading, error } = useQuery({
     queryKey: queryKeys.payments.list({
       statusFilter,
@@ -132,7 +152,6 @@ export function PaymentsView() {
       sortKey,
       sortDir,
     }),
-
     queryFn: () =>
       PaymentService.fetchPayments({
         status: statusFilter !== "all" ? statusFilter : undefined,
@@ -144,6 +163,7 @@ export function PaymentsView() {
         sort_by: sortKey,
         sort_dir: sortDir,
       }),
+    enabled: !dateError,
   });
 
   const payments = data?.items ?? [];
@@ -192,45 +212,63 @@ export function PaymentsView() {
             {STELLAR_NETWORK_LABEL}
           </span>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <select
-            value={statusFilter}
-            onChange={(e) => handleFilterChange("status", e.target.value)}
-            className="rounded border px-3 py-1.5 text-sm"
-            aria-label="Filter by status"
-          >
-            <option value="all">All Statuses</option>
-            <option value="PENDING">Pending</option>
-            <option value="CONFIRMED">Confirmed</option>
-            <option value="RELEASED">Released</option>
-            <option value="REFUNDED">Refunded</option>
-            <option value="FAILED">Failed</option>
-          </select>
-          <select
-            value={typeFilter}
-            onChange={(e) => handleFilterChange("type", e.target.value)}
-            className="rounded border px-3 py-1.5 text-sm"
-            aria-label="Filter by type"
-          >
-            <option value="all">All Types</option>
-            <option value="reward">Reward</option>
-            <option value="penalty">Penalty</option>
-            <option value="manual">Manual</option>
-          </select>
-          <input
-            type="date"
-            value={dateFrom}
-            onChange={(e) => handleFilterChange("dateFrom", e.target.value)}
-            className="rounded border px-3 py-1.5 text-sm"
-            aria-label="Date from"
-          />
-          <input
-            type="date"
-            value={dateTo}
-            onChange={(e) => handleFilterChange("dateTo", e.target.value)}
-            className="rounded border px-3 py-1.5 text-sm"
-            aria-label="Date to"
-          />
+        <div className="flex flex-col gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <select
+              value={statusFilter}
+              onChange={(e) => handleFilterChange("status", e.target.value)}
+              className="rounded border px-3 py-1.5 text-sm"
+              aria-label="Filter by status"
+            >
+              <option value="all">All Statuses</option>
+              <option value="PENDING">Pending</option>
+              <option value="CONFIRMED">Confirmed</option>
+              <option value="RELEASED">Released</option>
+              <option value="REFUNDED">Refunded</option>
+              <option value="FAILED">Failed</option>
+            </select>
+            <select
+              value={typeFilter}
+              onChange={(e) => handleFilterChange("type", e.target.value)}
+              className="rounded border px-3 py-1.5 text-sm"
+              aria-label="Filter by type"
+            >
+              <option value="all">All Types</option>
+              <option value="reward">Reward</option>
+              <option value="penalty">Penalty</option>
+              <option value="manual">Manual</option>
+            </select>
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => handleFilterChange("dateFrom", e.target.value)}
+              className={`rounded border px-3 py-1.5 text-sm ${dateError ? "border-red-500" : ""}`}
+              aria-label="Date from"
+              aria-invalid={!!dateError}
+            />
+            <input
+              type="date"
+              value={dateTo}
+              onChange={(e) => handleFilterChange("dateTo", e.target.value)}
+              className={`rounded border px-3 py-1.5 text-sm ${dateError ? "border-red-500" : ""}`}
+              aria-label="Date to"
+              aria-invalid={!!dateError}
+            />
+            {hasActiveFilters && (
+              <button
+                onClick={() => setUrlState(URL_DEFAULTS)}
+                className="rounded border px-3 py-1.5 text-sm hover:bg-gray-50"
+                aria-label="Clear all filters"
+              >
+                Clear Filters
+              </button>
+            )}
+          </div>
+          {dateError && (
+            <p className="text-sm text-red-600" role="alert">
+              {dateError}
+            </p>
+          )}
         </div>
       </div>
 
@@ -306,7 +344,6 @@ export function PaymentsView() {
                         : undefined
                     }
                   />
-
                 </td>
               </tr>
             ) : (

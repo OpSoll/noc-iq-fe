@@ -106,6 +106,7 @@ describe("outages frontend flow", () => {
               {
                 id: "outage-1",
                 title: "Lagos Core POP",
+                severity: "critical",
                 status: "open",
                 createdAt: "2026-03-27T08:00:00.000Z",
               },
