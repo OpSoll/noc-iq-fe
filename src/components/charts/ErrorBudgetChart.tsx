@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, memo } from "react";
 
 export interface ErrorBudgetDataPoint {
   date: string;
@@ -14,7 +14,7 @@ interface ErrorBudgetChartProps {
   windowLabel?: string;
 }
 
-export default function ErrorBudgetChart({
+function ErrorBudgetChart({
   data,
   thresholdPercent = 99.5,
   windowLabel = "30d",
@@ -103,3 +103,5 @@ export default function ErrorBudgetChart({
     </div>
   );
 }
+
+export default memo(ErrorBudgetChart);
