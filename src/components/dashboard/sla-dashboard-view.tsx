@@ -9,6 +9,7 @@ import PenaltiesRewardsChart from "@/components/dashboard/PenaltiesRewardsChart"
 import SLATrendChart from "@/components/dashboard/SLATrendChart";
 import AutoRefreshControl from "@/components/dashboard/AutoRefreshControl";
 import FinancialSummaryWidget from "@/components/dashboard/FinancialSummaryWidget";
+import MTTRHistogramChart from "@/components/dashboard/MTTRHistogramChart";
 import { useToast } from "@/components/ui/toast";
 import { RouteErrorState, RouteLoadingState } from "@/components/ui/route-state";
 import {
@@ -417,6 +418,8 @@ export default function SLADashboardView() {
         <SLATrendChart data={metrics.trends} onPointClick={onTrendClick} />
         <PenaltiesRewardsChart data={metrics.trends} onPenaltyClick={onPenaltyClick} onRewardClick={onRewardClick} />
       </div>
+
+      <MTTRHistogramChart dateFrom={filters.date_from} dateTo={filters.date_to} />
 
       {cmp && cmp.trends.length > 0 ? (
         <div>
