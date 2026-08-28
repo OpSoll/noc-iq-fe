@@ -39,7 +39,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
   const nonce = requestHeaders.get("x-nonce") ?? undefined;
 
   return (
-    <html lang="en">
+    <html lang="en" className={`${inter.variable} ${robotoMono.variable}`}>
       <head>
         {/* Perf #560: DNS prefetch + preconnect to cut Time-to-First-Byte latency
             for external Stellar network endpoints used by RPC / Horizon calls. */}
