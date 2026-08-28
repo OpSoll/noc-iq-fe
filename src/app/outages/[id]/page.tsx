@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 
 import { SLADisputesPanel } from "@/components/outages/SLADisputesPanel";
 import { PrintButton } from "@/components/shared/PrintButton";
@@ -10,9 +11,39 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RouteEmptyState, RouteErrorState, RouteLoadingState } from "@/components/ui/route-state";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/components/ui/toast";
-import { ResolveOutageModal } from "@/features/outages/components/ResolveOutageModal";
 import { getOutage, resolveOutage, updateOutage, deleteOutage } from "@/services/outages";
 import type { Outage, OutageResolutionPayment, OutageUpdate, Severity, OutageStatus } from "@/types/outages";
+
+// Loading skeleton for ResolveOutageModal
+function ResolveModalSkeleton() {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-xl">
+        <div className="space-y-3">
+          <div className="h-8 w-3/4 animate-pulse rounded-md bg-slate-200"></div>
+          <div className="h-4 w-full animate-pulse rounded-md bg-slate-200"></div>
+        </div>
+        <div className="mt-6 space-y-4">
+          <div className="h-32 w-full animate-pulse rounded-xl border border-slate-200 bg-slate-50"></div>
+          <div className="h-24 w-full animate-pulse rounded-xl border border-slate-200 bg-slate-50"></div>
+        </div>
+        <div className="mt-6 flex justify-end gap-3">
+          <div className="h-10 w-24 animate-pulse rounded-lg bg-slate-200"></div>
+          <div className="h-10 w-32 animate-pulse rounded-lg bg-slate-200"></div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Dynamically import heavy modal with SSR disabled
+const ResolveOutageModal = dynamic(
+  () => import("@/features/outages/components/ResolveOutageModal").then(mod => ({ default: mod.ResolveOutageModal })),
+  { 
+    ssr: false,
+    loading: () => <ResolveModalSkeleton />
+  }
+);
 
 function getErrorMessage(err: unknown) {
   return err instanceof Error ? err.message : "Failed to load outage";
