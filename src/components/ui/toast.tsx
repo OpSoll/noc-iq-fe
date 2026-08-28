@@ -43,6 +43,14 @@ const ToastWithProgress = ({
   }, []);
 
   useEffect(() => {
+    // Check if user prefers reduced motion
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    if (mediaQuery.matches) {
+      // If reduced motion is preferred, set width to 0 immediately without animation
+      setWidth(0);
+      return;
+    }
+
     let frame: number;
     if (!isPaused) {
       const animate = () => {
@@ -59,6 +67,14 @@ const ToastWithProgress = ({
   }, [isPaused]);
 
   useEffect(() => {
+    // Check if user prefers reduced motion
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    if (mediaQuery.matches) {
+      // If reduced motion is preferred, dismiss toast immediately
+      setTimeout(onDismiss, 100);
+      return;
+    }
+
     start.current = Date.now();
     timer.current = setTimeout(onDismiss, remaining.current);
     return () => {

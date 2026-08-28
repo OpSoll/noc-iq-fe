@@ -98,7 +98,30 @@ html.a11y-high-contrast .bg-white {
   background-color: #111111;
 }
 
-/* Reduced-motion mode */
+/* Reduced-motion mode - apply both for system preference and a11y class */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .animate-spin,
+  .animate-pulse {
+    animation: none !important;
+  }
+
+  .transition-all,
+  .transition-colors,
+  .transition-opacity,
+  .transition-transform {
+    transition: none !important;
+  }
+}
+
 html.a11y-reduced-motion *,
 html.a11y-reduced-motion *::before,
 html.a11y-reduced-motion *::after {
