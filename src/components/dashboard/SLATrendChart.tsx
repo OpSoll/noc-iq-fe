@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, memo } from "react";
 import { TrendPoint } from "../../types/dashboard";
 import AnomalyOverlay from "@/components/charts/AnomalyOverlay";
 import type { AnomalySegment } from "@/services/analytics";
@@ -13,7 +13,7 @@ interface SLATrendChartProps {
 
 const clampPercentage = (value: number) => Math.max(0, Math.min(100, value));
 
-export default function SLATrendChart({
+function SLATrendChart({
   data,
   onPointClick,
   anomalies = [],
@@ -94,3 +94,5 @@ export default function SLATrendChart({
     </div>
   );
 }
+
+export default memo(SLATrendChart);

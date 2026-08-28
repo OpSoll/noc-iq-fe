@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 
@@ -210,17 +210,17 @@ export default function SLADashboardView() {
     enabled: compareMode,
   });
 
-  function onTrendClick(point: TrendPoint) {
+  const onTrendClick = useCallback((point: TrendPoint) => {
     pushOutageDrilldown(point);
-  }
+  }, []);
 
-  function onPenaltyClick(point: TrendPoint) {
+  const onPenaltyClick = useCallback((point: TrendPoint) => {
     pushPaymentDrilldown("penalty", point);
-  }
+  }, []);
 
-  function onRewardClick(point: TrendPoint) {
+  const onRewardClick = useCallback((point: TrendPoint) => {
     pushPaymentDrilldown("reward", point);
-  }
+  }, []);
 
   if (primary.isLoading) {
     return (

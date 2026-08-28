@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { TrendPoint } from "../../types/dashboard";
 
 interface PenaltiesRewardsChartProps {
@@ -8,7 +9,7 @@ interface PenaltiesRewardsChartProps {
 
 const formatCurrency = (value: number) => `$${value.toLocaleString()}`;
 
-export default function PenaltiesRewardsChart({
+function PenaltiesRewardsChart({
   data,
   onPenaltyClick,
   onRewardClick,
@@ -51,3 +52,5 @@ export default function PenaltiesRewardsChart({
     </div>
   );
 }
+
+export default memo(PenaltiesRewardsChart);
