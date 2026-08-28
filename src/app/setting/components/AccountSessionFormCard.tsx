@@ -53,6 +53,7 @@ export function AccountSessionFormCard({
   const { password_strength, validation_result } = usePasswordValidation(
     registerForm.password,
   );
+  const hasRegisterPasswordErrors = registerForm.password.length > 0 && !Object.values(validation_result).every(Boolean);
 
   async function handleRegister() {
     try {
