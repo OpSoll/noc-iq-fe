@@ -17,6 +17,8 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const { password_strength, validation_result } =
     usePasswordValidation(password);
+  const passwordsMatch = password === confirm;
+  const hasPasswordErrors = password.length > 0 && !Object.values(validation_result).every(Boolean);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -91,8 +93,9 @@ export default function RegisterPage() {
             autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            aria-invalid={hasPasswordErrors ? true : undefined}
             aria-describedby="password-strength-feedback"
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
           <div
             id="password-strength-feedback"
@@ -122,8 +125,15 @@ export default function RegisterPage() {
             autoComplete="new-password"
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
+            aria-invalid={confirm.length > 0 && !passwordsMatch ? true : undefined}
+            aria-describedby={confirm.length > 0 && !passwordsMatch ? "confirm-password-error" : undefined}
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
+          {confirm.length > 0 && !passwordsMatch && (
+            <p id="confirm-password-error" className="mt-1 text-sm text-red-600">
+              Passwords do not match.
+            </p>
+          )}
         </div>
 
         {error && (

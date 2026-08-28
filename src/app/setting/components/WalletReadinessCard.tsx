@@ -47,7 +47,7 @@ export function WalletReadinessCard({
                 className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-amber-300 bg-white px-3 py-1.5 text-xs font-medium text-amber-800 hover:bg-amber-50 disabled:opacity-50"
                 title="Recheck wallet status on the backend"
               >
-                <RefreshCcw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
+                <RefreshCcw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} aria-hidden="true" />
                 {isRefreshing ? "Checking…" : "Recheck"}
               </button>
             )}
@@ -76,7 +76,7 @@ export function WalletReadinessCard({
                         className="inline-flex items-center gap-0.5 text-blue-700 hover:underline"
                         onClick={(e) => e.stopPropagation()}
                       >
-                        View on explorer <ExternalLink className="h-3 w-3" />
+                        View on explorer <ExternalLink className="h-3 w-3" aria-hidden="true" />
                       </a>
                     </>
                   )}
@@ -112,7 +112,7 @@ export function WalletReadinessCard({
                 className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-emerald-300 bg-white px-3 py-1.5 text-xs font-medium text-emerald-800 hover:bg-emerald-50 disabled:opacity-50"
                 title="Recheck wallet status"
               >
-                <RefreshCcw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
+                <RefreshCcw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} aria-hidden="true" />
                 {isRefreshing ? "Checking…" : "Recheck"}
               </button>
             )}
