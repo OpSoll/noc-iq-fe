@@ -17,6 +17,7 @@ export function LoginForm() {
   const [loading, setLoading] = useState(false);
   const { password_strength, validation_result } =
     usePasswordValidation(password);
+  const hasPasswordErrors = password.length > 0 && !Object.values(validation_result).every(Boolean);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
