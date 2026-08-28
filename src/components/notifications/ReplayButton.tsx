@@ -69,7 +69,7 @@ export function ReplayButton({
       disabled={isDisabled}
       onClick={() => setIsConfirmOpen(true)}
     >
-      <RotateCcw className="mr-2 h-4 w-4" />
+      <RotateCcw className="mr-2 h-4 w-4" aria-hidden="true" />
       Replay
     </Button>
   );
