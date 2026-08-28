@@ -8,6 +8,7 @@ import KPICard from "@/components/dashboard/KPICard";
 import PenaltiesRewardsChart from "@/components/dashboard/PenaltiesRewardsChart";
 import SLATrendChart from "@/components/dashboard/SLATrendChart";
 import AutoRefreshControl from "@/components/dashboard/AutoRefreshControl";
+import FinancialSummaryWidget from "@/components/dashboard/FinancialSummaryWidget";
 import { useToast } from "@/components/ui/toast";
 import { RouteErrorState, RouteLoadingState } from "@/components/ui/route-state";
 import {
@@ -409,6 +410,8 @@ export default function SLADashboardView() {
           actionLabel="Open filtered payment drilldown"
         />
       </div>
+
+      <FinancialSummaryWidget metrics={metrics} />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <SLATrendChart data={metrics.trends} onPointClick={onTrendClick} />
