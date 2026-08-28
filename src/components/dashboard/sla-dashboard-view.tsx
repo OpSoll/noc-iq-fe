@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import KPICard from "@/components/dashboard/KPICard";
 import PenaltiesRewardsChart from "@/components/dashboard/PenaltiesRewardsChart";
 import SLATrendChart from "@/components/dashboard/SLATrendChart";
+import AutoRefreshControl from "@/components/dashboard/AutoRefreshControl";
 import { useToast } from "@/components/ui/toast";
 import { RouteErrorState, RouteLoadingState } from "@/components/ui/route-state";
 import {
@@ -14,6 +15,7 @@ import {
   buildDashboardSnapshot,
 } from "@/lib/dashboardSnapshot";
 import { useUrlSync } from "@/hooks/useUrlSync";
+import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 import { fetchDashboardMetrics, type DashboardFilters } from "@/services/dashboardService";
 import type { DashboardMetrics, TrendPoint } from "@/types/dashboard";
 import { queryKeys } from "@/lib/queryKeys";
@@ -37,6 +39,7 @@ const DASHBOARD_DEFAULTS = {
 export default function SLADashboardView() {
   const router = useRouter();
   const toast = useToast();
+  const autoRefresh = useAutoRefresh();
   const [urlState, setUrlState] = useUrlSync(DASHBOARD_DEFAULTS);
   const compareMode = urlState.compare === "1";
   const filters = useMemo<DashboardFilters>(
@@ -201,6 +204,7 @@ export default function SLADashboardView() {
     queryKey: queryKeys.dashboard.metrics(filters as Record<string, unknown>),
     queryFn: () => fetchDashboardMetrics(filters),
     staleTime: 30_000,
+    refetchInterval: autoRefresh.refetchInterval,
   });
 
   const secondary = useQuery<DashboardMetrics>({
@@ -208,6 +212,7 @@ export default function SLADashboardView() {
     queryFn: () => fetchDashboardMetrics(compareFilters),
     staleTime: 30_000,
     enabled: compareMode,
+    refetchInterval: autoRefresh.refetchInterval,
   });
 
   const onTrendClick = useCallback((point: TrendPoint) => {
@@ -277,6 +282,11 @@ export default function SLADashboardView() {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs uppercase tracking-wide text-gray-400">Updated {lastUpdated}</span>
+          <AutoRefreshControl
+            value={autoRefresh.intervalMs}
+            onChange={autoRefresh.setIntervalMs}
+            isTabVisible={autoRefresh.isTabVisible}
+          />
           <button
             type="button"
             onClick={() => setCompareMode(!compareMode)}
