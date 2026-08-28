@@ -167,6 +167,7 @@ export function AccountSessionFormCard({
               }))
             }
             placeholder="Password"
+            aria-invalid={hasRegisterPasswordErrors ? true : undefined}
             aria-describedby="password-strength-feedback-register"
           />
           <div
