@@ -17,6 +17,7 @@ import { useUrlSync } from "@/hooks/useUrlSync";
 import { fetchDashboardMetrics, type DashboardFilters } from "@/services/dashboardService";
 import type { DashboardMetrics, TrendPoint } from "@/types/dashboard";
 import { queryKeys } from "@/lib/queryKeys";
+import { DATE_RANGE_PRESETS, computePresetRange, type DateRangePreset } from "@/lib/dateRangePresets";
 
 function delta(a: number, b: number) {
   const d = a - b;
@@ -32,6 +33,10 @@ const DASHBOARD_DEFAULTS = {
   compare: "0",
   compare_from: "",
   compare_to: "",
+  // Closes #448: which quick-preset (if any) produced the current date
+  // range, persisted in the query string so a reload keeps the button
+  // highlighted instead of just the raw dates.
+  preset: "",
 };
 
 export default function SLADashboardView() {
@@ -95,7 +100,13 @@ export default function SLADashboardView() {
   }, [urlState.compare_from, urlState.compare_to, compareFilters]);
 
   function set(key: keyof DashboardFilters, value: string) {
-    setUrlState({ [key]: value || "", compare: compareMode ? "1" : "0" });
+    // A manual date edit invalidates whichever preset was active. Closes #448.
+    const clearsPreset = key === "date_from" || key === "date_to";
+    setUrlState({
+      [key]: value || "",
+      compare: compareMode ? "1" : "0",
+      ...(clearsPreset ? { preset: "" } : {}),
+    });
   }
 
   function setCompareMode(value: boolean) {
@@ -253,19 +264,17 @@ export default function SLADashboardView() {
     metrics.penalties.count === 0 &&
     metrics.rewards.count === 0;
 
-  function applyPreset(days: number | "month" | "ytd") {
-    const to = new Date();
-    const from = new Date();
-    if (typeof days === "number") {
-      from.setDate(from.getDate() - days);
-    } else if (days === "month") {
-      from.setDate(1);
-    } else if (days === "ytd") {
-      from.setMonth(0, 1);
-    }
-    const toStr = to.toISOString().split("T")[0];
-    const fromStr = from.toISOString().split("T")[0];
-    setUrlState({ ...urlState, date_from: fromStr, date_to: toStr, compare: compareMode ? "1" : "0" });
+  // Closes #448: quick-preset date range buttons. The range math lives in
+  // computePresetRange() so it's covered by plain unit tests; this just
+  // applies the result and remembers which preset produced it.
+  function applyPreset(preset: DateRangePreset) {
+    const { date_from, date_to } = computePresetRange(preset);
+    setUrlState({
+      date_from,
+      date_to,
+      preset,
+      compare: compareMode ? "1" : "0",
+    });
   }
 
   return (
@@ -295,11 +304,22 @@ export default function SLADashboardView() {
         <p className="text-sm text-gray-400">Loading comparison window…</p>
       ) : null}
 
-      <div className="flex gap-2 text-sm text-slate-600 mb-2">
-        <button type="button" onClick={() => applyPreset(7)} className="hover:underline">Last 7 Days</button>
-        <button type="button" onClick={() => applyPreset(30)} className="hover:underline">Last 30 Days</button>
-        <button type="button" onClick={() => applyPreset("month")} className="hover:underline">This Month</button>
-        <button type="button" onClick={() => applyPreset("ytd")} className="hover:underline">Year to Date</button>
+      <div className="flex flex-wrap gap-2 text-sm text-slate-600 mb-2" role="group" aria-label="Quick date range presets">
+        {DATE_RANGE_PRESETS.map(({ key, label }) => (
+          <button
+            key={key}
+            type="button"
+            onClick={() => applyPreset(key)}
+            aria-pressed={urlState.preset === key}
+            className={`rounded-full px-3 py-1 transition-colors ${
+              urlState.preset === key
+                ? "bg-blue-100 font-semibold text-blue-700"
+                : "hover:bg-slate-100 hover:underline"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
       </div>
 
 
