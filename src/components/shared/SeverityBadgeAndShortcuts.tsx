@@ -4,10 +4,10 @@ import { useEffect, useState } from "react";
 // Closes #374: keyboard shortcut guide overlay
 
 const SEVERITY_STYLE = {
-  critical: { className: "bg-red-900 text-red-50", icon: "▲" },
-  high: { className: "bg-orange-800 text-orange-50", icon: "◆" },
-  medium: { className: "bg-yellow-700 text-yellow-50", icon: "●" },
-  low: { className: "bg-slate-600 text-slate-50", icon: "○" },
+  critical: { className: "bg-red-700 text-white", icon: "▲" },
+  high: { className: "bg-orange-600 text-white", icon: "◆" },
+  medium: { className: "bg-amber-500 text-black", icon: "●" },
+  low: { className: "bg-slate-500 text-white", icon: "○" },
 } as const;
 
 export function SeverityBadge({ severity }: { severity: keyof typeof SEVERITY_STYLE }) {
