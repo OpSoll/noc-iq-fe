@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, memo } from "react";
+import { useMemo, useRef, useState, memo } from "react";
 import { TrendPoint } from "../../types/dashboard";
 import AnomalyOverlay from "@/components/charts/AnomalyOverlay";
 import type { AnomalySegment } from "@/services/analytics";
@@ -16,6 +16,8 @@ interface SLATrendChartProps {
   anomalies?: AnomalySegment[];
   /** Operational SLA compliance target percentage. Closes #449. */
   target?: number;
+  /** Human-readable date range shown in the chart's accessible label. Closes #447. */
+  dateRangeLabel?: string;
 }
 
 const clampPercentage = (value: number) => Math.max(0, Math.min(100, value));
@@ -25,8 +27,59 @@ function SLATrendChart({
   onPointClick,
   anomalies = [],
   target = DEFAULT_SLA_COMPLIANCE_TARGET,
+  dateRangeLabel,
 }: SLATrendChartProps) {
   const [showAnomalies, setShowAnomalies] = useState(false);
+  const [focusedIndex, setFocusedIndex] = useState(0);
+  const itemRefs = useRef<Array<HTMLDivElement | null>>([]);
+
+  const chartLabel = useMemo(() => {
+    const rangePart = dateRangeLabel ? ` for ${dateRangeLabel}` : "";
+    if (data.length === 0) {
+      return `SLA compliance trend chart${rangePart}. No data points.`;
+    }
+    const latest = data[data.length - 1];
+    return `SLA compliance trend chart${rangePart} with ${data.length} data point${
+      data.length === 1 ? "" : "s"
+    }. Latest: ${clampPercentage(latest.compliance_percentage).toFixed(1)}% against a ${target}% target. Use the arrow keys to move between points.`;
+  }, [data, dateRangeLabel, target]);
+
+  function focusIndex(nextIndex: number) {
+    if (data.length === 0) return;
+    const clamped = Math.max(0, Math.min(data.length - 1, nextIndex));
+    setFocusedIndex(clamped);
+    itemRefs.current[clamped]?.focus();
+  }
+
+  function handlePointKeyDown(e: React.KeyboardEvent<HTMLDivElement>, index: number) {
+    switch (e.key) {
+      case "ArrowDown":
+      case "ArrowRight":
+        e.preventDefault();
+        focusIndex(index + 1);
+        return;
+      case "ArrowUp":
+      case "ArrowLeft":
+        e.preventDefault();
+        focusIndex(index - 1);
+        return;
+      case "Home":
+        e.preventDefault();
+        focusIndex(0);
+        return;
+      case "End":
+        e.preventDefault();
+        focusIndex(data.length - 1);
+        return;
+      case "Enter":
+      case " ":
+        e.preventDefault();
+        onPointClick?.(data[index]);
+        return;
+      default:
+        return;
+    }
+  }
 
   return (
     <div className="rounded-xl bg-white p-5 shadow-sm">
@@ -55,34 +108,42 @@ function SLATrendChart({
         </div>
       )}
 
-      <div className="space-y-3">
+      {/* Accessible focus container: role="group" describes the chart as a
+          whole; roving tabIndex below keeps Tab from stopping on every row
+          while arrow keys move a single focus point between them. Closes #447. */}
+      <div
+        className="space-y-3"
+        role="group"
+        aria-label={chartLabel}
+      >
         {data.length === 0 ? (
           <p className="text-sm text-gray-500">No trend data available.</p>
         ) : (
           <>
-            {data.map((point) => {
+            {data.map((point, index) => {
               const pct = clampPercentage(point.compliance_percentage);
               const above = isAboveTarget(pct, target);
               const variance = formatComplianceVariance(pct, target);
+              const pointLabel = `${point.period}: ${pct.toFixed(1)}% compliance, ${variance}`;
 
               return (
                 <div
                   key={point.period}
+                  ref={(el) => {
+                    itemRefs.current[index] = el;
+                  }}
                   className={`space-y-1 ${
                     onPointClick
                       ? "cursor-pointer rounded-lg p-1 hover:bg-gray-50 transition-colors"
-                      : ""
-                  }`}
+                      : "rounded-lg p-1"
+                  } focus:outline-none focus:ring-2 focus:ring-blue-400`}
                   onClick={() => onPointClick?.(point)}
-                  role={onPointClick ? "button" : undefined}
+                  role={onPointClick ? "button" : "img"}
+                  aria-label={pointLabel}
                   title={variance}
-                  tabIndex={onPointClick ? 0 : undefined}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      onPointClick?.(point);
-                    }
-                  }}
+                  tabIndex={index === focusedIndex ? 0 : -1}
+                  onFocus={() => setFocusedIndex(index)}
+                  onKeyDown={(e) => handlePointKeyDown(e, index)}
                 >
                   <div className="flex items-center justify-between text-sm text-gray-600">
                     <span>{point.period}</span>

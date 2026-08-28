@@ -99,6 +99,14 @@ export default function SLADashboardView() {
     return "Previous period";
   }, [urlState.compare_from, urlState.compare_to, compareFilters]);
 
+  // Closes #447: human-readable date range fed into the chart's aria-label.
+  const primaryRangeLabel = useMemo(() => {
+    if (filters.date_from && filters.date_to) return `${filters.date_from} to ${filters.date_to}`;
+    if (filters.date_from) return `${filters.date_from} onward`;
+    if (filters.date_to) return `through ${filters.date_to}`;
+    return "all time";
+  }, [filters.date_from, filters.date_to]);
+
   function set(key: keyof DashboardFilters, value: string) {
     // A manual date edit invalidates whichever preset was active. Closes #448.
     const clearsPreset = key === "date_from" || key === "date_to";
@@ -421,7 +429,7 @@ export default function SLADashboardView() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <SLATrendChart data={metrics.trends} onPointClick={onTrendClick} />
+        <SLATrendChart data={metrics.trends} onPointClick={onTrendClick} dateRangeLabel={primaryRangeLabel} />
         <PenaltiesRewardsChart data={metrics.trends} onPenaltyClick={onPenaltyClick} onRewardClick={onRewardClick} />
       </div>
 
@@ -431,7 +439,7 @@ export default function SLADashboardView() {
             Comparison Window — {compareLabel}
           </p>
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <SLATrendChart data={cmp.trends} />
+            <SLATrendChart data={cmp.trends} dateRangeLabel={compareLabel} />
             <PenaltiesRewardsChart data={cmp.trends} />
           </div>
         </div>
