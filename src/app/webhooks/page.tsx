@@ -3,6 +3,7 @@
 import { useSearchParams } from "next/navigation";
 import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { FixedSizeList } from "react-window";
 import {
   fetchWebhooks,
   createWebhook,
@@ -405,52 +406,66 @@ export default function WebhooksPage() {
                       No deliveries match the current filters.
                     </p>
                   ) : (
-                    <div className="space-y-2">
-                      {filteredDeliveries.map((d: WebhookDelivery) => (
-                        <div
-                          key={d.id}
-                          className="flex items-center justify-between rounded-lg bg-gray-50 px-3 py-2 text-xs"
-                        >
-                          <div className="flex items-center gap-3">
-                            <span
-                              className={
-                                d.status === "success"
-                                  ? "text-green-600"
-                                  : d.status === "failed"
-                                    ? "text-red-600"
-                                    : "text-yellow-600"
-                              }
+                    <div
+                      className="rounded-lg"
+                      style={{ height: Math.min(filteredDeliveries.length, 15) * 44 }}
+                    >
+                      <FixedSizeList
+                        height={Math.min(filteredDeliveries.length, 15) * 44}
+                        width="100%"
+                        itemCount={filteredDeliveries.length}
+                        itemSize={44}
+                        itemData={filteredDeliveries}
+                      >
+                        {({ index, style, data }) => {
+                          const d: WebhookDelivery = data[index];
+                          return (
+                            <div
+                              style={style}
+                              className="flex items-center justify-between rounded-lg bg-gray-50 px-3 py-2 text-xs"
                             >
-                              {d.status}
-                            </span>
-                            <span className="text-gray-500">{d.event}</span>
-                            {d.response_code && (
-                              <span className="text-gray-400">
-                                HTTP {d.response_code}
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-gray-400">
-                              {new Date(d.created_at).toLocaleString()}
-                            </span>
-                            {d.status === "failed" && (
-                              <button
-                                onClick={() =>
-                                  retryMutation.mutate({
-                                    webhookId: wh.id,
-                                    deliveryId: d.id,
-                                  })
-                                }
-                                disabled={retryMutation.isPending}
-                                className="rounded border border-blue-200 px-2 py-0.5 text-blue-600 hover:bg-blue-50 disabled:opacity-40"
-                              >
-                                Retry
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      ))}
+                              <div className="flex items-center gap-3">
+                                <span
+                                  className={
+                                    d.status === "success"
+                                      ? "text-green-600"
+                                      : d.status === "failed"
+                                        ? "text-red-600"
+                                        : "text-yellow-600"
+                                  }
+                                >
+                                  {d.status}
+                                </span>
+                                <span className="text-gray-500">{d.event}</span>
+                                {d.response_code && (
+                                  <span className="text-gray-400">
+                                    HTTP {d.response_code}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-gray-400">
+                                  {new Date(d.created_at).toLocaleString()}
+                                </span>
+                                {d.status === "failed" && (
+                                  <button
+                                    onClick={() =>
+                                      retryMutation.mutate({
+                                        webhookId: String(wh.id),
+                                        deliveryId: d.id,
+                                      })
+                                    }
+                                    disabled={retryMutation.isPending}
+                                    className="rounded border border-blue-200 px-2 py-0.5 text-blue-600 hover:bg-blue-50 disabled:opacity-40"
+                                  >
+                                    Retry
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        }}
+                      </FixedSizeList>
                     </div>
                   )}
                 </div>
