@@ -29,6 +29,28 @@ export default async function RootLayout({ children }: RootLayoutProps) {
 
   return (
     <html lang="en">
+      <head>
+        {/* Perf #560: DNS prefetch + preconnect to cut Time-to-First-Byte latency
+            for external Stellar network endpoints used by RPC / Horizon calls. */}
+        <link
+          rel="dns-prefetch"
+          href="https://horizon-testnet.stellar.org"
+        />
+        <link
+          rel="dns-prefetch"
+          href="https://soroban-testnet.stellar.org"
+        />
+        <link
+          rel="preconnect"
+          href="https://horizon-testnet.stellar.org"
+          crossOrigin="anonymous"
+        />
+        <link
+          rel="preconnect"
+          href="https://soroban-testnet.stellar.org"
+          crossOrigin="anonymous"
+        />
+      </head>
       <body>
         <ReactQueryProvider>
           <SessionProvider>
