@@ -18,6 +18,7 @@ import { fetchDashboardMetrics, type DashboardFilters } from "@/services/dashboa
 import type { DashboardMetrics, TrendPoint } from "@/types/dashboard";
 import { queryKeys } from "@/lib/queryKeys";
 import { DATE_RANGE_PRESETS, computePresetRange, type DateRangePreset } from "@/lib/dateRangePresets";
+import { exportSlaReportPdf } from "@/lib/pdfExport";
 
 function delta(a: number, b: number) {
   const d = a - b;
@@ -285,6 +286,17 @@ export default function SLADashboardView() {
     });
   }
 
+  // Closes #450: client-side PDF export of the current KPI summary + trend chart.
+  async function handleExportPdf() {
+    try {
+      const filename = await exportSlaReportPdf(metrics, filters);
+      toast(`Exported ${filename}.`, "success");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to export the PDF report.";
+      toast(message, "error");
+    }
+  }
+
   return (
     <div className="space-y-6 p-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -302,6 +314,7 @@ export default function SLADashboardView() {
             {compareMode ? "Exit Compare" : "Compare"}
           </button>
           <button type="button" onClick={() => downloadSnapshot(metrics)} className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50">Export</button>
+          <button type="button" onClick={() => void handleExportPdf()} className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50">Export PDF Report</button>
           <button type="button" onClick={() => void shareSnapshot(metrics)} className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50">Share snapshot</button>
           <button type="button" onClick={() => void primary.refetch()} className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50">Refresh</button>
         </div>
