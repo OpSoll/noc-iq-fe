@@ -76,7 +76,7 @@ export function WalletReadinessCard({
                         className="inline-flex items-center gap-0.5 text-blue-700 hover:underline"
                         onClick={(e) => e.stopPropagation()}
                       >
-                        View on explorer <ExternalLink className="h-3 w-3" />
+                        View on explorer <ExternalLink className="h-3 w-3" aria-hidden="true" />
                       </a>
                     </>
                   )}
