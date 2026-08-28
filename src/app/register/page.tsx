@@ -17,6 +17,7 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const { password_strength, validation_result } =
     usePasswordValidation(password);
+  const passwordsMatch = password === confirm;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
