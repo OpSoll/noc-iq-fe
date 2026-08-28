@@ -1,0 +1,52 @@
+name: PR Title Semantic Release Check
+
+# CI #567: Enforce the Conventional Commits specification on pull request
+# titles so that automated release tooling can derive the next semantic
+# version from the change type reliably.
+
+on:
+  pull_request:
+    types:
+      - opened
+      - edited
+      - reopened
+      - synchronize
+
+permissions:
+  contents: read
+
+jobs:
+  validate-pr-title:
+    name: Validate PR title against Conventional Commits
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Validate PR title
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          # Allowed Conventional Commits types.
+          TYPES="feat|fix|chore|docs|refactor|perf|ci|test|build|style|revert"
+
+          # Type + optional scope, followed by a colon and a description.
+          PATTERN="^(${TYPES})(\\([a-z0-9-]+\\))?!?: .+"
+
+          if [[ "$PR_TITLE" =~ $PATTERN ]]; then
+            echo "✅ PR title \"$PR_TITLE\" is valid."
+            exit 0
+          fi
+
+          echo "❌ Invalid PR title: \"$PR_TITLE\""
+          echo ""
+          echo "PR titles must follow the Conventional Commits specification:"
+          echo "    <type>[optional scope]: <description>"
+          echo ""
+          echo "Allowed types: feat, fix, chore, docs, refactor, perf, ci,"
+          echo "               test, build, style, revert"
+          echo ""
+          echo "Examples:"
+          echo "    feat: add outage post-mortem uploader"
+          echo "    fix(outages): resolve duplicate detection crash"
+          echo "    chore: bump dependency versions"
+          echo "    docs: update API reference"
+          exit 1
