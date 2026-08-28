@@ -10,6 +10,7 @@ import SLATrendChart from "@/components/dashboard/SLATrendChart";
 import AutoRefreshControl from "@/components/dashboard/AutoRefreshControl";
 import FinancialSummaryWidget from "@/components/dashboard/FinancialSummaryWidget";
 import MTTRHistogramChart from "@/components/dashboard/MTTRHistogramChart";
+import SLABreachCountdownCard from "@/components/dashboard/SLABreachCountdownCard";
 import { useToast } from "@/components/ui/toast";
 import { RouteErrorState, RouteLoadingState } from "@/components/ui/route-state";
 import {
@@ -302,6 +303,7 @@ export default function SLADashboardView() {
         </div>
       </div>
 
+      <SLABreachCountdownCard />
 
       {compareMode && secondary.isLoading ? (
         <p className="text-sm text-gray-400">Loading comparison window…</p>
