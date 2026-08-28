@@ -1,22 +1,61 @@
 # Wave 5 Closure Dashboard
 
-> Last updated: 2026-08-27
+> Last updated: 2026-08-28
 
 ## Issue Completion
 
 | Metric | Value |
 |--------|-------|
-| Total Wave 5 issues | 100 |
+| Total Wave 5 issues | 108 |
 | Closed | 100 |
-| Open | 0 |
-| Completion | 100% |
+| Open | 8 |
+| Completion | 93% |
 
 ## Open Issues
 
-_All issues closed! 🎉_
+- [ ] #454 Dashboard: Add auto-refresh interval toggle (10s, 30s, 60s, Off) in dashboard header
+- [ ] #453 Dashboard: Add MTTR (Mean Time to Resolution) distribution histogram component
+- [ ] #452 Dashboard: Add SLA penalty and reward aggregate financial widget
+- [ ] #451 Dashboard: Add real-time SLA breach countdown timer card for critical open outages
+- [ ] #450 Dashboard: Add export SLA metrics summary to PDF report
+- [ ] #449 Dashboard: Add SLA compliance threshold target indicator line to analytics chart
+- [ ] #448 Dashboard: Add quick-preset date range selector buttons in SLADashboardView
+- [ ] #447 Dashboard: Add keyboard focus trap and ARIA labels to SLA SVG charts
 
 ## Closed Issues
 
+- [x] #571 CI: Add automated release evidence package builder script
+- [x] #570 CI: Add automated Visual Regression Testing via Playwright screenshots
+- [x] #569 CI: Add Mock Service Worker (MSW) integration for offline Vitest component tests
+- [x] #568 CI: Add Docker container build and image security scan workflow
+- [x] #567 CI: Add PR Title Semantic Release validator workflow
+- [x] #566 CI: Add automated Next.js bundle size regression monitor
+- [x] #565 CI: Add automated ESLint and Prettier code quality check in GitHub Actions
+- [x] #564 CI: Add Lighthouse CI automated accessibility and performance audit workflow
+- [x] #563 CI: Add Vitest unit test coverage threshold enforcement (85% lines)
+- [x] #562 CI: Add automated Playwright E2E integration test suite for outage creation & resolution
+- [x] #561 Perf: Add client-side SWR / React Query response caching for GET endpoints
+- [x] #560 Perf: Add DNS prefetch and preconnect hints for Stellar RPC and Horizon endpoints
+- [x] #559 Perf: Add HTTP Keep-Alive connection pooling for Next.js API route proxies
+- [x] #558 Perf: Add Image optimization via Next.js Image component for site logos
+- [x] #557 Perf: Add Service Worker PWA offline caching for static assets and UI shell
+- [x] #556 Perf: Add virtualized windowing list for large webhook delivery logs (react-window)
+- [x] #555 Perf: Add Lucide Icon bundle tree-shaking optimization
+- [x] #554 Perf: Add Next.js font optimization for Google Fonts (Inter, Roboto Mono)
+- [x] #553 Perf: Add Dynamic Component Imports for heavy modal dialogs (React.lazy)
+- [x] #552 Perf: Add React.memo and useMemo optimizations to SLA analytics chart renders
+- [x] #551 A11y: Add interactive tooltip keyboard toggle support (Escape key dismiss)
+- [x] #550 A11y: Add screen reader table summaries via caption element
+- [x] #549 A11y: Add motion reduction preference support (prefers-reduced-motion)
+- [x] #548 A11y: Add keyboard accessible sorting controls on table column headers
+- [x] #547 A11y: Add responsive text scaling support without horizontal scrollbars
+- [x] #546 A11y: Add high contrast theme option for visually impaired users
+- [x] #545 A11y: Add form field error association via aria-describedby
+- [x] #544 A11y: Add screen reader accessible alt text to all status icons and SVG graphics
+- [x] #543 A11y: Add ARIA modal dialog labels and focus traps to all popover forms
+- [x] #542 A11y: Add keyboard shortcuts modal for table navigation (J / K next / previous row)
+- [x] #541 A11y: Add accessible color contrast compliance check for severity badges
+- [x] #540 A11y: Add proper ARIA role and expanded attributes to collapsible navigation sidebars
 - [x] #433 Accessibility: Fix dark mode text contrast ratios and visible focus rings
 - [x] #432 Docs: Update CONTRIBUTING.md with UI component and hook testing guidelines
 - [x] #431 Refactor: Extract shared Card and Badge sub-components in SettingsPage
@@ -85,38 +124,6 @@ _All issues closed! 🎉_
 - [x] #343 [FE-W6-008] Implement URL-synced sidebar/panel state for deep-linkable views
 - [x] #342 [FE-W6-007] Add skeleton loading states for all data-bound components
 - [x] #341 [FE-W6-006] Implement session timeout warning dialog with auto-logout
-- [x] #340 [FE-W6-005] Add WCAG 2.1 AA color contrast audit and remediation pass
-- [x] #339 [FE-W6-004] Implement virtualized list rendering for large outage/payment tables
-- [x] #338 [FE-W6-003] Add dark mode support with system preference detection and manual toggle
-- [x] #337 [FE-W6-002] Implement global error boundary with contextual fallback UI per route section
-- [x] #336 [FE-W6-001] Migrate axios to native fetch with typed interceptor layer
-- [x] #296 [FE-W5-125] Build Wave 5 closure dashboard for FE issue and quality signal tracking
-- [x] #295 [FE-W5-124] Add frontend-backend compatibility release gate before production tags
-- [x] #294 [FE-W5-123] Implement changelog automation for frontend operational surfaces
-- [x] #293 [FE-W5-122] Add frontend dependency policy checks for risky package additions
-- [x] #292 [FE-W5-121] Implement route-level ADR templates for major frontend decisions
-- [x] #291 [FE-W5-120] Create frontend reliability scorecard fed by test/telemetry signals
-- [x] #290 [FE-W5-119] Add code ownership and escalation map for high-risk frontend modules
-- [x] #289 [FE-W5-118] Implement contributor contract-change checklist with auto hints
-- [x] #288 [FE-W5-117] Add seeded preview data packs for deterministic UI review
-- [x] #287 [FE-W5-116] Implement preview environment quality gate checklist for FE PRs
-- [x] #286 [FE-W5-115] Create frontend architecture map with route-to-service dependency graph
-- [x] #285 [FE-W5-114] Add session-bound draft preservation for long operational forms
-- [x] #284 [FE-W5-113] Implement admin action audit banners with correlation deep-links
-- [x] #283 [FE-W5-112] Add secure client-side secret redaction in debug consoles
-- [x] #282 [FE-W5-111] Implement audit-log advanced filters with saved investigative views
-- [x] #281 [FE-W5-110] Add admin operations cockpit for jobs/webhooks/metrics quick actions
-- [x] #280 [FE-W5-109] Implement role-aware route capability matrix with runtime enforcement
-- [x] #279 [FE-W5-108] Add concurrent-session conflict handling and user notification center
-- [x] #278 [FE-W5-107] Implement robust session-expiry recovery UX for in-flight mutations
-- [x] #277 [FE-W5-106] Add CI route smoke matrix for multiple backend capability modes
-- [x] #276 [FE-W5-105] Implement mutation stress tests for optimistic UI rollback correctness
-- [x] #275 [FE-W5-104] Add contract fixture replay tests for frontend parsers/normalizers
-- [x] #274 [FE-W5-103] Create flaky test quarantine and triage workflow in CI
-- [x] #273 [FE-W5-102] Add visual regression checks for dashboard and operations screens
-- [x] #272 [FE-W5-101] Implement deterministic API mock layer for route integration tests
-- [x] #271 [FE-W5-100] Add Playwright coverage for SLA dispute lifecycle workflows
-- [x] #270 [FE-W5-099] Expand Playwright to cover webhook replay and dead-letter recovery
 
 ---
 _Auto-generated by `scripts/update-wave5-dashboard.mjs`. Do not edit manually._
