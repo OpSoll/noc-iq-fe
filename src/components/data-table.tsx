@@ -315,19 +315,34 @@ export function DataTable<TData, TValue>({
                     return (
                       <TableHead 
                         key={h.id} 
-                        className={`${config.padding} ${config.textSize} font-semibold text-slate-700 whitespace-nowrap ${
-                          canSort ? "cursor-pointer select-none group" : ""
+                        className={`${config.padding} ${config.textSize} font-semibold text-slate-700 whitespace-nowrap p-0 ${
+                          canSort ? "group" : ""
                         }`}
-                        onClick={canSort ? h.column.getToggleSortingHandler() : undefined}
                         aria-sort={
                           sortDir === "asc" ? "ascending" : 
                           sortDir === "desc" ? "descending" : "none"
                         }
                       >
-                        <div className="flex items-center gap-1.5">
-                          {flexRender(h.column.columnDef.header, h.getContext())}
-                          {canSort && <SortIcon direction={sortDir} />}
-                        </div>
+                        {canSort ? (
+                          <button
+                            type="button"
+                            onClick={h.column.getToggleSortingHandler()}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault();
+                                h.column.getToggleSortingHandler()(e as unknown as React.MouseEvent);
+                              }
+                            }}
+                            className="flex w-full items-center gap-1.5 cursor-pointer select-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset rounded px-2"
+                          >
+                            {flexRender(h.column.columnDef.header, h.getContext())}
+                            <SortIcon direction={sortDir} />
+                          </button>
+                        ) : (
+                          <div className="flex items-center gap-1.5 px-2">
+                            {flexRender(h.column.columnDef.header, h.getContext())}
+                          </div>
+                        )}
                       </TableHead>
                     );
                   })}
