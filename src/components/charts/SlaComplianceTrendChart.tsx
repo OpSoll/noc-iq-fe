@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useMemo, memo } from "react";
 // Closes #358: SLA compliance trend chart with configurable time windows
 // Closes #352: minimal locale infrastructure used for date formatting
 const LOCALE_KEY = "noc_locale";
@@ -20,22 +20,27 @@ export function useLocale() {
 export type SlaTrendPoint = { date: string; compliancePct: number };
 const WINDOWS = { "7d": 7, "30d": 30, "90d": 90 } as const;
 type WindowKey = keyof typeof WINDOWS;
-export function SlaComplianceTrendChart({
+function SlaComplianceTrendChart({
   points,
 }: {
   points: SlaTrendPoint[];
 }) {
   const { locale } = useLocale();
   const [windowKey, setWindowKey] = useState<WindowKey>("30d");
-  const visible = points.slice(-WINDOWS[windowKey]);
-  const max = Math.max(100, ...visible.map((p) => p.compliancePct));
-  const path = visible
-    .map((p, i) => {
-      const x = (i / Math.max(visible.length - 1, 1)) * 300;
-      return `${i === 0 ? "M" : "L"}${x},${80 - (p.compliancePct / max) * 80}`;
-    })
-    .join(" ");
-  const last = visible[visible.length - 1];
+  
+  const { visible, path, last } = useMemo(() => {
+    const visiblePoints = points.slice(-WINDOWS[windowKey]);
+    const max = Math.max(100, ...visiblePoints.map((p) => p.compliancePct));
+    const chartPath = visiblePoints
+      .map((p, i) => {
+        const x = (i / Math.max(visiblePoints.length - 1, 1)) * 300;
+        return `${i === 0 ? "M" : "L"}${x},${80 - (p.compliancePct / max) * 80}`;
+      })
+      .join(" ");
+    const lastPoint = visiblePoints[visiblePoints.length - 1];
+    return { visible: visiblePoints, path: chartPath, last: lastPoint };
+  }, [points, windowKey]);
+
   return (
     <div>
       <div className="flex gap-2 mb-2 text-sm">
@@ -68,3 +73,5 @@ export function SlaComplianceTrendChart({
     </div>
   );
 }
+
+export default memo(SlaComplianceTrendChart);
