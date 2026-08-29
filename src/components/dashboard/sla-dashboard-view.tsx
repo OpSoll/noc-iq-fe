@@ -17,6 +17,8 @@ import { useUrlSync } from "@/hooks/useUrlSync";
 import { fetchDashboardMetrics, type DashboardFilters } from "@/services/dashboardService";
 import type { DashboardMetrics, TrendPoint } from "@/types/dashboard";
 import { queryKeys } from "@/lib/queryKeys";
+import { DATE_RANGE_PRESETS, computePresetRange, type DateRangePreset } from "@/lib/dateRangePresets";
+import { exportSlaReportPdf } from "@/lib/pdfExport";
 
 function delta(a: number, b: number) {
   const d = a - b;
@@ -32,6 +34,10 @@ const DASHBOARD_DEFAULTS = {
   compare: "0",
   compare_from: "",
   compare_to: "",
+  // Closes #448: which quick-preset (if any) produced the current date
+  // range, persisted in the query string so a reload keeps the button
+  // highlighted instead of just the raw dates.
+  preset: "",
 };
 
 export default function SLADashboardView() {
@@ -94,8 +100,22 @@ export default function SLADashboardView() {
     return "Previous period";
   }, [urlState.compare_from, urlState.compare_to, compareFilters]);
 
+  // Closes #447: human-readable date range fed into the chart's aria-label.
+  const primaryRangeLabel = useMemo(() => {
+    if (filters.date_from && filters.date_to) return `${filters.date_from} to ${filters.date_to}`;
+    if (filters.date_from) return `${filters.date_from} onward`;
+    if (filters.date_to) return `through ${filters.date_to}`;
+    return "all time";
+  }, [filters.date_from, filters.date_to]);
+
   function set(key: keyof DashboardFilters, value: string) {
-    setUrlState({ [key]: value || "", compare: compareMode ? "1" : "0" });
+    // A manual date edit invalidates whichever preset was active. Closes #448.
+    const clearsPreset = key === "date_from" || key === "date_to";
+    setUrlState({
+      [key]: value || "",
+      compare: compareMode ? "1" : "0",
+      ...(clearsPreset ? { preset: "" } : {}),
+    });
   }
 
   function setCompareMode(value: boolean) {
@@ -253,19 +273,28 @@ export default function SLADashboardView() {
     metrics.penalties.count === 0 &&
     metrics.rewards.count === 0;
 
-  function applyPreset(days: number | "month" | "ytd") {
-    const to = new Date();
-    const from = new Date();
-    if (typeof days === "number") {
-      from.setDate(from.getDate() - days);
-    } else if (days === "month") {
-      from.setDate(1);
-    } else if (days === "ytd") {
-      from.setMonth(0, 1);
+  // Closes #448: quick-preset date range buttons. The range math lives in
+  // computePresetRange() so it's covered by plain unit tests; this just
+  // applies the result and remembers which preset produced it.
+  function applyPreset(preset: DateRangePreset) {
+    const { date_from, date_to } = computePresetRange(preset);
+    setUrlState({
+      date_from,
+      date_to,
+      preset,
+      compare: compareMode ? "1" : "0",
+    });
+  }
+
+  // Closes #450: client-side PDF export of the current KPI summary + trend chart.
+  async function handleExportPdf() {
+    try {
+      const filename = await exportSlaReportPdf(metrics, filters);
+      toast(`Exported ${filename}.`, "success");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to export the PDF report.";
+      toast(message, "error");
     }
-    const toStr = to.toISOString().split("T")[0];
-    const fromStr = from.toISOString().split("T")[0];
-    setUrlState({ ...urlState, date_from: fromStr, date_to: toStr, compare: compareMode ? "1" : "0" });
   }
 
   return (
@@ -285,6 +314,7 @@ export default function SLADashboardView() {
             {compareMode ? "Exit Compare" : "Compare"}
           </button>
           <button type="button" onClick={() => downloadSnapshot(metrics)} className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50">Export</button>
+          <button type="button" onClick={() => void handleExportPdf()} className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50">Export PDF Report</button>
           <button type="button" onClick={() => void shareSnapshot(metrics)} className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50">Share snapshot</button>
           <button type="button" onClick={() => void primary.refetch()} className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50">Refresh</button>
         </div>
@@ -295,11 +325,22 @@ export default function SLADashboardView() {
         <p className="text-sm text-gray-400">Loading comparison window…</p>
       ) : null}
 
-      <div className="flex gap-2 text-sm text-slate-600 mb-2">
-        <button type="button" onClick={() => applyPreset(7)} className="hover:underline">Last 7 Days</button>
-        <button type="button" onClick={() => applyPreset(30)} className="hover:underline">Last 30 Days</button>
-        <button type="button" onClick={() => applyPreset("month")} className="hover:underline">This Month</button>
-        <button type="button" onClick={() => applyPreset("ytd")} className="hover:underline">Year to Date</button>
+      <div className="flex flex-wrap gap-2 text-sm text-slate-600 mb-2" role="group" aria-label="Quick date range presets">
+        {DATE_RANGE_PRESETS.map(({ key, label }) => (
+          <button
+            key={key}
+            type="button"
+            onClick={() => applyPreset(key)}
+            aria-pressed={urlState.preset === key}
+            className={`rounded-full px-3 py-1 transition-colors ${
+              urlState.preset === key
+                ? "bg-blue-100 font-semibold text-blue-700"
+                : "hover:bg-slate-100 hover:underline"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
       </div>
 
 
@@ -401,7 +442,7 @@ export default function SLADashboardView() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <SLATrendChart data={metrics.trends} onPointClick={onTrendClick} />
+        <SLATrendChart data={metrics.trends} onPointClick={onTrendClick} dateRangeLabel={primaryRangeLabel} />
         <PenaltiesRewardsChart data={metrics.trends} onPenaltyClick={onPenaltyClick} onRewardClick={onRewardClick} />
       </div>
 
@@ -411,7 +452,7 @@ export default function SLADashboardView() {
             Comparison Window — {compareLabel}
           </p>
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <SLATrendChart data={cmp.trends} />
+            <SLATrendChart data={cmp.trends} dateRangeLabel={compareLabel} />
             <PenaltiesRewardsChart data={cmp.trends} />
           </div>
         </div>
