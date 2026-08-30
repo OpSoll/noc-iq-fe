@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RouteEmptyState, RouteErrorState, RouteLoadingState } from "@/components/ui/route-state";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/components/ui/toast";
+import { announce } from "@/hooks/useOutageRealtime";
 import { getOutage, resolveOutage, updateOutage, deleteOutage } from "@/services/outages";
 import type { Outage, OutageResolutionPayment, OutageUpdate, Severity, OutageStatus } from "@/types/outages";
 
@@ -154,10 +155,14 @@ export default function OutageDetailsPage() {
     setSaving(true);
     setError(null);
     try {
+      const statusChanged = editForm.status !== undefined && editForm.status !== outage.status;
       const updated = await updateOutage(id, editForm);
       setOutage({ ...outage, ...updated });
       setEditing(false);
       toast("Outage updated.", "success");
+      if (statusChanged) {
+        announce(`Outage #${id} status changed to ${editForm.status}`);
+      }
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {
@@ -175,6 +180,7 @@ export default function OutageDetailsPage() {
       setResolutionPayment(updated.payment);
       setIsResolveModalOpen(false);
       toast("Outage resolved successfully.", "success");
+      announce(`Outage #${id} marked as Resolved`);
     } catch (err) {
       const msg = getErrorMessage(err);
       setError(msg);
