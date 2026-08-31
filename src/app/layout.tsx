@@ -24,6 +24,7 @@ import { AccessibilityProvider } from "@/providers/accessibility";
 import { FeatureFlagProvider } from "@/providers/feature-flags";
 import { NetworkStatusProvider } from "@/contexts/NetworkStatusContext";
 import { OfflineBanner } from "@/components/OfflineBanner";
+import { LiveRegion } from "@/hooks/useOutageRealtime";
 
 export const metadata = {
   title: "NOCIQ",
@@ -63,6 +64,10 @@ export default async function RootLayout({ children }: RootLayoutProps) {
         />
       </head>
       <body>
+        {/* A11y #537: single sr-only aria-live="polite" region for the whole
+            app, so dynamic status changes (e.g. outage resolution) are
+            announced to screen reader users without moving focus. */}
+        <LiveRegion />
         <ReactQueryProvider>
           <SessionProvider>
             <FeatureFlagProvider>
