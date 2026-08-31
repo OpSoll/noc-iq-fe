@@ -14,6 +14,7 @@ import {
 } from "@/services/webhookService";
 import { saveDraft, loadDraft, clearDraft } from "@/lib/drafts";
 import type { Webhook, WebhookDelivery } from "@/types/webhook";
+import { WebhookDeliveryChart } from "@/components/webhooks/WebhookDeliveryChart";
 
 const AVAILABLE_EVENTS = [
   "outage.created",
@@ -95,6 +96,20 @@ export default function WebhooksPage() {
       return statusMatch && eventMatch;
     });
   }, [deliveries, statusFilter, eventFilter]);
+
+  const [maxRetries, setMaxRetries] = useState(3);
+  const [backoffSeconds, setBackoffSeconds] = useState(5);
+  const [payloadSearchQuery, setPayloadSearchQuery] = useState("");
+
+  const verifySnippetNode = `const crypto = require('crypto');
+const signature = req.headers['x-signature'];
+const hash = crypto.createHmac('sha256', secret).update(payload).digest('hex');
+const isValid = crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(hash));`;
+
+  const verifySnippetPython = `import hmac, hashlib
+signature = request.headers.get('X-Signature')
+hash = hmac.new(secret.encode(), payload.encode(), hashlib.sha256).hexdigest()
+is_valid = hmac.compare_digest(signature, hash)`;
 
   const createMutation = useMutation({
     mutationFn: createWebhook,
@@ -291,6 +306,35 @@ export default function WebhooksPage() {
             </p>
           )}
 
+                      <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700 block">Max Retries ({maxRetries})</label>
+              <input type="range" min={1} max={10} value={maxRetries} onChange={e => setMaxRetries(Number(e.target.value))} className="w-full" />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700 block">Backoff Interval ({backoffSeconds}s)</label>
+              <input type="range" min={1} max={60} value={backoffSeconds} onChange={e => setBackoffSeconds(Number(e.target.value))} className="w-full" />
+            </div>
+            <div className="space-y-2 border-t pt-2">
+              <label className="text-sm font-medium block text-gray-700">Signature Verification Snippets (HMAC SHA-256)</label>
+              <pre className="bg-slate-900 text-white rounded p-3 text-[10px] overflow-auto max-h-32 mb-2">{verifySnippetNode}</pre>
+              <pre className="bg-slate-900 text-white rounded p-3 text-[10px] overflow-auto max-h-32">{verifySnippetPython}</pre>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700 block">Event Subscriptions</label>
+              {["sla.violation", "sla.warning", "sla.resolved", "outage.created"].map(evt => (
+                <label key={evt} className="flex items-center gap-2 text-xs text-gray-600">
+                  <input
+                    type="checkbox"
+                    checked={formEvents.includes(evt)}
+                    onChange={e => {
+                      if (e.target.checked) setFormEvents([...formEvents, evt]);
+                      else setFormEvents(formEvents.filter(x => x !== evt));
+                    }}
+                  />
+                  {evt}
+                </label>
+              ))}
+            </div>
           <div className="flex gap-2">
             <button
               type="submit"
@@ -366,10 +410,22 @@ export default function WebhooksPage() {
 
               {selectedWebhook?.id === wh.id && (
                 <div className="mt-4 border-t pt-4">
+                  <div className="mb-3">
+                    <WebhookDeliveryChart deliveries={filteredDeliveries} />
+                  </div>
                   <div className="mb-2 flex items-center justify-between">
-                    <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                      Delivery history
-                    </h3>
+                    <div className="flex items-center justify-between w-full pr-4">
+                      <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                        Delivery history
+                      </h3>
+                      <input
+                        type="text"
+                        placeholder="Search JSON payloads..."
+                        value={payloadSearchQuery}
+                        onChange={e => setPayloadSearchQuery(e.target.value)}
+                        className="rounded border p-1 text-xs text-gray-800 max-w-xs"
+                      />
+                    </div>
                     <div className="flex gap-2">
                       <select
                         value={statusFilter}

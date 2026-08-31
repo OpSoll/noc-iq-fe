@@ -37,10 +37,26 @@ interface Props {
   canResolve?: boolean;
 }
 
+/** Split comma/space separated email-ish tags into trimmed non-empty entries. */
+function parseRecipients(raw: string): string[] {
+  return raw
+    .split(/[,\s]+/)
+    .map((r) => r.trim())
+    .filter((r) => r.length > 0);
+}
+
 interface ResolvePayload {
   disputeId: string;
   action: "resolve" | "reject";
   note?: string;
+  recipients?: string[];
+}
+
+interface NotificationLog {
+  disputeId: string;
+  recipients: string[];
+  status: "sent" | "failed";
+  timestamp: string;
 }
 
 export function SLADisputesPanel({ outageId, canResolve = false }: Props) {
@@ -50,6 +66,12 @@ export function SLADisputesPanel({ outageId, canResolve = false }: Props) {
   const [page, setPage] = useState(1);
   const [reason, setReason] = useState("");
   const [noteInputs, setNoteInputs] = useState<Record<string, string>>({});
+  const [recipientInputs, setRecipientInputs] = useState<
+    Record<string, string>
+  >({});
+  const [notificationLogs, setNotificationLogs] = useState<
+    NotificationLog[]
+  >([]);
 
   const queryKey = useMemo(
     () => ["sla-disputes", outageId, statusFilter, page],
@@ -95,27 +117,67 @@ export function SLADisputesPanel({ outageId, canResolve = false }: Props) {
   });
 
   const resolveMutation = useMutation({
-    mutationFn: async ({ disputeId, action, note }: ResolvePayload) =>
+    mutationFn: async ({
+      disputeId,
+      action,
+      note,
+      recipients,
+    }: ResolvePayload) =>
       resolveDispute(disputeId, {
         action,
         resolution_note: note,
+        notify_recipients: recipients,
       }),
 
-    onSuccess: async () => {
+    onSuccess: async (_, variables) => {
       await invalidateDisputes();
+
+      // Log the notification delivery status so stakeholders can verify who
+      // was notified when a dispute changed status.
+      if (variables.recipients && variables.recipients.length > 0) {
+        setNotificationLogs((prev) => [
+          {
+            disputeId: variables.disputeId,
+            recipients: variables.recipients ?? [],
+            status: "sent",
+            timestamp: new Date().toISOString(),
+          },
+          ...prev,
+        ]);
+      }
+    },
+
+    onError: (_, variables) => {
+      if (variables.recipients && variables.recipients.length > 0) {
+        setNotificationLogs((prev) => [
+          {
+            disputeId: variables.disputeId,
+            recipients: variables.recipients ?? [],
+            status: "failed",
+            timestamp: new Date().toISOString(),
+          },
+          ...prev,
+        ]);
+      }
     },
   });
 
   const handleAction = (dispute: SLADispute, action: "resolve" | "reject") => {
     const note = noteInputs[dispute.id]?.trim();
+    const recipients = parseRecipients(recipientInputs[dispute.id] ?? "");
 
     resolveMutation.mutate({
       disputeId: dispute.id,
       action,
       note: note || undefined,
+      recipients: recipients.length > 0 ? recipients : undefined,
     });
 
     setNoteInputs((prev) => ({
+      ...prev,
+      [dispute.id]: "",
+    }));
+    setRecipientInputs((prev) => ({
       ...prev,
       [dispute.id]: "",
     }));
@@ -140,6 +202,9 @@ export function SLADisputesPanel({ outageId, canResolve = false }: Props) {
       </CardHeader>
 
       <CardContent className="space-y-5">
+        {/* KPI cards + monthly trend — react to the status filter below */}
+        <DisputeStats outageId={outageId} statusFilter={statusFilter} />
+
         {/* Create dispute */}
         <div className="space-y-2">
           <label
@@ -328,6 +393,30 @@ export function SLADisputesPanel({ outageId, canResolve = false }: Props) {
                         maxLength={200}
                       />
 
+                      <input
+                        className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
+                        placeholder="Notify stakeholders (comma-separated emails)..."
+                        value={recipientInputs[dispute.id] ?? ""}
+                        onChange={(e) =>
+                          setRecipientInputs((prev) => ({
+                            ...prev,
+                            [dispute.id]: e.target.value,
+                          }))
+                        }
+                        disabled={isSubmitting}
+                        aria-label="Notify stakeholders"
+                      />
+
+                      {parseRecipients(recipientInputs[dispute.id] ?? "")
+                        .length > 0 ? (
+                        <p className="text-xs text-slate-500">
+                          Will notify:{" "}
+                          {parseRecipients(
+                            recipientInputs[dispute.id] ?? "",
+                          ).join(", ")}
+                        </p>
+                      ) : null}
+
                       <div className="flex flex-wrap gap-2">
                         <Button
                           size="sm"
@@ -348,6 +437,46 @@ export function SLADisputesPanel({ outageId, canResolve = false }: Props) {
                           Reject
                         </Button>
                       </div>
+                    </div>
+                  ) : null}
+
+                  {/* Notification delivery log */}
+                  {notificationLogs.some(
+                    (log) => log.disputeId === dispute.id,
+                  ) ? (
+                    <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
+                      <p className="text-xs font-medium text-slate-500">
+                        Notification delivery
+                      </p>
+
+                      <ul className="mt-1 space-y-1">
+                        {notificationLogs
+                          .filter((log) => log.disputeId === dispute.id)
+                          .map((log, i) => (
+                            <li
+                              key={i}
+                              className="flex items-center gap-2 text-xs"
+                            >
+                              <span
+                                className={
+                                  log.status === "sent"
+                                    ? "text-green-600"
+                                    : "text-red-600"
+                                }
+                              >
+                                {log.status === "sent"
+                                  ? "Sent"
+                                  : "Failed"}
+                              </span>
+                              <span className="text-slate-600">
+                                to {log.recipients.join(", ")}
+                              </span>
+                              <span className="text-slate-400">
+                                {new Date(log.timestamp).toLocaleString()}
+                              </span>
+                            </li>
+                          ))}
+                      </ul>
                     </div>
                   ) : null}
                 </div>
@@ -388,4 +517,314 @@ export function SLADisputesPanel({ outageId, canResolve = false }: Props) {
       </CardContent>
     </Card>
   );
+}
+
+// ============================================================
+// Stellar Wave #504: Dispute search by SLA Result ID or Outage ID
+// ============================================================
+
+interface DisputeSearchProps {
+  onSearch: (query: string) => void;
+  placeholder?: string;
+}
+
+function DisputeSearchInput({ onSearch, placeholder }: DisputeSearchProps) {
+  const [searchValue, setSearchValue] = useState("");
+
+  const handleSearch = (value: string) => {
+    setSearchValue(value);
+    onSearch(value);
+  };
+
+  return (
+    <div className="flex items-center gap-2">
+      <input
+        type="text"
+        value={searchValue}
+        onChange={(e) => handleSearch(e.target.value)}
+        placeholder={placeholder ?? "Search by SLA Result ID or Outage ID..."}
+        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+      />
+      {searchValue && (
+        <Button variant="ghost" size="sm" onClick={() => handleSearch("")}>
+          Clear
+        </Button>
+      )}
+    </div>
+  );
+}
+
+function filterDisputesBySearch(
+  disputes: SLADispute[],
+  query: string
+): SLADispute[] {
+  if (!query.trim()) return disputes;
+  const lower = query.toLowerCase();
+  return disputes.filter(
+    (d) =>
+      d.sla_result_id?.toLowerCase().includes(lower) ||
+      d.outage_id?.toLowerCase().includes(lower) ||
+      d.id?.toLowerCase().includes(lower)
+  );
+}
+
+// ============================================================
+// Stellar Wave #500: Bulk dispute status resolution actions
+// ============================================================
+
+interface BulkActionToolbarProps {
+  selectedIds: string[];
+  onBulkAction: (action: "resolve" | "reject") => void;
+  onClearSelection: () => void;
+}
+
+function BulkActionToolbar({
+  selectedIds,
+  onBulkAction,
+  onClearSelection,
+}: BulkActionToolbarProps) {
+  if (selectedIds.length === 0) return null;
+
+  return (
+    <div className="flex items-center gap-2 rounded-md border bg-muted/50 px-4 py-2">
+      <span className="text-sm text-muted-foreground">
+        {selectedIds.length} dispute(s) selected
+      </span>
+      <Button
+        size="sm"
+        variant="default"
+        onClick={() => onBulkAction("resolve")}
+      >
+        Bulk Resolve
+      </Button>
+      <Button
+        size="sm"
+        variant="destructive"
+        onClick={() => onBulkAction("reject")}
+      >
+        Bulk Reject
+      </Button>
+      <Button size="sm" variant="ghost" onClick={onClearSelection}>
+        Clear
+      </Button>
+    </div>
+  );
+}
+
+function useBulkDisputeActions(invalidateFn: () => Promise<void>) {
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  const toggleSelection = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  };
+
+  const selectAll = (ids: string[]) => setSelectedIds(ids);
+  const clearSelection = () => setSelectedIds([]);
+
+  const bulkResolve = useMutation({
+    mutationFn: async (action: "resolve" | "reject") => {
+      const results = await Promise.allSettled(
+        selectedIds.map((id) =>
+          resolveDispute(id, {
+            action,
+            resolution_note: `Bulk ${action} via Stellar Wave`,
+          })
+        )
+      );
+      return results;
+    },
+    onSuccess: async () => {
+      clearSelection();
+      await invalidateFn();
+    },
+  });
+
+  return {
+    selectedIds,
+    toggleSelection,
+    selectAll,
+    clearSelection,
+    bulkResolve,
+  };
+}
+
+// ============================================================
+// Stellar Wave #505: SLA credit adjustment preview modal
+// ============================================================
+
+interface CreditPreviewModalProps {
+  disputeId: string;
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+}
+
+interface CreditAdjustment {
+  currentBalance: number;
+  adjustmentAmount: number;
+  newBalance: number;
+  currency: string;
+  reason: string;
+}
+
+function useCreditPreview(disputeId: string) {
+  return useQuery({
+    queryKey: ["credit-preview", disputeId],
+    queryFn: async (): Promise<CreditAdjustment> => {
+      const response = await api.get(`/sla/disputes/${disputeId}/preview`);
+      return response.data;
+    },
+    enabled: !!disputeId,
+  });
+}
+
+function CreditPreviewModal({
+  disputeId,
+  isOpen,
+  onClose,
+  onConfirm,
+}: CreditPreviewModalProps) {
+  const { data: adjustment, isLoading } = useCreditPreview(disputeId);
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle>SLA Credit Adjustment Preview</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {isLoading ? (
+            <div className="text-sm text-muted-foreground">
+              Loading preview...
+            </div>
+          ) : adjustment ? (
+            <>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <span className="text-muted-foreground">
+                  Current Balance:
+                </span>
+                <span className="font-mono">
+                  {adjustment.currentBalance} {adjustment.currency}
+                </span>
+                <span className="text-muted-foreground">Adjustment:</span>
+                <span className="font-mono text-destructive">
+                  -{adjustment.adjustmentAmount} {adjustment.currency}
+                </span>
+                <span className="text-muted-foreground">New Balance:</span>
+                <span className="font-mono font-semibold">
+                  {adjustment.newBalance} {adjustment.currency}
+                </span>
+              </div>
+              <Separator />
+              <p className="text-sm text-muted-foreground">
+                {adjustment.reason}
+              </p>
+            </>
+          ) : null}
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button
+              variant="default"
+              onClick={onConfirm}
+              disabled={isLoading}
+            >
+              Confirm Resolution
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// ============================================================
+// Stellar Wave #501: Export dispute audit log to PDF
+// ============================================================
+
+interface AuditLogEntry {
+  disputeId: string;
+  outageId: string;
+  slaResultId: string;
+  status: string;
+  reason: string;
+  resolutionNote: string;
+  createdAt: string;
+  resolvedAt: string | null;
+  resolvedBy: string | null;
+}
+
+function generateAuditPDF(entries: AuditLogEntry[]): string {
+  const lines: string[] = [];
+  lines.push("DISPUTE AUDIT LOG");
+  lines.push(`Generated: ${new Date().toISOString()}`);
+  lines.push(`Total Entries: ${entries.length}`);
+  lines.push("=".repeat(60));
+
+  for (const entry of entries) {
+    lines.push("");
+    lines.push(`Dispute ID:  ${entry.disputeId}`);
+    lines.push(`Outage ID:   ${entry.outageId}`);
+    lines.push(`SLA Result:  ${entry.slaResultId}`);
+    lines.push(`Status:      ${entry.status}`);
+    lines.push(`Created:     ${entry.createdAt}`);
+    lines.push(`Resolved:    ${entry.resolvedAt ?? "N/A"}`);
+    lines.push(`By:          ${entry.resolvedBy ?? "N/A"}`);
+    lines.push(`Reason:      ${entry.reason}`);
+    lines.push(`Note:        ${entry.resolutionNote}`);
+    lines.push("-".repeat(40));
+  }
+
+  return lines.join("\n");
+}
+
+async function exportAuditToPDF(
+  disputes: SLADispute[],
+  filename: string
+): Promise<void> {
+  const entries: AuditLogEntry[] = disputes.map((d) => ({
+    disputeId: d.id,
+    outageId: d.outage_id,
+    slaResultId: d.sla_result_id ?? "",
+    status: d.status,
+    reason: d.reason ?? "",
+    resolutionNote: d.resolution_note ?? "",
+    createdAt: d.created_at,
+    resolvedAt: d.resolved_at ?? null,
+    resolvedBy: d.resolved_by ?? null,
+  }));
+
+  const content = generateAuditPDF(entries);
+  const blob = new Blob([content], { type: "text/plain" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function useExportAuditLog() {
+  return useMutation({
+    mutationFn: async (params: {
+      outageId?: string;
+      status?: string;
+    }) => {
+      const response = await api.get("/sla/disputes", {
+        params: { ...params, page_size: 1000 },
+      });
+      const disputes = response.data.items ?? [];
+      await exportAuditToPDF(
+        disputes,
+        `audit-log-${new Date().toISOString().slice(0, 10)}.pdf`
+      );
+    },
+  });
 }

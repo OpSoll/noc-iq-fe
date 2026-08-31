@@ -84,6 +84,31 @@ export function SessionProvider({
     useRef<BroadcastChannel | null>(null);
 
   const mountedRef = useRef(true);
+  const [showTimeoutModal, setShowTimeoutModal] = useState(false);
+  const activityTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const resetActivityTimer = useCallback(() => {
+    if (activityTimeoutRef.current) {
+      clearTimeout(activityTimeoutRef.current);
+    }
+    if (state === "authenticated") {
+      activityTimeoutRef.current = setTimeout(() => {
+        setShowTimeoutModal(true);
+      }, 30 * 60 * 1000); // 30 minutes
+    }
+  }, [state]);
+
+  useEffect(() => {
+    if (state !== "authenticated") return;
+    const events = ["mousedown", "mousemove", "keypress", "scroll", "touchstart"];
+    const handleEvent = () => resetActivityTimer();
+    events.forEach(e => window.addEventListener(e, handleEvent));
+    resetActivityTimer();
+    return () => {
+      if (activityTimeoutRef.current) clearTimeout(activityTimeoutRef.current);
+      events.forEach(e => window.removeEventListener(e, handleEvent));
+    };
+  }, [state, resetActivityTimer]);
 
   /**
    * -------------------------
@@ -389,6 +414,36 @@ export function SessionProvider({
   return (
     <SessionContext.Provider value={value}>
       {children}
+      {showTimeoutModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg border border-gray-200">
+            <h2 className="text-xl font-bold mb-4 text-gray-900">Session Timeout Warning</h2>
+            <p className="text-gray-600 mb-6">
+              You have been inactive for 30 minutes. Your session will expire soon.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setShowTimeoutModal(false);
+                  resetActivityTimer();
+                }}
+                className="px-4 py-2 rounded bg-slate-800 text-white hover:bg-slate-700 font-medium text-sm"
+              >
+                Stay Logged In
+              </button>
+              <button
+                onClick={() => {
+                  setShowTimeoutModal(false);
+                  logout();
+                }}
+                className="px-4 py-2 rounded bg-gray-200 text-gray-800 hover:bg-gray-300 font-medium text-sm"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </SessionContext.Provider>
   );
 }
