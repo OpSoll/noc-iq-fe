@@ -109,6 +109,36 @@ export default function WebhooksPage() {
     });
   }, [deliveries, statusFilter, eventFilter]);
 
+  const [customHeaders, setCustomHeaders] = useState<Array<{ key: string; value: string }>>([]);
+  const [retentionDays, setRetentionDays] = useState(30);
+  const [disableThreshold, setDisableThreshold] = useState(5);
+
+  const addHeader = () => setCustomHeaders([...customHeaders, { key: "", value: "" }]);
+  const removeHeader = (index: number) => setCustomHeaders(customHeaders.filter((_, i) => i !== index));
+  const updateHeader = (index: number, k: string, v: string) => {
+    const updated = [...customHeaders];
+    updated[index] = { key: k, value: v };
+    setCustomHeaders(updated);
+  };
+
+  const handleExportCSV = () => {
+    const headers = ["ID", "Event", "Response Code", "Timestamp"];
+    const rows = filteredDeliveries.map(d => [d.id, d.event, d.response_code ?? "N/A", d.timestamp]);
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+    const link = document.createElement("a");
+    link.href = encodeURI(csvContent);
+    link.download = "webhook_deliveries.csv";
+    link.click();
+  };
+
+  const handleExportJSON = () => {
+    const blob = new Blob([JSON.stringify(filteredDeliveries, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "webhook_deliveries.json";
+    link.click();
+  };
   const [maxRetries, setMaxRetries] = useState(3);
   const [backoffSeconds, setBackoffSeconds] = useState(5);
   const [payloadSearchQuery, setPayloadSearchQuery] = useState("");
