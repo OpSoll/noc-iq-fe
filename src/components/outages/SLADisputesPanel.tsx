@@ -10,6 +10,8 @@ import { Separator } from "@/components/ui/separator";
 import { flagDispute, getDisputes, resolveDispute } from "@/services/sla";
 import type { DisputeStatus, SLADispute } from "@/types/sla";
 
+import { DisputeStats } from "./DisputeStats";
+
 const PAGE_SIZE = 5;
 
 const STATUS_OPTIONS = [
@@ -200,6 +202,9 @@ export function SLADisputesPanel({ outageId, canResolve = false }: Props) {
       </CardHeader>
 
       <CardContent className="space-y-5">
+        {/* KPI cards + monthly trend — react to the status filter below */}
+        <DisputeStats outageId={outageId} statusFilter={statusFilter} />
+
         {/* Create dispute */}
         <div className="space-y-2">
           <label
