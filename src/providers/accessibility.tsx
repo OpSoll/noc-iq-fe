@@ -64,6 +64,17 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
     }
   }, [mode]);
 
+    // Listen for storage events across tabs to sync theme preference
+  useEffect(() => {
+    function handleStorage(e: StorageEvent) {
+      if (e.key === STORAGE_KEY && e.newValue) {
+        setModeState(e.newValue as AccessibilityMode);
+      }
+    }
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, []);
+
   // Listen for system preference changes
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
