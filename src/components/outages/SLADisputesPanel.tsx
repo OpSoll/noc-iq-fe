@@ -10,6 +10,8 @@ import { Separator } from "@/components/ui/separator";
 import { flagDispute, getDisputes, resolveDispute } from "@/services/sla";
 import type { DisputeStatus, SLADispute } from "@/types/sla";
 
+import DisputeDeadlineBadge from "./DisputeDeadlineBadge";
+
 const PAGE_SIZE = 5;
 
 const STATUS_OPTIONS = [
@@ -279,6 +281,11 @@ export function SLADisputesPanel({ outageId, canResolve = false }: Props) {
                       <span className="text-xs text-slate-400">
                         #{dispute.id.slice(0, 8)}
                       </span>
+
+                      <DisputeDeadlineBadge
+                        createdAt={dispute.created_at}
+                        status={dispute.status}
+                      />
                     </div>
 
                     <span className="text-xs text-slate-400">
