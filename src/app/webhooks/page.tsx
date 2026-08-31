@@ -14,6 +14,7 @@ import {
 } from "@/services/webhookService";
 import { saveDraft, loadDraft, clearDraft } from "@/lib/drafts";
 import type { Webhook, WebhookDelivery } from "@/types/webhook";
+import { WebhookDeliveryChart } from "@/components/webhooks/WebhookDeliveryChart";
 
 const AVAILABLE_EVENTS = [
   "outage.created",
@@ -409,6 +410,9 @@ is_valid = hmac.compare_digest(signature, hash)`;
 
               {selectedWebhook?.id === wh.id && (
                 <div className="mt-4 border-t pt-4">
+                  <div className="mb-3">
+                    <WebhookDeliveryChart deliveries={filteredDeliveries} />
+                  </div>
                   <div className="mb-2 flex items-center justify-between">
                     <div className="flex items-center justify-between w-full pr-4">
                       <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
