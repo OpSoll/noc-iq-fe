@@ -36,9 +36,7 @@ export default function WebhooksPage() {
   const [draftRestored, setDraftRestored] = useState(hasDraft);
 
   const searchParams = useSearchParams();
-  const [statusFilter, setStatusFilter] = useState(
-    searchParams.get("status") || "all",
-  );
+  const [statusFilter, setStatusFilter] = useState("all");
   const [eventFilter, setEventFilter] = useState(
     searchParams.get("event") || "all",
   );
@@ -84,6 +82,20 @@ export default function WebhooksPage() {
   });
 
   const filteredDeliveries = useMemo(() => {
+        <div className="flex gap-2 mb-4">
+          {["all", "success", "retrying", "failed"].map(s => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => setStatusFilter(s)}
+              className={`px-3 py-1 rounded-full text-xs font-medium border capitalize ${
+                statusFilter === s ? "bg-slate-800 text-white" : "bg-white text-slate-600"
+              }`}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
     return deliveries.filter((d) => {
       const code = d.response_code ?? -1;
       const statusMatch =
@@ -291,6 +303,16 @@ export default function WebhooksPage() {
             </p>
           )}
 
+                      <div className="relative group">
+              <span className="text-xs text-blue-600 cursor-pointer underline">View Event Payload Schema</span>
+              <div className="hidden group-hover:block absolute left-0 bottom-6 bg-slate-900 text-white text-xs rounded p-3 w-64 shadow-lg z-50">
+                <p className="font-bold border-b pb-1 mb-1">Payload Fields:</p>
+                <p><strong>id:</strong> string (UUID)</p>
+                <p><strong>event:</strong> string (event name)</p>
+                <p><strong>timestamp:</strong> number (epoch millis)</p>
+                <p><strong>data:</strong> object (event content)</p>
+              </div>
+            </div>
           <div className="flex gap-2">
             <button
               type="submit"
