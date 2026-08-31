@@ -37,9 +37,7 @@ export default function WebhooksPage() {
   const [draftRestored, setDraftRestored] = useState(hasDraft);
 
   const searchParams = useSearchParams();
-  const [statusFilter, setStatusFilter] = useState(
-    searchParams.get("status") || "all",
-  );
+  const [statusFilter, setStatusFilter] = useState("all");
   const [eventFilter, setEventFilter] = useState(
     searchParams.get("event") || "all",
   );
@@ -85,6 +83,20 @@ export default function WebhooksPage() {
   });
 
   const filteredDeliveries = useMemo(() => {
+        <div className="flex gap-2 mb-4">
+          {["all", "success", "retrying", "failed"].map(s => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => setStatusFilter(s)}
+              className={`px-3 py-1 rounded-full text-xs font-medium border capitalize ${
+                statusFilter === s ? "bg-slate-800 text-white" : "bg-white text-slate-600"
+              }`}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
     return deliveries.filter((d) => {
       const code = d.response_code ?? -1;
       const statusMatch =
@@ -306,34 +318,15 @@ is_valid = hmac.compare_digest(signature, hash)`;
             </p>
           )}
 
-                      <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 block">Max Retries ({maxRetries})</label>
-              <input type="range" min={1} max={10} value={maxRetries} onChange={e => setMaxRetries(Number(e.target.value))} className="w-full" />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 block">Backoff Interval ({backoffSeconds}s)</label>
-              <input type="range" min={1} max={60} value={backoffSeconds} onChange={e => setBackoffSeconds(Number(e.target.value))} className="w-full" />
-            </div>
-            <div className="space-y-2 border-t pt-2">
-              <label className="text-sm font-medium block text-gray-700">Signature Verification Snippets (HMAC SHA-256)</label>
-              <pre className="bg-slate-900 text-white rounded p-3 text-[10px] overflow-auto max-h-32 mb-2">{verifySnippetNode}</pre>
-              <pre className="bg-slate-900 text-white rounded p-3 text-[10px] overflow-auto max-h-32">{verifySnippetPython}</pre>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 block">Event Subscriptions</label>
-              {["sla.violation", "sla.warning", "sla.resolved", "outage.created"].map(evt => (
-                <label key={evt} className="flex items-center gap-2 text-xs text-gray-600">
-                  <input
-                    type="checkbox"
-                    checked={formEvents.includes(evt)}
-                    onChange={e => {
-                      if (e.target.checked) setFormEvents([...formEvents, evt]);
-                      else setFormEvents(formEvents.filter(x => x !== evt));
-                    }}
-                  />
-                  {evt}
-                </label>
-              ))}
+                      <div className="relative group">
+              <span className="text-xs text-blue-600 cursor-pointer underline">View Event Payload Schema</span>
+              <div className="hidden group-hover:block absolute left-0 bottom-6 bg-slate-900 text-white text-xs rounded p-3 w-64 shadow-lg z-50">
+                <p className="font-bold border-b pb-1 mb-1">Payload Fields:</p>
+                <p><strong>id:</strong> string (UUID)</p>
+                <p><strong>event:</strong> string (event name)</p>
+                <p><strong>timestamp:</strong> number (epoch millis)</p>
+                <p><strong>data:</strong> object (event content)</p>
+              </div>
             </div>
           <div className="flex gap-2">
             <button
