@@ -6,14 +6,45 @@
 
 | Metric | Value |
 |--------|-------|
-| Total Wave 5 issues | 100 |
+| Total Wave 5 issues | 132 |
 | Closed | 100 |
-| Open | 0 |
-| Completion | 100% |
+| Open | 32 |
+| Completion | 76% |
 
 ## Open Issues
 
-_All issues closed! 🎉_
+- [ ] #527 State: Add theme preference persistence across browser tabs via StorageEvent listener
+- [ ] #526 State: Add session timeout warning modal after 30 minutes of inactivity
+- [ ] #525 State: Add active user role and permission guards in UI store
+- [ ] #524 State: Add reactive online/offline network connection state listener
+- [ ] #523 State: Add global UI state reset action button in App Settings
+- [ ] #522 State: Add Zustand local storage persistence schema versioning migration helper
+- [ ] #521 Webhooks: Add webhook delivery status filter pills (All, Success, Retrying, Failed)
+- [ ] #520 Webhooks: Add webhook payload schema documentation popover
+- [ ] #519 Webhooks: Add export webhook delivery logs to JSON / CSV
+- [ ] #518 Webhooks: Add webhook delivery log retention period selector
+- [ ] #517 Webhooks: Add custom HTTP headers key-value editor for webhook dispatches
+- [ ] #516 Webhooks: Add webhook endpoint disable toggle on consecutive failure threshold
+- [ ] #511 Webhooks: Add webhook endpoint ping test button in Create Webhook modal
+- [ ] #510 Webhooks: Add webhook delivery success rate latency chart
+- [ ] #509 Webhooks: Add webhook secret key rotation modal with grace period window
+- [ ] #508 Webhooks: Add manual webhook redelivery trigger button in WebhooksView
+- [ ] #507 Webhooks: Add payload syntax highlighter in WebhookDeliveryDetailsModal
+- [ ] #506 Disputes: Add dispute status change webhook notification trigger option
+- [ ] #505 Disputes: Add dispute SLA credit adjustment preview modal
+- [ ] #504 Disputes: Add dispute search by SLA Result ID or Outage ID
+- [ ] #503 Disputes: Add dispute statistics summary KPI cards
+- [ ] #502 Disputes: Add dispute notification email recipient tags
+- [ ] #501 Disputes: Add export dispute audit log to PDF for legal compliance
+- [ ] #500 Disputes: Add bulk dispute status resolution actions
+- [ ] #499 Disputes: Add dispute resolution deadline countdown timer
+- [ ] #498 Disputes: Add SLA result calculation re-simulation button in dispute viewer
+- [ ] #497 Disputes: Add dispute reason category filter (MTTR Error, Threshold Mismatch, Outage Timing)
+- [ ] #496 Disputes: Add dispute escalation workflow to senior management
+- [ ] #495 Disputes: Add evidence document previewer modal for dispute attachments
+- [ ] #494 Disputes: Add resolution notes template selector in ResolveDisputeModal
+- [ ] #493 Disputes: Add dispute audit log history viewer in SLADisputesView
+- [ ] #492 SLA Config: Add dirty form state confirmation before closing edit dialog
 
 ## Closed Issues
 
@@ -57,6 +88,14 @@ _All issues closed! 🎉_
 - [x] #534 State: Add cross-tab broadcast channel for real-time state synchronization
 - [x] #533 State: Add preference import validation schema with error reporting
 - [x] #532 State: Add workspace data export to JSON backup file
+- [x] #531 State: Add optimistic UI state updates for outage status transitions
+- [x] #530 State: Add toast notification queue deduplication middleware
+- [x] #529 State: Add user preference store for default table page size (10, 25, 50, 100)
+- [x] #528 State: Add active navigation tab persistence in URL query parameters
+- [x] #515 Webhooks: Add webhook max retries and exponential backoff configuration slider
+- [x] #514 Webhooks: Add HMAC SHA-256 signature verification code generator snippet
+- [x] #513 Webhooks: Add GIN index search box for searching webhook JSON payloads
+- [x] #512 Webhooks: Add webhook event subscription multi-select checkboxes (sla.violation, sla.warning, sla.resolved)
 - [x] #454 Dashboard: Add auto-refresh interval toggle (10s, 30s, 60s, Off) in dashboard header
 - [x] #453 Dashboard: Add MTTR (Mean Time to Resolution) distribution histogram component
 - [x] #452 Dashboard: Add SLA penalty and reward aggregate financial widget
@@ -109,14 +148,6 @@ _All issues closed! 🎉_
 - [x] #369 [FE-W7-001] Dedicated login page with form validation and error states
 - [x] #367 [FE-W6-031] Migrate access and refresh tokens from localStorage to httpOnly cookies
 - [x] #365 [FE-W6-030] Add Playwright end-to-end test suite for critical incident management workflows
-- [x] #364 [FE-W6-029] Implement form validation with react-hook-form across create/edit flows
-- [x] #363 [FE-W6-028] Migrate axios to native fetch with typed interceptor layer
-- [x] #362 [FE-W6-027] Add webhook delivery history replay UI with diff view
-- [x] #361 [FE-W6-026] Implement payment reconciliation status badge with drill-down
-- [x] #360 [FE-W6-025] Add TypeScript strict mode and fix all resulting type errors
-- [x] #359 [FE-W6-024] Implement bulk outage selection and batch status update workflow
-- [x] #358 [FE-W6-023] Add SLA compliance trend chart with configurable time windows
-- [x] #357 [FE-W6-022] Implement outage timeline visualization with interactive Gantt view
 
 ---
 _Auto-generated by `scripts/update-wave5-dashboard.mjs`. Do not edit manually._
