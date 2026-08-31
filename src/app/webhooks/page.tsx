@@ -96,6 +96,37 @@ export default function WebhooksPage() {
     });
   }, [deliveries, statusFilter, eventFilter]);
 
+  const [customHeaders, setCustomHeaders] = useState<Array<{ key: string; value: string }>>([]);
+  const [retentionDays, setRetentionDays] = useState(30);
+  const [disableThreshold, setDisableThreshold] = useState(5);
+
+  const addHeader = () => setCustomHeaders([...customHeaders, { key: "", value: "" }]);
+  const removeHeader = (index: number) => setCustomHeaders(customHeaders.filter((_, i) => i !== index));
+  const updateHeader = (index: number, k: string, v: string) => {
+    const updated = [...customHeaders];
+    updated[index] = { key: k, value: v };
+    setCustomHeaders(updated);
+  };
+
+  const handleExportCSV = () => {
+    const headers = ["ID", "Event", "Response Code", "Timestamp"];
+    const rows = filteredDeliveries.map(d => [d.id, d.event, d.response_code ?? "N/A", d.timestamp]);
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+    const link = document.createElement("a");
+    link.href = encodeURI(csvContent);
+    link.download = "webhook_deliveries.csv";
+    link.click();
+  };
+
+  const handleExportJSON = () => {
+    const blob = new Blob([JSON.stringify(filteredDeliveries, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "webhook_deliveries.json";
+    link.click();
+  };
+
   const createMutation = useMutation({
     mutationFn: createWebhook,
     onSuccess: () => {
@@ -291,6 +322,30 @@ export default function WebhooksPage() {
             </p>
           )}
 
+                      <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Log Retention Period (Days)</label>
+              <select value={retentionDays} onChange={e => setRetentionDays(Number(e.target.value))} className="w-full rounded border p-2">
+                <option value={7}>7 Days</option>
+                <option value={30}>30 Days</option>
+                <option value={90}>90 Days</option>
+                <option value={365}>1 Year</option>
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Failure Disabling Threshold</label>
+              <input type="number" value={disableThreshold} onChange={e => setDisableThreshold(Number(e.target.value))} className="w-full rounded border p-2" min={1} max={50} />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Custom HTTP Headers</label>
+              {customHeaders.map((h, i) => (
+                <div key={i} className="flex gap-2">
+                  <input placeholder="Header Name" value={h.key} onChange={e => updateHeader(i, e.target.value, h.value)} className="w-1/2 rounded border p-1 text-xs text-gray-800" />
+                  <input placeholder="Header Value" value={h.value} onChange={e => updateHeader(i, h.key, e.target.value)} className="w-1/2 rounded border p-1 text-xs text-gray-800" />
+                  <button type="button" onClick={() => removeHeader(i)} className="text-xs px-2 text-red-600">✕</button>
+                </div>
+              ))}
+              <button type="button" onClick={addHeader} className="text-xs px-2 py-1 bg-gray-100 rounded hover:bg-gray-200">+ Add Header</button>
+            </div>
           <div className="flex gap-2">
             <button
               type="submit"
@@ -367,9 +422,15 @@ export default function WebhooksPage() {
               {selectedWebhook?.id === wh.id && (
                 <div className="mt-4 border-t pt-4">
                   <div className="mb-2 flex items-center justify-between">
-                    <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                      Delivery history
-                    </h3>
+                    <div className="flex items-center justify-between w-full pr-4">
+                      <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                        Delivery history
+                      </h3>
+                      <div className="flex gap-2">
+                        <button onClick={handleExportCSV} type="button" className="text-xs px-2 py-0.5 rounded bg-gray-200 text-gray-800 hover:bg-gray-300">Export CSV</button>
+                        <button onClick={handleExportJSON} type="button" className="text-xs px-2 py-0.5 rounded bg-gray-200 text-gray-800 hover:bg-gray-300">Export JSON</button>
+                      </div>
+                    </div>
                     <div className="flex gap-2">
                       <select
                         value={statusFilter}
