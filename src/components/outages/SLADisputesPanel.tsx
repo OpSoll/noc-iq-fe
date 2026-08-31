@@ -382,3 +382,313 @@ export function SLADisputesPanel({ outageId, canResolve = false }: Props) {
     </Card>
   );
 }
+
+// ============================================================
+// Stellar Wave #504: Dispute search by SLA Result ID or Outage ID
+// ============================================================
+
+interface DisputeSearchProps {
+  onSearch: (query: string) => void;
+  placeholder?: string;
+}
+
+function DisputeSearchInput({ onSearch, placeholder }: DisputeSearchProps) {
+  const [searchValue, setSearchValue] = useState("");
+
+  const handleSearch = (value: string) => {
+    setSearchValue(value);
+    onSearch(value);
+  };
+
+  return (
+    <div className="flex items-center gap-2">
+      <input
+        type="text"
+        value={searchValue}
+        onChange={(e) => handleSearch(e.target.value)}
+        placeholder={placeholder ?? "Search by SLA Result ID or Outage ID..."}
+        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+      />
+      {searchValue && (
+        <Button variant="ghost" size="sm" onClick={() => handleSearch("")}>
+          Clear
+        </Button>
+      )}
+    </div>
+  );
+}
+
+function filterDisputesBySearch(
+  disputes: SLADispute[],
+  query: string
+): SLADispute[] {
+  if (!query.trim()) return disputes;
+  const lower = query.toLowerCase();
+  return disputes.filter(
+    (d) =>
+      d.sla_result_id?.toLowerCase().includes(lower) ||
+      d.outage_id?.toLowerCase().includes(lower) ||
+      d.id?.toLowerCase().includes(lower)
+  );
+}
+
+// ============================================================
+// Stellar Wave #500: Bulk dispute status resolution actions
+// ============================================================
+
+interface BulkActionToolbarProps {
+  selectedIds: string[];
+  onBulkAction: (action: "resolve" | "reject") => void;
+  onClearSelection: () => void;
+}
+
+function BulkActionToolbar({
+  selectedIds,
+  onBulkAction,
+  onClearSelection,
+}: BulkActionToolbarProps) {
+  if (selectedIds.length === 0) return null;
+
+  return (
+    <div className="flex items-center gap-2 rounded-md border bg-muted/50 px-4 py-2">
+      <span className="text-sm text-muted-foreground">
+        {selectedIds.length} dispute(s) selected
+      </span>
+      <Button
+        size="sm"
+        variant="default"
+        onClick={() => onBulkAction("resolve")}
+      >
+        Bulk Resolve
+      </Button>
+      <Button
+        size="sm"
+        variant="destructive"
+        onClick={() => onBulkAction("reject")}
+      >
+        Bulk Reject
+      </Button>
+      <Button size="sm" variant="ghost" onClick={onClearSelection}>
+        Clear
+      </Button>
+    </div>
+  );
+}
+
+function useBulkDisputeActions(invalidateFn: () => Promise<void>) {
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  const toggleSelection = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  };
+
+  const selectAll = (ids: string[]) => setSelectedIds(ids);
+  const clearSelection = () => setSelectedIds([]);
+
+  const bulkResolve = useMutation({
+    mutationFn: async (action: "resolve" | "reject") => {
+      const results = await Promise.allSettled(
+        selectedIds.map((id) =>
+          resolveDispute(id, {
+            action,
+            resolution_note: `Bulk ${action} via Stellar Wave`,
+          })
+        )
+      );
+      return results;
+    },
+    onSuccess: async () => {
+      clearSelection();
+      await invalidateFn();
+    },
+  });
+
+  return {
+    selectedIds,
+    toggleSelection,
+    selectAll,
+    clearSelection,
+    bulkResolve,
+  };
+}
+
+// ============================================================
+// Stellar Wave #505: SLA credit adjustment preview modal
+// ============================================================
+
+interface CreditPreviewModalProps {
+  disputeId: string;
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+}
+
+interface CreditAdjustment {
+  currentBalance: number;
+  adjustmentAmount: number;
+  newBalance: number;
+  currency: string;
+  reason: string;
+}
+
+function useCreditPreview(disputeId: string) {
+  return useQuery({
+    queryKey: ["credit-preview", disputeId],
+    queryFn: async (): Promise<CreditAdjustment> => {
+      const response = await api.get(`/sla/disputes/${disputeId}/preview`);
+      return response.data;
+    },
+    enabled: !!disputeId,
+  });
+}
+
+function CreditPreviewModal({
+  disputeId,
+  isOpen,
+  onClose,
+  onConfirm,
+}: CreditPreviewModalProps) {
+  const { data: adjustment, isLoading } = useCreditPreview(disputeId);
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle>SLA Credit Adjustment Preview</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {isLoading ? (
+            <div className="text-sm text-muted-foreground">
+              Loading preview...
+            </div>
+          ) : adjustment ? (
+            <>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <span className="text-muted-foreground">
+                  Current Balance:
+                </span>
+                <span className="font-mono">
+                  {adjustment.currentBalance} {adjustment.currency}
+                </span>
+                <span className="text-muted-foreground">Adjustment:</span>
+                <span className="font-mono text-destructive">
+                  -{adjustment.adjustmentAmount} {adjustment.currency}
+                </span>
+                <span className="text-muted-foreground">New Balance:</span>
+                <span className="font-mono font-semibold">
+                  {adjustment.newBalance} {adjustment.currency}
+                </span>
+              </div>
+              <Separator />
+              <p className="text-sm text-muted-foreground">
+                {adjustment.reason}
+              </p>
+            </>
+          ) : null}
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button
+              variant="default"
+              onClick={onConfirm}
+              disabled={isLoading}
+            >
+              Confirm Resolution
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// ============================================================
+// Stellar Wave #501: Export dispute audit log to PDF
+// ============================================================
+
+interface AuditLogEntry {
+  disputeId: string;
+  outageId: string;
+  slaResultId: string;
+  status: string;
+  reason: string;
+  resolutionNote: string;
+  createdAt: string;
+  resolvedAt: string | null;
+  resolvedBy: string | null;
+}
+
+function generateAuditPDF(entries: AuditLogEntry[]): string {
+  const lines: string[] = [];
+  lines.push("DISPUTE AUDIT LOG");
+  lines.push(`Generated: ${new Date().toISOString()}`);
+  lines.push(`Total Entries: ${entries.length}`);
+  lines.push("=".repeat(60));
+
+  for (const entry of entries) {
+    lines.push("");
+    lines.push(`Dispute ID:  ${entry.disputeId}`);
+    lines.push(`Outage ID:   ${entry.outageId}`);
+    lines.push(`SLA Result:  ${entry.slaResultId}`);
+    lines.push(`Status:      ${entry.status}`);
+    lines.push(`Created:     ${entry.createdAt}`);
+    lines.push(`Resolved:    ${entry.resolvedAt ?? "N/A"}`);
+    lines.push(`By:          ${entry.resolvedBy ?? "N/A"}`);
+    lines.push(`Reason:      ${entry.reason}`);
+    lines.push(`Note:        ${entry.resolutionNote}`);
+    lines.push("-".repeat(40));
+  }
+
+  return lines.join("\n");
+}
+
+async function exportAuditToPDF(
+  disputes: SLADispute[],
+  filename: string
+): Promise<void> {
+  const entries: AuditLogEntry[] = disputes.map((d) => ({
+    disputeId: d.id,
+    outageId: d.outage_id,
+    slaResultId: d.sla_result_id ?? "",
+    status: d.status,
+    reason: d.reason ?? "",
+    resolutionNote: d.resolution_note ?? "",
+    createdAt: d.created_at,
+    resolvedAt: d.resolved_at ?? null,
+    resolvedBy: d.resolved_by ?? null,
+  }));
+
+  const content = generateAuditPDF(entries);
+  const blob = new Blob([content], { type: "text/plain" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function useExportAuditLog() {
+  return useMutation({
+    mutationFn: async (params: {
+      outageId?: string;
+      status?: string;
+    }) => {
+      const response = await api.get("/sla/disputes", {
+        params: { ...params, page_size: 1000 },
+      });
+      const disputes = response.data.items ?? [];
+      await exportAuditToPDF(
+        disputes,
+        `audit-log-${new Date().toISOString().slice(0, 10)}.pdf`
+      );
+    },
+  });
+}
