@@ -14,6 +14,7 @@ import {
 } from "@/services/webhookService";
 import { saveDraft, loadDraft, clearDraft } from "@/lib/drafts";
 import type { Webhook, WebhookDelivery } from "@/types/webhook";
+import { WebhookDeliveryChart } from "@/components/webhooks/WebhookDeliveryChart";
 
 const AVAILABLE_EVENTS = [
   "outage.created",
@@ -36,9 +37,7 @@ export default function WebhooksPage() {
   const [draftRestored, setDraftRestored] = useState(hasDraft);
 
   const searchParams = useSearchParams();
-  const [statusFilter, setStatusFilter] = useState(
-    searchParams.get("status") || "all",
-  );
+  const [statusFilter, setStatusFilter] = useState("all");
   const [eventFilter, setEventFilter] = useState(
     searchParams.get("event") || "all",
   );
@@ -84,6 +83,20 @@ export default function WebhooksPage() {
   });
 
   const filteredDeliveries = useMemo(() => {
+        <div className="flex gap-2 mb-4">
+          {["all", "success", "retrying", "failed"].map(s => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => setStatusFilter(s)}
+              className={`px-3 py-1 rounded-full text-xs font-medium border capitalize ${
+                statusFilter === s ? "bg-slate-800 text-white" : "bg-white text-slate-600"
+              }`}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
     return deliveries.filter((d) => {
       const code = d.response_code ?? -1;
       const statusMatch =
@@ -126,6 +139,19 @@ export default function WebhooksPage() {
     link.download = "webhook_deliveries.json";
     link.click();
   };
+  const [maxRetries, setMaxRetries] = useState(3);
+  const [backoffSeconds, setBackoffSeconds] = useState(5);
+  const [payloadSearchQuery, setPayloadSearchQuery] = useState("");
+
+  const verifySnippetNode = `const crypto = require('crypto');
+const signature = req.headers['x-signature'];
+const hash = crypto.createHmac('sha256', secret).update(payload).digest('hex');
+const isValid = crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(hash));`;
+
+  const verifySnippetPython = `import hmac, hashlib
+signature = request.headers.get('X-Signature')
+hash = hmac.new(secret.encode(), payload.encode(), hashlib.sha256).hexdigest()
+is_valid = hmac.compare_digest(signature, hash)`;
 
   const createMutation = useMutation({
     mutationFn: createWebhook,
@@ -322,29 +348,15 @@ export default function WebhooksPage() {
             </p>
           )}
 
-                      <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Log Retention Period (Days)</label>
-              <select value={retentionDays} onChange={e => setRetentionDays(Number(e.target.value))} className="w-full rounded border p-2">
-                <option value={7}>7 Days</option>
-                <option value={30}>30 Days</option>
-                <option value={90}>90 Days</option>
-                <option value={365}>1 Year</option>
-              </select>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Failure Disabling Threshold</label>
-              <input type="number" value={disableThreshold} onChange={e => setDisableThreshold(Number(e.target.value))} className="w-full rounded border p-2" min={1} max={50} />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Custom HTTP Headers</label>
-              {customHeaders.map((h, i) => (
-                <div key={i} className="flex gap-2">
-                  <input placeholder="Header Name" value={h.key} onChange={e => updateHeader(i, e.target.value, h.value)} className="w-1/2 rounded border p-1 text-xs text-gray-800" />
-                  <input placeholder="Header Value" value={h.value} onChange={e => updateHeader(i, h.key, e.target.value)} className="w-1/2 rounded border p-1 text-xs text-gray-800" />
-                  <button type="button" onClick={() => removeHeader(i)} className="text-xs px-2 text-red-600">✕</button>
-                </div>
-              ))}
-              <button type="button" onClick={addHeader} className="text-xs px-2 py-1 bg-gray-100 rounded hover:bg-gray-200">+ Add Header</button>
+                      <div className="relative group">
+              <span className="text-xs text-blue-600 cursor-pointer underline">View Event Payload Schema</span>
+              <div className="hidden group-hover:block absolute left-0 bottom-6 bg-slate-900 text-white text-xs rounded p-3 w-64 shadow-lg z-50">
+                <p className="font-bold border-b pb-1 mb-1">Payload Fields:</p>
+                <p><strong>id:</strong> string (UUID)</p>
+                <p><strong>event:</strong> string (event name)</p>
+                <p><strong>timestamp:</strong> number (epoch millis)</p>
+                <p><strong>data:</strong> object (event content)</p>
+              </div>
             </div>
           <div className="flex gap-2">
             <button
@@ -421,15 +433,21 @@ export default function WebhooksPage() {
 
               {selectedWebhook?.id === wh.id && (
                 <div className="mt-4 border-t pt-4">
+                  <div className="mb-3">
+                    <WebhookDeliveryChart deliveries={filteredDeliveries} />
+                  </div>
                   <div className="mb-2 flex items-center justify-between">
                     <div className="flex items-center justify-between w-full pr-4">
                       <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
                         Delivery history
                       </h3>
-                      <div className="flex gap-2">
-                        <button onClick={handleExportCSV} type="button" className="text-xs px-2 py-0.5 rounded bg-gray-200 text-gray-800 hover:bg-gray-300">Export CSV</button>
-                        <button onClick={handleExportJSON} type="button" className="text-xs px-2 py-0.5 rounded bg-gray-200 text-gray-800 hover:bg-gray-300">Export JSON</button>
-                      </div>
+                      <input
+                        type="text"
+                        placeholder="Search JSON payloads..."
+                        value={payloadSearchQuery}
+                        onChange={e => setPayloadSearchQuery(e.target.value)}
+                        className="rounded border p-1 text-xs text-gray-800 max-w-xs"
+                      />
                     </div>
                     <div className="flex gap-2">
                       <select

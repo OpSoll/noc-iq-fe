@@ -29,6 +29,8 @@ export interface FlagDisputePayload {
 export interface ResolveDisputePayload {
   action: "resolve" | "reject";
   resolution_note?: string;
+  /** Stakeholder email addresses to notify of the resolution. */
+  notify_recipients?: string[];
 }
 
 export interface DisputeListParams {
