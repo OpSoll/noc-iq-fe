@@ -22,6 +22,9 @@ const Navigation = () => {
   const { mode, setMode } = useAccessibility();
   const isAdmin = user?.role === "admin";
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const activeTab = searchParams.get('tab') || 'dashboard';
+  void activeTab;
 
   const linkClass =
     "rounded px-1.5 py-0.5 hover:underline focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none";

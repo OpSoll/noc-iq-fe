@@ -330,7 +330,10 @@ export function DataTable<TData, TValue>({
                             onKeyDown={(e) => {
                               if (e.key === "Enter" || e.key === " ") {
                                 e.preventDefault();
-                                h.column.getToggleSortingHandler()(e as unknown as React.MouseEvent);
+                                const handler = h.column.getToggleSortingHandler();
+                                if (handler) {
+                                  handler(e as unknown as React.MouseEvent);
+                                }
                               }
                             }}
                             className="flex w-full items-center gap-1.5 cursor-pointer select-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset rounded px-2"
