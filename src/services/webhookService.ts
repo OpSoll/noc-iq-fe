@@ -4,6 +4,7 @@ import type {
   WebhookDelivery,
   CreateWebhookPayload,
   UpdateWebhookPayload,
+  RotateSecretPayload,
 } from "@/types/webhook";
 
 export const fetchWebhooks = async (): Promise<Webhook[]> => {
@@ -51,4 +52,21 @@ export const testWebhookConnection = async (
     { url },
   );
   return { statusCode: res.data.status_code, latencyMs: res.data.latency_ms };
+};
+
+/**
+ * Rotates a webhook's signing secret. The old secret keeps validating
+ * incoming-compatible signatures for `grace_period_hours` (default 24h) so
+ * receivers have time to pick up the new one before the old one stops
+ * working.
+ */
+export const rotateWebhookSecret = async (
+  webhookId: string,
+  payload: RotateSecretPayload,
+): Promise<Webhook> => {
+  const res = await api.post<Webhook>(
+    `/webhooks/${webhookId}/rotate-secret`,
+    payload,
+  );
+  return res.data;
 };

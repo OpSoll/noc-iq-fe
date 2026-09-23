@@ -16,6 +16,13 @@ import {
 import type { DisputeStatus, SLADispute } from "@/types/sla";
 
 import DisputeDeadlineBadge from "./DisputeDeadlineBadge";
+import DisputeAuditTrail from "./DisputeAuditTrail";
+import {
+  classifyDisputeCategory,
+  DISPUTE_CATEGORIES,
+  DISPUTE_CATEGORY_LABELS,
+  type DisputeCategory,
+} from "./disputeCategory";
 
 const PAGE_SIZE = 5;
 
@@ -26,6 +33,11 @@ const STATUS_OPTIONS = [
   "resolved",
   "rejected",
 ] as const;
+
+const CATEGORY_FILTER_OPTIONS: Array<DisputeCategory | ""> = [
+  "",
+  ...DISPUTE_CATEGORIES,
+];
 
 const statusVariant: Record<
   string,
@@ -74,6 +86,9 @@ export function SLADisputesPanel({ outageId, canResolve = false }: Props) {
   const queryClient = useQueryClient();
 
   const [statusFilter, setStatusFilter] = useState<DisputeStatus | "">("");
+  const [categoryFilter, setCategoryFilter] = useState<DisputeCategory | "">(
+    "",
+  );
   const [page, setPage] = useState(1);
   const [reason, setReason] = useState("");
   const [noteInputs, setNoteInputs] = useState<Record<string, string>>({});
@@ -104,7 +119,14 @@ export function SLADisputesPanel({ outageId, canResolve = false }: Props) {
     enabled: Boolean(outageId),
   });
 
-  const disputes: SLADispute[] = data?.items ?? [];
+  const allDisputes: SLADispute[] = data?.items ?? [];
+  // Category isn't stored server-side yet, so this filter runs client-side
+  // over the already-fetched page.
+  const disputes = categoryFilter
+    ? allDisputes.filter(
+        (d) => classifyDisputeCategory(d.reason) === categoryFilter,
+      )
+    : allDisputes;
   const total = data?.total ?? 0;
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -314,6 +336,32 @@ export function SLADisputesPanel({ outageId, canResolve = false }: Props) {
           })}
         </div>
 
+        {/* Category filter */}
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs font-medium uppercase tracking-wide text-slate-500">
+            Category
+          </span>
+
+          {CATEGORY_FILTER_OPTIONS.map((category) => {
+            const isActive = categoryFilter === category;
+
+            return (
+              <button
+                key={category || "all"}
+                type="button"
+                onClick={() => setCategoryFilter(category)}
+                className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                  isActive
+                    ? "border-slate-900 bg-slate-900 text-white"
+                    : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100"
+                }`}
+              >
+                {category === "" ? "All" : DISPUTE_CATEGORY_LABELS[category]}
+              </button>
+            );
+          })}
+        </div>
+
         {/* Loading */}
         {isLoading ? (
           <div className="space-y-3">
@@ -379,6 +427,14 @@ export function SLADisputesPanel({ outageId, canResolve = false }: Props) {
                         #{dispute.id.slice(0, 8)}
                       </span>
 
+                      <Badge variant="outline" className="shrink-0">
+                        {
+                          DISPUTE_CATEGORY_LABELS[
+                            classifyDisputeCategory(dispute.reason)
+                          ]
+                        }
+                      </Badge>
+
                       <DisputeDeadlineBadge
                         createdAt={dispute.created_at}
                         status={dispute.status}
@@ -407,6 +463,8 @@ export function SLADisputesPanel({ outageId, canResolve = false }: Props) {
                       </p>
                     </div>
                   ) : null}
+
+                  <DisputeAuditTrail dispute={dispute} />
 
                   {/* Resolver actions */}
                   {canResolve && dispute.status === "open" ? (
