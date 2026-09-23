@@ -6,28 +6,52 @@
 
 | Metric | Value |
 |--------|-------|
-| Total Wave 5 issues | 112 |
+| Total Wave 5 issues | 108 |
 | Closed | 100 |
-| Open | 12 |
-| Completion | 89% |
+| Open | 8 |
+| Completion | 93% |
 
 ## Open Issues
 
 - [ ] #511 Webhooks: Add webhook endpoint ping test button in Create Webhook modal
-- [ ] #509 Webhooks: Add webhook secret key rotation modal with grace period window
 - [ ] #508 Webhooks: Add manual webhook redelivery trigger button in WebhooksView
 - [ ] #507 Webhooks: Add payload syntax highlighter in WebhookDeliveryDetailsModal
 - [ ] #506 Disputes: Add dispute status change webhook notification trigger option
 - [ ] #498 Disputes: Add SLA result calculation re-simulation button in dispute viewer
-- [ ] #497 Disputes: Add dispute reason category filter (MTTR Error, Threshold Mismatch, Outage Timing)
 - [ ] #496 Disputes: Add dispute escalation workflow to senior management
 - [ ] #495 Disputes: Add evidence document previewer modal for dispute attachments
 - [ ] #494 Disputes: Add resolution notes template selector in ResolveDisputeModal
-- [ ] #493 Disputes: Add dispute audit log history viewer in SLADisputesView
-- [ ] #492 SLA Config: Add dirty form state confirmation before closing edit dialog
 
 ## Closed Issues
 
+- [x] #723 UI Resilience: Implement WebSocket connection auto-reconnect with exponential backoff
+- [x] #722 UI Resilience: Add local storage corruption recovery guard
+- [x] #721 UI Resilience: Implement image fallback loader for broken asset logos
+- [x] #720 UI Resilience: Add client-side mutation tracker and rollback manager
+- [x] #719 UI Resilience: Implement rate limit 429 Retry-After countdown toast
+- [x] #718 UI Resilience: Add empty data state fallback cards across all dashboard views
+- [x] #717 UI Resilience: Implement stale asset version detection and auto-reload prompt
+- [x] #716 UI Resilience: Add HTTP request timeout and retry policy for API client
+- [x] #715 UI Resilience: Implement automatic TanStack Query cache recovery handler
+- [x] #714 UI Resilience: Add API error envelope normalizer for user-friendly error toasts
+- [x] #713 UI Resilience: Implement offline network status banner with auto-reconnect
+- [x] #712 UI Resilience: Add global React Error Boundary with fallback recovery UI
+- [x] #711 Accessibility: Implement automated axe-core accessibility testing in Vitest test suite
+- [x] #710 Accessibility: Add ARIA sort attributes to data table header elements
+- [x] #709 Accessibility: Implement accessible form error summary component
+- [x] #708 Accessibility: Add ARIA expanded attributes to collapsible accordion components
+- [x] #707 Accessibility: Implement accessible modal closing via Escape key handler
+- [x] #706 Accessibility: Add Screen Reader Only (sr-only) descriptive text for metric trend indicators
+- [x] #705 Accessibility: Implement high-contrast focus ring styling for interactive controls
+- [x] #704 Accessibility: Add descriptive ARIA labels to all interactive icon buttons
+- [x] #703 Accessibility: Implement full keyboard navigation for custom data tables
+- [x] #702 Accessibility: Add skip to main content navigation link for keyboard users
+- [x] #701 Accessibility: Implement ARIA live region announcements for dynamic table updates
+- [x] #700 Accessibility: Add modal dialog keyboard focus trap wrapper
+- [x] #699 Form Validation: Add auto-focus on first invalid field on form validation failure
+- [x] #698 Form Validation: Implement form field reset button with dirty check prompt
+- [x] #697 Form Validation: Add mutation feedback toast notification hook
+- [x] #696 Form Validation: Implement smart datetime input picker with min/max constraint validation
 - [x] #571 CI: Add automated release evidence package builder script
 - [x] #570 CI: Add automated Visual Regression Testing via Playwright screenshots
 - [x] #569 CI: Add Mock Service Worker (MSW) integration for offline Vitest component tests
@@ -89,6 +113,7 @@
 - [x] #513 Webhooks: Add GIN index search box for searching webhook JSON payloads
 - [x] #512 Webhooks: Add webhook event subscription multi-select checkboxes (sla.violation, sla.warning, sla.resolved)
 - [x] #510 Webhooks: Add webhook delivery success rate latency chart
+- [x] #509 Webhooks: Add webhook secret key rotation modal with grace period window
 - [x] #505 Disputes: Add dispute SLA credit adjustment preview modal
 - [x] #504 Disputes: Add dispute search by SLA Result ID or Outage ID
 - [x] #503 Disputes: Add dispute statistics summary KPI cards
@@ -96,38 +121,9 @@
 - [x] #501 Disputes: Add export dispute audit log to PDF for legal compliance
 - [x] #500 Disputes: Add bulk dispute status resolution actions
 - [x] #499 Disputes: Add dispute resolution deadline countdown timer
-- [x] #454 Dashboard: Add auto-refresh interval toggle (10s, 30s, 60s, Off) in dashboard header
-- [x] #453 Dashboard: Add MTTR (Mean Time to Resolution) distribution histogram component
-- [x] #452 Dashboard: Add SLA penalty and reward aggregate financial widget
-- [x] #451 Dashboard: Add real-time SLA breach countdown timer card for critical open outages
-- [x] #450 Dashboard: Add export SLA metrics summary to PDF report
-- [x] #449 Dashboard: Add SLA compliance threshold target indicator line to analytics chart
-- [x] #448 Dashboard: Add quick-preset date range selector buttons in SLADashboardView
-- [x] #447 Dashboard: Add keyboard focus trap and ARIA labels to SLA SVG charts
-- [x] #433 Accessibility: Fix dark mode text contrast ratios and visible focus rings
-- [x] #432 Docs: Update CONTRIBUTING.md with UI component and hook testing guidelines
-- [x] #431 Refactor: Extract shared Card and Badge sub-components in SettingsPage
-- [x] #430 DX: Add OpenAPI schema drift validation CLI script
-- [x] #429 Testing: Add Vitest unit tests for paymentService API response mappings
-- [x] #428 Testing: Add unit tests for outage resolution SLA calculations in outages service
-- [x] #427 Notifications: Add auto-dismiss countdown progress bar to Toast component
-- [x] #426 Performance: Memoize timeline node rendering and windowing in IncidentTimeline
-- [x] #425 Performance: Debounce search input updates in useOutageSearchAndLayout hook
-- [x] #424 Type Safety: Enforce strict TypeScript types for Axios API error envelopes
-- [x] #423 Shared: Replace plain text placeholders with centralized EmptyState component
-- [x] #422 Shared: Display global offline banner notification when backend server is unreachable
-- [x] #421 Webhooks: Add formatted JSON tree viewer toggle in PayloadViewer
-- [x] #420 Webhooks: Add event type and HTTP status code filtering dropdowns
-- [x] #419 Bulk Import: Add pre-flight line-by-line CSV validation error table
-- [x] #418 Bulk Import: Add drag-over visual state and 5MB max file size check
-- [x] #417 Navigation: Add reusable Breadcrumb navigation bar on sub-pages
-- [x] #416 Navigation: Set aria-current on active links and handle Escape key on mobile menu
-- [x] #415 Settings: Add one-click copy button with toast feedback for WalletAddress
-- [x] #414 Settings: Add client-side password strength meter for Register & Password forms
-- [x] #413 Dashboard: Add keyboard focus trap and ARIA labels to SLA SVG charts
-- [x] #412 Dashboard: Add quick-preset date range selector buttons in SLADashboardView
-- [x] #411 SLA Config: Add dirty form state confirmation before closing edit dialog
-- [x] #410 Outages: Add resolution preview step in ResolveOutageModal
+- [x] #497 Disputes: Add dispute reason category filter (MTTR Error, Threshold Mismatch, Outage Timing)
+- [x] #493 Disputes: Add dispute audit log history viewer in SLADisputesView
+- [x] #492 SLA Config: Add dirty form state confirmation before closing edit dialog
 
 ---
 _Auto-generated by `scripts/update-wave5-dashboard.mjs`. Do not edit manually._
