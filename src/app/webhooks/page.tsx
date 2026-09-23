@@ -11,10 +11,12 @@ import {
   deleteWebhook,
   fetchWebhookDeliveries,
   retryDelivery,
+  rotateWebhookSecret,
 } from "@/services/webhookService";
 import { saveDraft, loadDraft, clearDraft } from "@/lib/drafts";
 import type { Webhook, WebhookDelivery } from "@/types/webhook";
 import { WebhookDeliveryChart } from "@/components/webhooks/WebhookDeliveryChart";
+import { RotateSecretModal } from "@/components/webhooks/RotateSecretModal";
 
 const AVAILABLE_EVENTS = [
   "outage.created",
@@ -27,6 +29,9 @@ const DRAFT_KEY = "webhook-new";
 export default function WebhooksPage() {
   const qc = useQueryClient();
   const [selectedWebhook, setSelectedWebhook] = useState<Webhook | null>(null);
+  const [rotatingWebhookId, setRotatingWebhookId] = useState<string | null>(
+    null,
+  );
   const [showForm, setShowForm] = useState(false);
   const [formUrl, setFormUrl] = useState("");
   const [formEvents, setFormEvents] = useState<string[]>([]);
@@ -183,6 +188,21 @@ is_valid = hmac.compare_digest(signature, hash)`;
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["webhooks"] });
       if (selectedWebhook) setSelectedWebhook(null);
+    },
+  });
+
+  const rotateMutation = useMutation({
+    mutationFn: ({
+      webhookId,
+      graceHours,
+    }: {
+      webhookId: string;
+      graceHours: number;
+    }) =>
+      rotateWebhookSecret(webhookId, { grace_period_hours: graceHours }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["webhooks"] });
+      setRotatingWebhookId(null);
     },
   });
 
@@ -422,6 +442,16 @@ is_valid = hmac.compare_digest(signature, hash)`;
                     Edit
                   </button>
                   <button
+                    onClick={() =>
+                      setRotatingWebhookId(
+                        rotatingWebhookId === wh.id ? null : wh.id,
+                      )
+                    }
+                    className="rounded border border-amber-200 px-2 py-1 text-xs text-amber-700 hover:bg-amber-50"
+                  >
+                    Rotate Secret
+                  </button>
+                  <button
                     onClick={() => deleteMutation.mutate(wh.id)}
                     disabled={deleteMutation.isPending}
                     className="rounded border border-red-200 px-2 py-1 text-xs text-red-600 hover:bg-red-50 disabled:opacity-40"
@@ -430,6 +460,20 @@ is_valid = hmac.compare_digest(signature, hash)`;
                   </button>
                 </div>
               </div>
+
+              {rotatingWebhookId === wh.id && (
+                <RotateSecretModal
+                  webhook={wh}
+                  isRotating={
+                    rotateMutation.isPending &&
+                    rotateMutation.variables?.webhookId === wh.id
+                  }
+                  onRotate={(graceHours) =>
+                    rotateMutation.mutate({ webhookId: wh.id, graceHours })
+                  }
+                  onClose={() => setRotatingWebhookId(null)}
+                />
+              )}
 
               {selectedWebhook?.id === wh.id && (
                 <div className="mt-4 border-t pt-4">
