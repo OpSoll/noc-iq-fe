@@ -7,7 +7,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { flagDispute, getDisputes, resolveDispute } from "@/services/sla";
+import {
+  flagDispute,
+  getDisputes,
+  resolveDispute,
+  triggerDisputeWebhook,
+} from "@/services/sla";
 import type { DisputeStatus, SLADispute } from "@/types/sla";
 
 import DisputeDeadlineBadge from "./DisputeDeadlineBadge";
@@ -59,6 +64,12 @@ interface NotificationLog {
   timestamp: string;
 }
 
+interface WebhookLog {
+  disputeId: string;
+  status: "sent" | "failed";
+  timestamp: string;
+}
+
 export function SLADisputesPanel({ outageId, canResolve = false }: Props) {
   const queryClient = useQueryClient();
 
@@ -72,6 +83,7 @@ export function SLADisputesPanel({ outageId, canResolve = false }: Props) {
   const [notificationLogs, setNotificationLogs] = useState<
     NotificationLog[]
   >([]);
+  const [webhookLogs, setWebhookLogs] = useState<WebhookLog[]>([]);
 
   const queryKey = useMemo(
     () => ["sla-disputes", outageId, statusFilter, page],
@@ -116,6 +128,19 @@ export function SLADisputesPanel({ outageId, canResolve = false }: Props) {
     },
   });
 
+  const logWebhookResult = (disputeId: string, status: "sent" | "failed") => {
+    setWebhookLogs((prev) => [
+      { disputeId, status, timestamp: new Date().toISOString() },
+      ...prev,
+    ]);
+  };
+
+  const webhookMutation = useMutation({
+    mutationFn: (disputeId: string) => triggerDisputeWebhook(disputeId),
+    onSuccess: (_, disputeId) => logWebhookResult(disputeId, "sent"),
+    onError: (_, disputeId) => logWebhookResult(disputeId, "failed"),
+  });
+
   const resolveMutation = useMutation({
     mutationFn: async ({
       disputeId,
@@ -144,6 +169,13 @@ export function SLADisputesPanel({ outageId, canResolve = false }: Props) {
           },
           ...prev,
         ]);
+      }
+
+      // Notify external CRM/ERP integrations via webhook when a dispute is
+      // resolved (not on reject — only a genuine resolution is external-
+      // facing news).
+      if (variables.action === "resolve") {
+        webhookMutation.mutate(variables.disputeId);
       }
     },
 
@@ -477,6 +509,54 @@ export function SLADisputesPanel({ outageId, canResolve = false }: Props) {
                             </li>
                           ))}
                       </ul>
+                    </div>
+                  ) : null}
+
+                  {/* Webhook notification status */}
+                  {dispute.status === "resolved" ? (
+                    <div className="flex flex-wrap items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs">
+                      <span className="font-medium text-slate-500">
+                        Webhook (dispute.resolved):
+                      </span>
+                      {(() => {
+                        const latest = webhookLogs.find(
+                          (log) => log.disputeId === dispute.id,
+                        );
+                        if (!latest) {
+                          return (
+                            <span className="text-slate-400">
+                              Not yet triggered
+                            </span>
+                          );
+                        }
+                        return (
+                          <>
+                            <span
+                              className={
+                                latest.status === "sent"
+                                  ? "text-green-600"
+                                  : "text-red-600"
+                              }
+                            >
+                              {latest.status === "sent" ? "Sent" : "Failed"}
+                            </span>
+                            <span className="text-slate-400">
+                              {new Date(latest.timestamp).toLocaleString()}
+                            </span>
+                          </>
+                        );
+                      })()}
+                      <button
+                        type="button"
+                        onClick={() => webhookMutation.mutate(dispute.id)}
+                        disabled={webhookMutation.isPending}
+                        className="ml-auto rounded border border-slate-300 px-2 py-0.5 text-slate-600 hover:bg-white disabled:opacity-40"
+                      >
+                        {webhookMutation.isPending &&
+                        webhookMutation.variables === dispute.id
+                          ? "Sending…"
+                          : "Resend webhook"}
+                      </button>
                     </div>
                   ) : null}
                 </div>

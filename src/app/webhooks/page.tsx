@@ -11,10 +11,13 @@ import {
   deleteWebhook,
   fetchWebhookDeliveries,
   retryDelivery,
+  testWebhookConnection,
 } from "@/services/webhookService";
 import { saveDraft, loadDraft, clearDraft } from "@/lib/drafts";
 import type { Webhook, WebhookDelivery } from "@/types/webhook";
 import { WebhookDeliveryChart } from "@/components/webhooks/WebhookDeliveryChart";
+import { JsonPayloadViewer } from "@/components/webhooks/JsonPayloadViewer";
+import { useToast } from "@/components/ui/toast";
 
 const AVAILABLE_EVENTS = [
   "outage.created",
@@ -26,7 +29,10 @@ const DRAFT_KEY = "webhook-new";
 
 export default function WebhooksPage() {
   const qc = useQueryClient();
+  const toast = useToast();
   const [selectedWebhook, setSelectedWebhook] = useState<Webhook | null>(null);
+  const [inspectedDelivery, setInspectedDelivery] =
+    useState<WebhookDelivery | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [formUrl, setFormUrl] = useState("");
   const [formEvents, setFormEvents] = useState<string[]>([]);
@@ -194,10 +200,18 @@ is_valid = hmac.compare_digest(signature, hash)`;
       webhookId: string;
       deliveryId: string;
     }) => retryDelivery(webhookId, deliveryId),
-    onSuccess: () =>
+    onSuccess: () => {
       qc.invalidateQueries({
         queryKey: ["webhook-deliveries", selectedWebhook?.id],
-      }),
+      });
+      toast("Webhook redelivery triggered.", "success");
+    },
+    onError: (err: Error) =>
+      toast(err.message || "Webhook redelivery failed.", "error"),
+  });
+
+  const testConnectionMutation = useMutation({
+    mutationFn: testWebhookConnection,
   });
 
   function resetForm() {
@@ -312,14 +326,36 @@ is_valid = hmac.compare_digest(signature, hash)`;
             <label className="block text-sm font-medium text-gray-700">
               Payload URL
             </label>
-            <input
-              type="url"
-              required
-              value={formUrl}
-              onChange={(e) => setFormUrl(e.target.value)}
-              placeholder="https://example.com/webhook"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-            />
+            <div className="flex items-center gap-2">
+              <input
+                type="url"
+                required
+                value={formUrl}
+                onChange={(e) => setFormUrl(e.target.value)}
+                placeholder="https://example.com/webhook"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+              <button
+                type="button"
+                onClick={() => testConnectionMutation.mutate(formUrl)}
+                disabled={!formUrl || testConnectionMutation.isPending}
+                className="shrink-0 rounded-lg border px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-40"
+              >
+                {testConnectionMutation.isPending ? "Testing…" : "Test Connection"}
+              </button>
+            </div>
+            {testConnectionMutation.data && (
+              <p className="text-xs text-green-600">
+                HTTP {testConnectionMutation.data.statusCode} &middot;{" "}
+                {testConnectionMutation.data.latencyMs}ms
+              </p>
+            )}
+            {testConnectionMutation.isError && (
+              <p className="text-xs text-red-600">
+                {(testConnectionMutation.error as Error).message ||
+                  "Connection test failed."}
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -526,6 +562,18 @@ is_valid = hmac.compare_digest(signature, hash)`;
                                 <span className="text-gray-400">
                                   {new Date(d.created_at).toLocaleString()}
                                 </span>
+                                <button
+                                  onClick={() =>
+                                    setInspectedDelivery(
+                                      inspectedDelivery?.id === d.id ? null : d,
+                                    )
+                                  }
+                                  className="rounded border border-gray-200 px-2 py-0.5 text-gray-600 hover:bg-white"
+                                >
+                                  {inspectedDelivery?.id === d.id
+                                    ? "Hide Payload"
+                                    : "View Payload"}
+                                </button>
                                 {d.status === "failed" && (
                                   <button
                                     onClick={() =>
@@ -545,6 +593,23 @@ is_valid = hmac.compare_digest(signature, hash)`;
                           );
                         }}
                       </FixedSizeList>
+                    </div>
+                  )}
+
+                  {inspectedDelivery && (
+                    <div className="mt-3 space-y-3">
+                      <JsonPayloadViewer
+                        title="Request payload"
+                        payload={inspectedDelivery.request_body ?? {
+                          note: "No request body recorded for this delivery.",
+                        }}
+                      />
+                      <JsonPayloadViewer
+                        title="Response body"
+                        payload={inspectedDelivery.response_body ?? {
+                          note: "No response body recorded for this delivery.",
+                        }}
+                      />
                     </div>
                   )}
                 </div>

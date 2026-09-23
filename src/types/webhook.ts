@@ -13,6 +13,10 @@ export interface WebhookDelivery {
   status: "success" | "failed" | "pending";
   response_code: number | null;
   created_at: string;
+  /** The JSON payload sent to the endpoint. */
+  request_body?: unknown;
+  /** The endpoint's response body, if any. */
+  response_body?: unknown;
 }
 
 export interface CreateWebhookPayload {

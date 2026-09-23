@@ -33,3 +33,22 @@ export const fetchWebhookDeliveries = async (webhookId: string): Promise<Webhook
 export const retryDelivery = async (webhookId: string, deliveryId: string): Promise<void> => {
   await api.post(`/webhooks/${webhookId}/deliveries/${deliveryId}/retry`);
 };
+
+export interface WebhookPingResult {
+  statusCode: number;
+  latencyMs: number;
+}
+
+/**
+ * Sends a `ping` test event to `url` and reports the HTTP status code and
+ * round-trip latency, so a URL can be verified before the webhook is saved.
+ */
+export const testWebhookConnection = async (
+  url: string,
+): Promise<WebhookPingResult> => {
+  const res = await api.post<{ status_code: number; latency_ms: number }>(
+    "/webhooks/test",
+    { url },
+  );
+  return { statusCode: res.data.status_code, latencyMs: res.data.latency_ms };
+};
