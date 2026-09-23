@@ -17,6 +17,7 @@ const robotoMono = Roboto_Mono({
 import Navigation from "@/components/Navigation";
 import RouteGuard from "@/components/RouteGuard";
 import ClientShell from "@/components/ClientShell";
+import SkipNav from "@/components/SkipNav";
 import { ToastProvider } from "@/components/ui/toast";
 import { ReactQueryProvider } from "@/providers/react-query";
 import { SessionProvider } from "@/providers/session";
@@ -76,6 +77,8 @@ export default async function RootLayout({ children }: RootLayoutProps) {
                   <RouteGuard>
                     <NetworkStatusProvider>
                       <OfflineBanner />
+                      {/* Skip-to-main link — first focusable element on every page (closes #702) */}
+                      <SkipNav />
                       <Navigation />
                       <ClientShell nonce={nonce}>{children}</ClientShell>
                     </NetworkStatusProvider>

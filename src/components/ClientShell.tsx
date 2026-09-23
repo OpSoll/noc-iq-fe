@@ -27,7 +27,16 @@ export default function ClientShell({ children, nonce }: { children: ReactNode; 
 
   return (
     <>
-      {children}
+      {/*
+       * #main-content is the focus target of the SkipNav link (closes #702).
+       * tabIndex={-1} makes the <main> element programmatically focusable
+       * without adding it to the natural tab order, so the skip link can
+       * hand focus directly here and screen readers announce the landmark.
+       */}
+      <main id="main-content" tabIndex={-1} className="outline-none">
+        {children}
+      </main>
+      </main>
       {conflict && (
         <ConflictNotification
           conflict={conflict}
