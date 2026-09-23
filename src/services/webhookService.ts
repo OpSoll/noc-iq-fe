@@ -35,6 +35,25 @@ export const retryDelivery = async (webhookId: string, deliveryId: string): Prom
   await api.post(`/webhooks/${webhookId}/deliveries/${deliveryId}/retry`);
 };
 
+export interface WebhookPingResult {
+  statusCode: number;
+  latencyMs: number;
+}
+
+/**
+ * Sends a `ping` test event to `url` and reports the HTTP status code and
+ * round-trip latency, so a URL can be verified before the webhook is saved.
+ */
+export const testWebhookConnection = async (
+  url: string,
+): Promise<WebhookPingResult> => {
+  const res = await api.post<{ status_code: number; latency_ms: number }>(
+    "/webhooks/test",
+    { url },
+  );
+  return { statusCode: res.data.status_code, latencyMs: res.data.latency_ms };
+};
+
 /**
  * Rotates a webhook's signing secret. The old secret keeps validating
  * incoming-compatible signatures for `grace_period_hours` (default 24h) so

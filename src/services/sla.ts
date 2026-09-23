@@ -180,6 +180,23 @@ export async function resolveDispute(
   }
 }
 
+/**
+ * Manually (re-)triggers the `dispute.resolved` webhook notification for a
+ * dispute, so external CRM/ERP integrations can be notified of the status
+ * change even if the original automatic delivery failed.
+ */
+export async function triggerDisputeWebhook(disputeId: string): Promise<void> {
+  if (!disputeId?.trim()) {
+    throw new Error("Dispute ID is required.");
+  }
+
+  try {
+    await api.post(`${SLA_ENDPOINTS.DISPUTES}/${disputeId}/notify-webhook`);
+  } catch (error: unknown) {
+    throw new Error(extractErrorMessage(error));
+  }
+}
+
 /* -------------------------------------------------------------------------- */
 /*                            Optional Query Keys                             */
 /* -------------------------------------------------------------------------- */
