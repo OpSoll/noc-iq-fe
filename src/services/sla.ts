@@ -4,6 +4,7 @@ import { api } from "@/lib/api";
 
 import type {
   DisputeListParams,
+  EscalateDisputePayload,
   FlagDisputePayload,
   PaginatedDisputes,
   ResolveDisputePayload,
@@ -192,6 +193,34 @@ export async function triggerDisputeWebhook(disputeId: string): Promise<void> {
 
   try {
     await api.post(`${SLA_ENDPOINTS.DISPUTES}/${disputeId}/notify-webhook`);
+  } catch (error: unknown) {
+    throw new Error(extractErrorMessage(error));
+  }
+}
+
+/**
+ * Escalate a dispute to senior management (opsoll/noc-iq-fe#496).
+ * The dispute must be pending (open or under_review) and older than the
+ * 7-day escalation threshold; the backend enforces this as well.
+ */
+export async function escalateDispute(
+  disputeId: string,
+  payload: EscalateDisputePayload
+): Promise<SLADispute> {
+  if (!disputeId?.trim()) {
+    throw new Error("Dispute ID is required.");
+  }
+  if (!payload.manager_tag?.trim()) {
+    throw new Error("A manager tag is required to escalate a dispute.");
+  }
+
+  try {
+    const response = await api.post<SLADispute>(
+      `${SLA_ENDPOINTS.DISPUTES}/${disputeId}/escalate`,
+      payload
+    );
+
+    return response.data;
   } catch (error: unknown) {
     throw new Error(extractErrorMessage(error));
   }

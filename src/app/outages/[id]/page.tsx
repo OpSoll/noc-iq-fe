@@ -551,7 +551,12 @@ export default function OutageDetailsPage() {
           </CardContent>
         </Card>
 
-        <SLADisputesPanel outageId={outage.id} canResolve={isResolved} />
+        <SLADisputesPanel
+          outageId={outage.id}
+          canResolve={isResolved}
+          outageSeverity={outage.severity}
+          originalSlaResult={outage.sla_status ?? null}
+        />
       </div>
 
       <ResolveOutageModal
