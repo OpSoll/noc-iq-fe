@@ -13,10 +13,23 @@ import {
   resolveDispute,
   triggerDisputeWebhook,
 } from "@/services/sla";
-import type { DisputeStatus, SLADispute } from "@/types/sla";
+import type {
+  DisputeAttachment,
+  DisputeStatus,
+  SLADispute,
+  SLAResult,
+} from "@/types/sla";
 
 import DisputeDeadlineBadge from "./DisputeDeadlineBadge";
 import DisputeAuditTrail from "./DisputeAuditTrail";
+import EvidencePreviewModal from "./EvidencePreviewModal";
+import EscalateDisputeModal from "./EscalateDisputeModal";
+import SLAReSimulateModal from "./SLAReSimulateModal";
+import {
+  isEscalatable,
+  ESCALATION_PRIORITY_LABELS,
+} from "./disputeEscalation";
+import { RESOLUTION_TEMPLATES, getResolutionTemplate } from "./disputeTemplates";
 import {
   classifyDisputeCategory,
   DISPUTE_CATEGORIES,
@@ -52,6 +65,10 @@ const statusVariant: Record<
 interface Props {
   outageId: string;
   canResolve?: boolean;
+  /** Severity of the parent outage — used by SLA re-simulation (#498). */
+  outageSeverity?: string;
+  /** Original finalized SLA result for the outage — comparison baseline (#498). */
+  originalSlaResult?: SLAResult | null;
 }
 
 /** Split comma/space separated email-ish tags into trimmed non-empty entries. */
@@ -82,7 +99,12 @@ interface WebhookLog {
   timestamp: string;
 }
 
-export function SLADisputesPanel({ outageId, canResolve = false }: Props) {
+export function SLADisputesPanel({
+  outageId,
+  canResolve = false,
+  outageSeverity,
+  originalSlaResult = null,
+}: Props) {
   const queryClient = useQueryClient();
 
   const [statusFilter, setStatusFilter] = useState<DisputeStatus | "">("");
@@ -92,6 +114,9 @@ export function SLADisputesPanel({ outageId, canResolve = false }: Props) {
   const [page, setPage] = useState(1);
   const [reason, setReason] = useState("");
   const [noteInputs, setNoteInputs] = useState<Record<string, string>>({});
+  const [selectedTemplates, setSelectedTemplates] = useState<
+    Record<string, string>
+  >({});
   const [recipientInputs, setRecipientInputs] = useState<
     Record<string, string>
   >({});
@@ -99,6 +124,12 @@ export function SLADisputesPanel({ outageId, canResolve = false }: Props) {
     NotificationLog[]
   >([]);
   const [webhookLogs, setWebhookLogs] = useState<WebhookLog[]>([]);
+  const [previewAttachment, setPreviewAttachment] =
+    useState<DisputeAttachment | null>(null);
+  const [escalationTarget, setEscalationTarget] = useState<SLADispute | null>(
+    null,
+  );
+  const [resimulateOpen, setResimulateOpen] = useState(false);
 
   const queryKey = useMemo(
     () => ["sla-disputes", outageId, statusFilter, page],
@@ -235,6 +266,21 @@ export function SLADisputesPanel({ outageId, canResolve = false }: Props) {
       ...prev,
       [dispute.id]: "",
     }));
+  };
+
+  // ── Resolution note templates (opsoll/noc-iq-fe#494) ─────────────────────
+
+  const handleTemplateSelect = (disputeId: string, templateId: string) => {
+    setSelectedTemplates((prev) => ({ ...prev, [disputeId]: templateId }));
+
+    const template = getResolutionTemplate(templateId);
+    if (template) {
+      // Populate the resolution notes area with the selected template.
+      setNoteInputs((prev) => ({
+        ...prev,
+        [disputeId]: template.note,
+      }));
+    }
   };
 
   const isSubmitting = flagMutation.isPending || resolveMutation.isPending;
@@ -415,13 +461,27 @@ export function SLADisputesPanel({ outageId, canResolve = false }: Props) {
 
                 <div className="space-y-3">
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <Badge
                         variant={statusVariant[dispute.status] ?? "outline"}
                         className="capitalize"
                       >
                         {dispute.status.replace("_", " ")}
                       </Badge>
+
+                      {dispute.escalated_at ? (
+                        <Badge
+                          variant="destructive"
+                          className="border-red-600 bg-red-600 text-white"
+                          title={
+                            dispute.escalated_priority
+                              ? `Priority: ${ESCALATION_PRIORITY_LABELS[dispute.escalated_priority]}${dispute.escalated_manager ? ` — Manager: ${dispute.escalated_manager}` : ""}`
+                              : "Escalated to senior management"
+                          }
+                        >
+                          Escalated
+                        </Badge>
+                      ) : null}
 
                       <span className="text-xs text-slate-400">
                         #{dispute.id.slice(0, 8)}
@@ -452,6 +512,47 @@ export function SLADisputesPanel({ outageId, canResolve = false }: Props) {
                     </p>
                   </div>
 
+                  {/* Evidence attachments (opsoll/noc-iq-fe#495) */}
+                  {dispute.attachments && dispute.attachments.length > 0 ? (
+                    <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
+                      <p className="text-xs font-medium text-slate-500">
+                        Evidence documents
+                      </p>
+
+                      <ul className="mt-1.5 space-y-1.5">
+                        {dispute.attachments.map((attachment) => (
+                          <li
+                            key={attachment.id}
+                            className="flex flex-wrap items-center gap-2"
+                          >
+                            <span className="text-xs font-medium text-slate-700">
+                              {attachment.filename}
+                            </span>
+                            <span className="text-[11px] text-slate-400">
+                              {attachment.content_type}
+                            </span>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setPreviewAttachment(attachment)}
+                            >
+                              Preview
+                            </Button>
+                            <a
+                              href={attachment.url}
+                              download={attachment.filename}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-600 hover:bg-slate-100"
+                            >
+                              Download
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
+
                   {dispute.resolution_note ? (
                     <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
                       <p className="text-xs font-medium text-slate-500">
@@ -469,6 +570,35 @@ export function SLADisputesPanel({ outageId, canResolve = false }: Props) {
                   {/* Resolver actions */}
                   {canResolve && dispute.status === "open" ? (
                     <div className="space-y-2 rounded-lg border border-slate-100 bg-slate-50 p-3">
+                      {/* Resolution template selector (opsoll/noc-iq-fe#494) */}
+                      <div className="space-y-1.5">
+                        <label
+                          htmlFor={`resolution-template-${dispute.id}`}
+                          className="text-xs font-medium text-slate-500"
+                        >
+                          Resolution Template
+                        </label>
+                        <select
+                          id={`resolution-template-${dispute.id}`}
+                          value={selectedTemplates[dispute.id] ?? ""}
+                          onChange={(e) =>
+                            handleTemplateSelect(
+                              dispute.id,
+                              e.target.value,
+                            )
+                          }
+                          className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
+                          disabled={isSubmitting}
+                        >
+                          <option value="">Select a template (optional)...</option>
+                          {RESOLUTION_TEMPLATES.map((template) => (
+                            <option key={template.id} value={template.id}>
+                              {template.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
                       <input
                         className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
                         placeholder="Optional resolution note..."
@@ -526,8 +656,35 @@ export function SLADisputesPanel({ outageId, canResolve = false }: Props) {
                         >
                           Reject
                         </Button>
+
+                        {/* Escalate pending disputes older than 7 days
+                            (opsoll/noc-iq-fe#496) */}
+                        {isEscalatable(dispute) ? (
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            disabled={isSubmitting}
+                            onClick={() => setEscalationTarget(dispute)}
+                          >
+                            Escalate Dispute
+                          </Button>
+                        ) : null}
                       </div>
                     </div>
+                  ) : null}
+
+                  {/* SLA re-simulation — always available to resolvers,
+                      also for under_review disputes (opsoll/noc-iq-fe#498) */}
+                  {canResolve &&
+                  (dispute.status === "open" ||
+                    dispute.status === "under_review") ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setResimulateOpen(true)}
+                    >
+                      Re-simulate SLA Calculation
+                    </Button>
                   ) : null}
 
                   {/* Notification delivery log */}
@@ -653,6 +810,28 @@ export function SLADisputesPanel({ outageId, canResolve = false }: Props) {
           </div>
         ) : null}
       </CardContent>
+
+      {/* Evidence document previewer (opsoll/noc-iq-fe#495) */}
+      <EvidencePreviewModal
+        attachment={previewAttachment}
+        onClose={() => setPreviewAttachment(null)}
+      />
+
+      {/* Dispute escalation workflow (opsoll/noc-iq-fe#496) */}
+      <EscalateDisputeModal
+        dispute={escalationTarget}
+        onClose={() => setEscalationTarget(null)}
+        onEscalated={() => invalidateDisputes()}
+      />
+
+      {/* SLA result re-simulation (opsoll/noc-iq-fe#498) */}
+      <SLAReSimulateModal
+        isOpen={resimulateOpen}
+        onClose={() => setResimulateOpen(false)}
+        outageId={outageId}
+        severity={outageSeverity ?? "medium"}
+        originalResult={originalSlaResult}
+      />
     </Card>
   );
 }
