@@ -1,32 +1,32 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { ThemeSwitcher } from "@/components/ThemeSwitcher";
-import { NotificationBell } from "@/components/notifications/NotificationBell";
-import { usePathname } from "next/navigation";
-import { useSession } from "@/hooks/useSession";
+import Link from 'next/link';
+import { ThemeSwitcher } from '@/components/ThemeSwitcher';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
+import { usePathname } from 'next/navigation';
+import { useSession } from '@/hooks/useSession';
 import {
   useAccessibility,
   type AccessibilityMode,
-} from "@/providers/accessibility";
+} from '@/providers/accessibility';
 
 // Routes only visible to admin users
-const ADMIN_ROUTES = ["/webhooks", "/config"];
+const ADMIN_ROUTES = ['/webhooks', '/config'];
 
 const A11Y_MODES: { value: AccessibilityMode; label: string }[] = [
-  { value: "default", label: "Default" },
-  { value: "high-contrast", label: "High contrast" },
-  { value: "reduced-motion", label: "Reduced motion" },
+  { value: 'default', label: 'Default' },
+  { value: 'high-contrast', label: 'High contrast' },
+  { value: 'reduced-motion', label: 'Reduced motion' },
 ];
 
 const Navigation = () => {
   const { state, user, logout } = useSession();
   const { mode, setMode } = useAccessibility();
-  const isAdmin = user?.role === "admin";
+  const isAdmin = user?.role === 'admin';
   const pathname = usePathname();
 
   const linkClass =
-    "rounded px-1.5 py-0.5 hover:underline focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none";
+    'rounded px-1.5 py-0.5 hover:underline focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none';
 
   const getLinkClass = (path: string) => {
     return pathname === path ? `${linkClass} font-bold` : linkClass;
@@ -34,46 +34,46 @@ const Navigation = () => {
 
   return (
     <nav
-      style={{ padding: "1rem", borderBottom: "1px solid #ccc" }}
+      style={{ padding: '1rem', borderBottom: '1px solid #ccc' }}
       className="flex items-center justify-between"
     >
       <div className="flex flex-wrap gap-3 text-sm">
         <Link
           href="/"
-          className={getLinkClass("/")}
-          aria-current={pathname === "/" ? "page" : undefined}
+          className={getLinkClass('/')}
+          aria-current={pathname === '/' ? 'page' : undefined}
         >
           Dashboard
         </Link>
         <span>|</span>
         <Link
           href="/outages"
-          className={getLinkClass("/outages")}
-          aria-current={pathname === "/outages" ? "page" : undefined}
+          className={getLinkClass('/outages')}
+          aria-current={pathname === '/outages' ? 'page' : undefined}
         >
           Outages
         </Link>
         <span>|</span>
         <Link
           href="/bulk-import"
-          className={getLinkClass("/bulk-import")}
-          aria-current={pathname === "/bulk-import" ? "page" : undefined}
+          className={getLinkClass('/bulk-import')}
+          aria-current={pathname === '/bulk-import' ? 'page' : undefined}
         >
           Bulk Import
         </Link>
         <span>|</span>
         <Link
           href="/payments"
-          className={getLinkClass("/payments")}
-          aria-current={pathname === "/payments" ? "page" : undefined}
+          className={getLinkClass('/payments')}
+          aria-current={pathname === '/payments' ? 'page' : undefined}
         >
           Payments
         </Link>
         <span>|</span>
         <Link
           href="/setting"
-          className={getLinkClass("/setting")}
-          aria-current={pathname === "/setting" ? "page" : undefined}
+          className={getLinkClass('/setting')}
+          aria-current={pathname === '/setting' ? 'page' : undefined}
         >
           Settings
         </Link>
@@ -82,16 +82,16 @@ const Navigation = () => {
             <span>|</span>
             <Link
               href="/config"
-              className={getLinkClass("/config")}
-              aria-current={pathname === "/config" ? "page" : undefined}
+              className={getLinkClass('/config')}
+              aria-current={pathname === '/config' ? 'page' : undefined}
             >
               SLA Config
             </Link>
             <span>|</span>
             <Link
               href="/webhooks"
-              className={getLinkClass("/webhooks")}
-              aria-current={pathname === "/webhooks" ? "page" : undefined}
+              className={getLinkClass('/webhooks')}
+              aria-current={pathname === '/webhooks' ? 'page' : undefined}
             >
               Webhooks
             </Link>
@@ -115,10 +115,10 @@ const Navigation = () => {
           ))}
         </select>
 
-        {state === "loading" && (
+        {state === 'loading' && (
           <span className="text-slate-400">Checking session…</span>
         )}
-        {state === "authenticated" && user && (
+        {state === 'authenticated' && user && (
           <span className="flex items-center gap-3">
             <span>{user.email}</span>
             {isAdmin && (
@@ -134,7 +134,7 @@ const Navigation = () => {
             </button>
           </span>
         )}
-        {state === "unauthenticated" && (
+        {state === 'unauthenticated' && (
           <Link
             href="/login"
             className="rounded border border-slate-200 px-2 py-0.5 text-xs hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none"

@@ -1,31 +1,21 @@
-import { useEffect } from "react";
+import { useEffect } from 'react';
 
-export function useBeforeUnload(
-  shouldBlock: boolean,
-) {
+export function useBeforeUnload(shouldBlock: boolean) {
   useEffect(() => {
     if (!shouldBlock) {
       return;
     }
 
-    const handleBeforeUnload = (
-      event: BeforeUnloadEvent,
-    ) => {
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
       event.preventDefault();
 
-      event.returnValue = "";
+      event.returnValue = '';
     };
 
-    window.addEventListener(
-      "beforeunload",
-      handleBeforeUnload,
-    );
+    window.addEventListener('beforeunload', handleBeforeUnload);
 
     return () => {
-      window.removeEventListener(
-        "beforeunload",
-        handleBeforeUnload,
-      );
+      window.removeEventListener('beforeunload', handleBeforeUnload);
     };
   }, [shouldBlock]);
 }

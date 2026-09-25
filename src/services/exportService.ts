@@ -1,9 +1,9 @@
-import { api } from "@/lib/api";
-import { ExportFormat, OutageExportFilters } from "../types/export";
+import { api } from '@/lib/api';
+import { ExportFormat, OutageExportFilters } from '../types/export';
 
 function getFilenameFromDisposition(
   dispositionHeader: string | undefined,
-  fallbackFormat: ExportFormat,
+  fallbackFormat: ExportFormat
 ) {
   const match = dispositionHeader?.match(/filename="?([^"]+)"?/i);
   if (match?.[1]) {
@@ -20,36 +20,40 @@ export const exportOutages = async (
   const params: Record<string, string> = { format };
 
   Object.entries(filters).forEach(([key, value]) => {
-    if (value !== undefined && value !== "") {
+    if (value !== undefined && value !== '') {
       params[key] = value;
     }
   });
 
-  const response = await api.get<Blob>("/outages/export", {
+  const response = await api.get<Blob>('/outages/export', {
     params,
-    responseType: "blob",
+    responseType: 'blob',
   });
 
-  const mimeType = response.headers["content-type"] ?? (
-    format === "csv" ? "text/csv" : "application/json"
-  );
+  const mimeType =
+    response.headers['content-type'] ??
+    (format === 'csv' ? 'text/csv' : 'application/json');
   const blob =
     response.data instanceof Blob
       ? response.data
       : new Blob(
           [
-            typeof response.data === "string"
+            typeof response.data === 'string'
               ? response.data
-              : JSON.stringify(response.data, null, format === "json" ? 2 : undefined),
+              : JSON.stringify(
+                  response.data,
+                  null,
+                  format === 'json' ? 2 : undefined
+                ),
           ],
-          { type: mimeType },
+          { type: mimeType }
         );
   const url = URL.createObjectURL(blob);
   const filename = getFilenameFromDisposition(
-    response.headers["content-disposition"],
-    format,
+    response.headers['content-disposition'],
+    format
   );
-  const anchor = document.createElement("a");
+  const anchor = document.createElement('a');
   anchor.href = url;
   anchor.download = filename;
   document.body.appendChild(anchor);

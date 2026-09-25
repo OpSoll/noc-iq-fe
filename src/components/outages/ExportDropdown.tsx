@@ -1,6 +1,6 @@
-import React, { useRef, useState, useEffect } from "react";
-import { exportOutages } from "../../services/exportService";
-import { ExportFormat, OutageExportFilters } from "../../types/export";
+import React, { useRef, useState, useEffect } from 'react';
+import { exportOutages } from '../../services/exportService';
+import { ExportFormat, OutageExportFilters } from '../../types/export';
 
 interface ExportDropdownProps {
   filters?: OutageExportFilters;
@@ -18,8 +18,8 @@ const ExportDropdown: React.FC<ExportDropdownProps> = ({ filters = {} }) => {
         setOpen(false);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const handleExport = async (format: ExportFormat) => {
@@ -29,7 +29,9 @@ const ExportDropdown: React.FC<ExportDropdownProps> = ({ filters = {} }) => {
     try {
       await exportOutages(format, filters);
     } catch {
-      setError(`Failed to export as ${format.toUpperCase()}. Please try again.`);
+      setError(
+        `Failed to export as ${format.toUpperCase()}. Please try again.`
+      );
     } finally {
       setLoading(null);
     }
@@ -84,12 +86,17 @@ const ExportDropdown: React.FC<ExportDropdownProps> = ({ filters = {} }) => {
             </svg>
             Export
             <svg
-              className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`}
+              className={`h-4 w-4 transition-transform ${open ? 'rotate-180' : ''}`}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 9l-7 7-7-7"
+              />
             </svg>
           </>
         )}
@@ -97,7 +104,7 @@ const ExportDropdown: React.FC<ExportDropdownProps> = ({ filters = {} }) => {
 
       {open && (
         <div className="absolute right-0 z-10 mt-1 w-40 rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
-          {(["csv", "json"] as ExportFormat[]).map((format) => (
+          {(['csv', 'json'] as ExportFormat[]).map((format) => (
             <button
               key={format}
               onClick={() => handleExport(format)}

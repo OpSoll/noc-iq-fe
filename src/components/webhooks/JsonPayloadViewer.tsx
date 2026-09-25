@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useState } from "react";
+import { useState } from 'react';
 
 interface JsonNodeProps {
   value: unknown;
@@ -14,13 +14,13 @@ function JsonNode({ value, depth = 0 }: JsonNodeProps) {
   if (value === null || value === undefined) {
     return <span className="text-slate-400">null</span>;
   }
-  if (typeof value === "string") {
+  if (typeof value === 'string') {
     return <span className="text-emerald-400">&quot;{value}&quot;</span>;
   }
-  if (typeof value === "number") {
+  if (typeof value === 'number') {
     return <span className="text-sky-400">{value}</span>;
   }
-  if (typeof value === "boolean") {
+  if (typeof value === 'boolean') {
     return <span className="text-purple-400">{String(value)}</span>;
   }
 
@@ -30,7 +30,7 @@ function JsonNode({ value, depth = 0 }: JsonNodeProps) {
     : Object.entries(value as Record<string, unknown>);
 
   if (entries.length === 0) {
-    return <span className="text-slate-400">{isArray ? "[]" : "{}"}</span>;
+    return <span className="text-slate-400">{isArray ? '[]' : '{}'}</span>;
   }
 
   return (
@@ -39,26 +39,28 @@ function JsonNode({ value, depth = 0 }: JsonNodeProps) {
         type="button"
         onClick={() => setCollapsed((c) => !c)}
         className="mr-1 text-slate-500 hover:text-slate-300"
-        aria-label={collapsed ? "Expand" : "Collapse"}
+        aria-label={collapsed ? 'Expand' : 'Collapse'}
       >
-        {collapsed ? "▶" : "▼"}
+        {collapsed ? '▶' : '▼'}
       </button>
-      {isArray ? "[" : "{"}
+      {isArray ? '[' : '{'}
       {collapsed ? (
         <span className="text-slate-500"> … {entries.length} items </span>
       ) : (
         <div className="ml-4">
           {entries.map(([key, val], i) => (
             <div key={key}>
-              {!isArray && <span className="text-rose-300">&quot;{key}&quot;</span>}
+              {!isArray && (
+                <span className="text-rose-300">&quot;{key}&quot;</span>
+              )}
               {!isArray && <span className="text-slate-500">: </span>}
               <JsonNode value={val} depth={depth + 1} />
-              {i < entries.length - 1 ? "," : ""}
+              {i < entries.length - 1 ? ',' : ''}
             </div>
           ))}
         </div>
       )}
-      {isArray ? "]" : "}"}
+      {isArray ? ']' : '}'}
     </span>
   );
 }
@@ -90,7 +92,7 @@ export function JsonPayloadViewer({ title, payload }: Props) {
           onClick={handleCopy}
           className="rounded border border-slate-700 px-2 py-0.5 text-slate-300 hover:bg-slate-800"
         >
-          {copied ? "Copied!" : "Copy"}
+          {copied ? 'Copied!' : 'Copy'}
         </button>
       </div>
       <div className="overflow-auto whitespace-pre-wrap break-words">

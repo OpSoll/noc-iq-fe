@@ -1,7 +1,7 @@
-export type PasswordStrengthLevel = "Weak" | "Medium" | "Strong";
+export type PasswordStrengthLevel = 'Weak' | 'Medium' | 'Strong';
 
 export function getPasswordStrength(score: number): PasswordStrengthLevel {
-  return score === 5 ? "Strong" : score >= 3 ? "Medium" : "Weak";
+  return score === 5 ? 'Strong' : score >= 3 ? 'Medium' : 'Weak';
 }
 
 export function validatePassword(password: string) {
@@ -19,7 +19,7 @@ export function validatePassword(password: string) {
     password_strength,
     validation_result,
     strength,
-    isStrong: strength === "Strong",
+    isStrong: strength === 'Strong',
   };
 }
 

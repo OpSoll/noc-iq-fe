@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 /**
  * OutagesTable
@@ -10,7 +10,7 @@
  * Closes #710 – Accessibility: Add ARIA sort attributes to data table header elements
  */
 
-import { useMemo, useState } from "react";
+import { useMemo, useState } from 'react';
 import {
   type ColumnDef,
   type SortingState,
@@ -18,8 +18,8 @@ import {
   getCoreRowModel,
   getSortedRowModel,
   useReactTable,
-} from "@tanstack/react-table";
-import type { Severity, OutageStatus } from "@/types/outages";
+} from '@tanstack/react-table';
+import type { Severity, OutageStatus } from '@/types/outages';
 
 // ─── Domain types ─────────────────────────────────────────────────────────────
 
@@ -45,25 +45,25 @@ export interface OutageRow {
  * column is present but ordering is not applicable.
  */
 export function toAriaSortValue(
-  isSorted: "asc" | "desc" | false,
-): "ascending" | "descending" | "none" {
-  if (isSorted === "asc") return "ascending";
-  if (isSorted === "desc") return "descending";
-  return "none";
+  isSorted: 'asc' | 'desc' | false
+): 'ascending' | 'descending' | 'none' {
+  if (isSorted === 'asc') return 'ascending';
+  if (isSorted === 'desc') return 'descending';
+  return 'none';
 }
 
 // ─── Status / Severity badge helpers ──────────────────────────────────────────
 
 const STATUS_CLASSES: Record<OutageStatus, string> = {
-  open: "bg-amber-100 text-amber-800",
-  resolved: "bg-emerald-100 text-emerald-800",
+  open: 'bg-amber-100 text-amber-800',
+  resolved: 'bg-emerald-100 text-emerald-800',
 };
 
 const SEVERITY_CLASSES: Record<Severity, string> = {
-  low: "bg-sky-100 text-sky-800",
-  medium: "bg-yellow-100 text-yellow-800",
-  high: "bg-orange-100 text-orange-800",
-  critical: "bg-red-100 text-red-800",
+  low: 'bg-sky-100 text-sky-800',
+  medium: 'bg-yellow-100 text-yellow-800',
+  high: 'bg-orange-100 text-orange-800',
+  critical: 'bg-red-100 text-red-800',
 };
 
 function StatusBadge({ status }: { status: OutageStatus }) {
@@ -88,11 +88,7 @@ function SeverityBadge({ severity }: { severity: Severity }) {
 
 // ─── Sort direction indicator icon ────────────────────────────────────────────
 
-function SortIndicator({
-  direction,
-}: {
-  direction: "asc" | "desc" | false;
-}) {
+function SortIndicator({ direction }: { direction: 'asc' | 'desc' | false }) {
   if (!direction) {
     return (
       <svg
@@ -113,7 +109,7 @@ function SortIndicator({
   }
   return (
     <svg
-      className={`h-3 w-3 transition-transform ${direction === "desc" ? "rotate-180" : ""}`}
+      className={`h-3 w-3 transition-transform ${direction === 'desc' ? 'rotate-180' : ''}`}
       fill="none"
       viewBox="0 0 24 24"
       stroke="currentColor"
@@ -134,32 +130,32 @@ function SortIndicator({
 function buildColumns(): ColumnDef<OutageRow>[] {
   return [
     {
-      id: "title",
-      accessorKey: "title",
-      header: "Title",
+      id: 'title',
+      accessorKey: 'title',
+      header: 'Title',
       enableSorting: true,
       cell: ({ row }) => (
         <span className="font-medium text-slate-900">{row.original.title}</span>
       ),
     },
     {
-      id: "severity",
-      accessorKey: "severity",
-      header: "Severity",
+      id: 'severity',
+      accessorKey: 'severity',
+      header: 'Severity',
       enableSorting: true,
       cell: ({ row }) => <SeverityBadge severity={row.original.severity} />,
     },
     {
-      id: "status",
-      accessorKey: "status",
-      header: "Status",
+      id: 'status',
+      accessorKey: 'status',
+      header: 'Status',
       enableSorting: true,
       cell: ({ row }) => <StatusBadge status={row.original.status} />,
     },
     {
-      id: "createdAt",
-      accessorKey: "createdAt",
-      header: "Created",
+      id: 'createdAt',
+      accessorKey: 'createdAt',
+      header: 'Created',
       enableSorting: true,
       cell: ({ row }) => (
         <span className="text-slate-600 text-xs">
@@ -201,17 +197,19 @@ export function OutagesTable({
   data,
   sorting: externalSorting,
   onSortingChange,
-  caption = "Outages",
+  caption = 'Outages',
 }: OutagesTableProps) {
   const [internalSorting, setInternalSorting] = useState<SortingState>([
-    { id: "createdAt", desc: true },
+    { id: 'createdAt', desc: true },
   ]);
 
   const isControlled = externalSorting !== undefined;
   const sorting = isControlled ? externalSorting : internalSorting;
 
-  const handleSortingChange = (updater: SortingState | ((prev: SortingState) => SortingState)) => {
-    const next = typeof updater === "function" ? updater(sorting) : updater;
+  const handleSortingChange = (
+    updater: SortingState | ((prev: SortingState) => SortingState)
+  ) => {
+    const next = typeof updater === 'function' ? updater(sorting) : updater;
     if (isControlled) {
       onSortingChange?.(next);
     } else {
@@ -256,7 +254,7 @@ export function OutagesTable({
                     scope="col"
                     aria-sort={toAriaSortValue(isSorted)}
                     className={`px-4 py-3 text-left text-xs font-semibold text-slate-700 whitespace-nowrap ${
-                      canSort ? "group" : ""
+                      canSort ? 'group' : ''
                     }`}
                   >
                     {canSort ? (
@@ -264,12 +262,9 @@ export function OutagesTable({
                         type="button"
                         onClick={h.column.getToggleSortingHandler()}
                         className="flex items-center gap-1.5 select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 rounded"
-                        aria-label={`Sort by ${typeof h.column.columnDef.header === "string" ? h.column.columnDef.header : h.id}, currently ${toAriaSortValue(isSorted)}`}
+                        aria-label={`Sort by ${typeof h.column.columnDef.header === 'string' ? h.column.columnDef.header : h.id}, currently ${toAriaSortValue(isSorted)}`}
                       >
-                        {flexRender(
-                          h.column.columnDef.header,
-                          h.getContext(),
-                        )}
+                        {flexRender(h.column.columnDef.header, h.getContext())}
                         <SortIndicator direction={isSorted} />
                       </button>
                     ) : (
@@ -294,10 +289,7 @@ export function OutagesTable({
             </tr>
           ) : (
             rows.map((row) => (
-              <tr
-                key={row.id}
-                className="transition-colors hover:bg-slate-50"
-              >
+              <tr key={row.id} className="transition-colors hover:bg-slate-50">
                 {row.getVisibleCells().map((cell) => (
                   <td key={cell.id} className="px-4 py-3">
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}

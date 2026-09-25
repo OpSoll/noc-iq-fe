@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 /**
  * Modal — accessible dialog with Escape key close handler (closes #707)
@@ -33,8 +33,8 @@
  * ```
  */
 
-import { useRef, useId, type ReactNode } from "react";
-import { useFocusTrap } from "@/hooks/useFocusTrap";
+import { useRef, useId, type ReactNode } from 'react';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 
 export interface ModalProps {
   /** Whether the modal is currently visible. */
@@ -74,7 +74,7 @@ export default function Modal({
   onClose,
   title,
   children,
-  maxWidth = "max-w-lg",
+  maxWidth = 'max-w-lg',
   disableBackdropClose = false,
 }: ModalProps) {
   const panelRef = useRef<HTMLDivElement>(null);
@@ -116,10 +116,7 @@ export default function Modal({
       >
         {/* Header */}
         <div className="flex items-center justify-between gap-4">
-          <h2
-            id={headingId}
-            className="text-lg font-semibold text-slate-900"
-          >
+          <h2 id={headingId} className="text-lg font-semibold text-slate-900">
             {title}
           </h2>
 

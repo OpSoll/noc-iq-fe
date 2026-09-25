@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { getPasswordStrength } from "@/hooks/usePasswordValidation";
+import { getPasswordStrength } from '@/hooks/usePasswordValidation';
 
 interface PasswordStrengthProps {
   password_strength: number;
@@ -11,9 +11,9 @@ export default function PasswordStrength({
 }: PasswordStrengthProps) {
   const strength = getPasswordStrength(password_strength);
   const color = {
-    Weak: "bg-red-500",
-    Medium: "bg-amber-500",
-    Strong: "bg-green-500",
+    Weak: 'bg-red-500',
+    Medium: 'bg-amber-500',
+    Strong: 'bg-green-500',
   }[strength];
   return (
     <div className="space-y-1">

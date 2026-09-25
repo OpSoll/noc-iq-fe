@@ -7,7 +7,7 @@ export type HealthScoreWeights = {
 
 export type HealthScoreResult = {
   score: number;
-  grade: "A" | "B" | "C" | "D" | "F";
+  grade: 'A' | 'B' | 'C' | 'D' | 'F';
   degradationHints: string[];
 };
 
@@ -23,16 +23,16 @@ export function calculateHealthScore(
   avgLatencyMs: number,
   uptimePercent: number,
   recentErrors: number,
-  weights: HealthScoreWeights = defaultWeights,
+  weights: HealthScoreWeights = defaultWeights
 ): HealthScoreResult {
   const latencyScore = Math.max(0, 100 - avgLatencyMs / 10);
   const errorScore = Math.max(0, 100 - recentErrors * 10);
 
   const score = Math.round(
     successRate * weights.successRate +
-    latencyScore * weights.avgLatency +
-    uptimePercent * weights.uptime +
-    errorScore * weights.recentErrors,
+      latencyScore * weights.avgLatency +
+      uptimePercent * weights.uptime +
+      errorScore * weights.recentErrors
   );
 
   const hints: string[] = [];
@@ -41,8 +41,16 @@ export function calculateHealthScore(
   if (uptimePercent < 99) hints.push(`Uptime (${uptimePercent}%) below 99%`);
   if (recentErrors > 5) hints.push(`${recentErrors} recent errors detected`);
 
-  const grade: HealthScoreResult["grade"] =
-    score >= 90 ? "A" : score >= 75 ? "B" : score >= 60 ? "C" : score >= 40 ? "D" : "F";
+  const grade: HealthScoreResult['grade'] =
+    score >= 90
+      ? 'A'
+      : score >= 75
+        ? 'B'
+        : score >= 60
+          ? 'C'
+          : score >= 40
+            ? 'D'
+            : 'F';
 
   return { score, grade, degradationHints: hints };
 }

@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {
   DropdownMenu,
@@ -7,13 +7,13 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useNotifications } from "@/components/ui/toast";
+} from '@/components/ui/dropdown-menu';
+import { useNotifications } from '@/components/ui/toast';
 
 export function NotificationBell() {
   const { notifications, markAllAsRead } = useNotifications();
   const unread = notifications.filter(
-    (notification) => !notification.read,
+    (notification) => !notification.read
   ).length;
 
   return (
@@ -71,7 +71,7 @@ export function NotificationBell() {
             {notifications.map((notification) => (
               <li
                 key={notification.id}
-                className={`break-words border-b border-slate-100 p-3 text-sm ${notification.read ? "text-slate-600" : "bg-indigo-50 font-medium"}`}
+                className={`break-words border-b border-slate-100 p-3 text-sm ${notification.read ? 'text-slate-600' : 'bg-indigo-50 font-medium'}`}
               >
                 {!notification.read && (
                   <span className="sr-only">Unread: </span>

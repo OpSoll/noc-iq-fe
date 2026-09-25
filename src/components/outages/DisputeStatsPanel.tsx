@@ -1,23 +1,23 @@
-"use client";
+'use client';
 
-import { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getDisputes } from "@/services/sla";
-import type { DisputeStatus, SLADispute } from "@/types/sla";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { getDisputes } from '@/services/sla';
+import type { DisputeStatus, SLADispute } from '@/types/sla';
 
 import {
   computeDisputeKpis,
   computeMonthlyTrend,
   type MonthlyTrendPoint,
-} from "./disputeStats";
+} from './disputeStats';
 
 const TREND_BAR_HEIGHT = 96;
 
 interface Props {
   outageId: string;
-  statusFilter: DisputeStatus | "";
+  statusFilter: DisputeStatus | '';
 }
 
 function TrendChart({ points }: { points: MonthlyTrendPoint[] }) {
@@ -55,7 +55,7 @@ function TrendChart({ points }: { points: MonthlyTrendPoint[] }) {
                   className="fill-slate-400"
                   fontSize={9}
                 >
-                  {p.label.split(" ")[0]}
+                  {p.label.split(' ')[0]}
                 </text>
               </g>
             );
@@ -74,7 +74,7 @@ function TrendChart({ points }: { points: MonthlyTrendPoint[] }) {
  */
 export function DisputeStats({ outageId, statusFilter }: Props) {
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["sla-disputes-stats", outageId, statusFilter],
+    queryKey: ['sla-disputes-stats', outageId, statusFilter],
     queryFn: () =>
       getDisputes({
         outage_id: outageId,
@@ -92,21 +92,22 @@ export function DisputeStats({ outageId, statusFilter }: Props) {
   const trend = useMemo(() => computeMonthlyTrend(disputes), [disputes]);
 
   const cards: Array<{ label: string; value: string; hint?: string }> = [
-    { label: "Total Disputes", value: String(kpis.total) },
+    { label: 'Total Disputes', value: String(kpis.total) },
     {
-      label: "Pending Approval",
+      label: 'Pending Approval',
       value: String(kpis.pendingApproval),
-      hint: "open + under review",
+      hint: 'open + under review',
     },
     {
-      label: "Approval Rate",
-      value: kpis.total === 0 ? "—" : `${kpis.approvalRatePct}%`,
-      hint: "resolved of decided",
+      label: 'Approval Rate',
+      value: kpis.total === 0 ? '—' : `${kpis.approvalRatePct}%`,
+      hint: 'resolved of decided',
     },
     {
-      label: "Avg Resolution Time",
-      value: kpis.avgResolutionHours === null ? "—" : `${kpis.avgResolutionHours}h`,
-      hint: kpis.avgResolutionHours === null ? "no resolutions yet" : undefined,
+      label: 'Avg Resolution Time',
+      value:
+        kpis.avgResolutionHours === null ? '—' : `${kpis.avgResolutionHours}h`,
+      hint: kpis.avgResolutionHours === null ? 'no resolutions yet' : undefined,
     },
   ];
 
@@ -115,7 +116,11 @@ export function DisputeStats({ outageId, statusFilter }: Props) {
       <CardHeader className="space-y-1 pb-3">
         <CardTitle>Dispute statistics</CardTitle>
         <p className="text-sm text-slate-500">
-          Volume and resolution efficiency{statusFilter ? ` — filtered by ${statusFilter.replace("_", " ")}` : ""}.
+          Volume and resolution efficiency
+          {statusFilter
+            ? ` — filtered by ${statusFilter.replace('_', ' ')}`
+            : ''}
+          .
         </p>
       </CardHeader>
 
@@ -133,7 +138,9 @@ export function DisputeStats({ outageId, statusFilter }: Props) {
             ))}
           </div>
         ) : isError ? (
-          <p className="text-xs text-red-600">Failed to load dispute statistics.</p>
+          <p className="text-xs text-red-600">
+            Failed to load dispute statistics.
+          </p>
         ) : (
           <>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -149,7 +156,9 @@ export function DisputeStats({ outageId, statusFilter }: Props) {
                     {card.value}
                   </p>
                   {card.hint ? (
-                    <p className="mt-1 text-[11px] text-slate-400">{card.hint}</p>
+                    <p className="mt-1 text-[11px] text-slate-400">
+                      {card.hint}
+                    </p>
                   ) : null}
                 </div>
               ))}

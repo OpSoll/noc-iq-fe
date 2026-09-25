@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 /**
  * mutationTracker.ts
@@ -28,10 +28,10 @@ export interface PendingMutation {
   timestamp: number;
 }
 
-const MUTATIONS_KEY = "noc_pending_mutations";
+const MUTATIONS_KEY = 'noc_pending_mutations';
 
 export function getPendingMutations(): PendingMutation[] {
-  if (typeof window === "undefined") return [];
+  if (typeof window === 'undefined') return [];
   try {
     const raw = sessionStorage.getItem(MUTATIONS_KEY);
     return raw ? JSON.parse(raw) : [];
@@ -41,7 +41,7 @@ export function getPendingMutations(): PendingMutation[] {
 }
 
 export function addPendingMutation(mutation: PendingMutation): void {
-  if (typeof window === "undefined") return;
+  if (typeof window === 'undefined') return;
   const existing = getPendingMutations();
   existing.push(mutation);
   try {
@@ -61,7 +61,7 @@ export function clearPendingMutation(id: string): void {
 }
 
 export function clearAllPendingMutations(): void {
-  if (typeof window === "undefined") return;
+  if (typeof window === 'undefined') return;
   try {
     sessionStorage.removeItem(MUTATIONS_KEY);
   } catch {
@@ -124,16 +124,16 @@ export class MutationTrackerError extends Error {
   constructor(summary: MutationFailureSummary) {
     const rolledBack =
       summary.rolledBack.length > 0
-        ? ` Rolled back: ${summary.rolledBack.join(", ")}.`
-        : "";
+        ? ` Rolled back: ${summary.rolledBack.join(', ')}.`
+        : '';
     super(
       `Mutation failed at step "${summary.failedStep}": ${
         summary.error instanceof Error
           ? summary.error.message
           : String(summary.error)
-      }.${rolledBack}`,
+      }.${rolledBack}`
     );
-    this.name = "MutationTrackerError";
+    this.name = 'MutationTrackerError';
     this.summary = summary;
   }
 }
@@ -252,7 +252,7 @@ export class MutationTracker<TResults extends unknown[] = unknown[]> {
  * ```
  */
 export async function runTrackedMutation<T extends unknown[]>(
-  steps: MutationStep[],
+  steps: MutationStep[]
 ): Promise<T> {
   const tracker = new MutationTracker();
   for (const step of steps) {

@@ -1,22 +1,22 @@
-"use client";
+'use client';
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef } from 'react';
 
-type Theme = "light" | "dark" | "system";
-const STORAGE_KEY = "noc_theme";
-const DARK_QUERY = "(prefers-color-scheme: dark)";
+type Theme = 'light' | 'dark' | 'system';
+const STORAGE_KEY = 'noc_theme';
+const DARK_QUERY = '(prefers-color-scheme: dark)';
 
 function parseTheme(value: string | null): Theme {
-  return value === "light" || value === "dark" ? value : "system";
+  return value === 'light' || value === 'dark' ? value : 'system';
 }
 
 function applyTheme(theme: Theme) {
   const dark =
-    theme === "dark" ||
-    (theme === "system" && window.matchMedia(DARK_QUERY).matches);
+    theme === 'dark' ||
+    (theme === 'system' && window.matchMedia(DARK_QUERY).matches);
   const root = document.documentElement;
-  root.classList.toggle("dark", dark);
-  root.classList.toggle("light", !dark);
+  root.classList.toggle('dark', dark);
+  root.classList.toggle('light', !dark);
 }
 
 export function ThemeSwitcher() {
@@ -28,13 +28,13 @@ export function ThemeSwitcher() {
       select.value = parseTheme(localStorage.getItem(STORAGE_KEY));
     } catch {
       // The system default still works when browser storage is unavailable.
-      select.value = "system";
+      select.value = 'system';
     }
     applyTheme(parseTheme(select.value));
 
     const media = window.matchMedia(DARK_QUERY);
     const onSystemChange = () => {
-      if (select.value === "system") applyTheme("system");
+      if (select.value === 'system') applyTheme('system');
     };
     const onStorage = (event: StorageEvent) => {
       if (event.key === STORAGE_KEY || event.key === null) {
@@ -42,11 +42,11 @@ export function ThemeSwitcher() {
         applyTheme(parseTheme(select.value));
       }
     };
-    media.addEventListener("change", onSystemChange);
-    window.addEventListener("storage", onStorage);
+    media.addEventListener('change', onSystemChange);
+    window.addEventListener('storage', onStorage);
     return () => {
-      media.removeEventListener("change", onSystemChange);
-      window.removeEventListener("storage", onStorage);
+      media.removeEventListener('change', onSystemChange);
+      window.removeEventListener('storage', onStorage);
     };
   }, []);
 

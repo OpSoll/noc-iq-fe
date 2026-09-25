@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { ErrorState } from "@/components/shared/ErrorState";
+import { ErrorState } from '@/components/shared/ErrorState';
 
 export default function Error({
   error,
@@ -11,7 +11,7 @@ export default function Error({
     <div className="p-6">
       <ErrorState
         error={{
-          message: error?.message || "Unexpected error",
+          message: error?.message || 'Unexpected error',
           correlationId: error?.correlationId,
         }}
       />

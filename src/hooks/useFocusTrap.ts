@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { RefObject, useEffect } from "react";
+import { RefObject, useEffect } from 'react';
 
 const FOCUSABLE =
   'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
@@ -13,7 +13,7 @@ const FOCUSABLE =
 export function useFocusTrap(
   containerRef: RefObject<HTMLElement | null>,
   open: boolean,
-  onClose: () => void,
+  onClose: () => void
 ) {
   useEffect(() => {
     if (!open) return;
@@ -28,15 +28,17 @@ export function useFocusTrap(
     function handleKeyDown(event: KeyboardEvent) {
       if (!container) return;
 
-      if (event.key === "Escape") {
+      if (event.key === 'Escape') {
         event.preventDefault();
         onClose();
         return;
       }
 
-      if (event.key !== "Tab") return;
+      if (event.key !== 'Tab') return;
 
-      const focusable = Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE));
+      const focusable = Array.from(
+        container.querySelectorAll<HTMLElement>(FOCUSABLE)
+      );
       if (focusable.length === 0) return;
 
       const first = focusable[0];
@@ -51,9 +53,9 @@ export function useFocusTrap(
       }
     }
 
-    document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener('keydown', handleKeyDown);
     return () => {
-      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener('keydown', handleKeyDown);
       trigger?.focus();
     };
   }, [open, containerRef, onClose]);

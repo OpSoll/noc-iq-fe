@@ -8,22 +8,22 @@
 
 export type FeatureFlag = string;
 
-const FLAG_PREFIX = "NEXT_PUBLIC_FLAG_";
+const FLAG_PREFIX = 'NEXT_PUBLIC_FLAG_';
 
 // ── Known flags ─────────────────────────────────────────────────────────────
 
 const KNOWN_FLAGS: Record<string, { default: boolean; description: string }> = {
   admin_error_budget: {
     default: false,
-    description: "Enable the error-budget dashboard at /admin/error-budget",
+    description: 'Enable the error-budget dashboard at /admin/error-budget',
   },
   otel_tracing: {
     default: false,
-    description: "Enable route-level OpenTelemetry span instrumentation",
+    description: 'Enable route-level OpenTelemetry span instrumentation',
   },
   compare_mode: {
     default: true,
-    description: "Enable SLA dashboard compare mode",
+    description: 'Enable SLA dashboard compare mode',
   },
 };
 
@@ -39,11 +39,11 @@ function readEnvFlag(key: string): boolean | undefined {
   const envKey = `${FLAG_PREFIX}${key.toUpperCase()}`;
   const val = process.env[envKey];
   if (val === undefined) return undefined;
-  return val === "true" || val === "1";
+  return val === 'true' || val === '1';
 }
 
 function readRuntimeOverride(key: string): boolean | undefined {
-  if (typeof window === "undefined") return undefined;
+  if (typeof window === 'undefined') return undefined;
   return window.__FEATURE_FLAGS?.[key];
 }
 
@@ -61,16 +61,22 @@ export function isFeatureEnabled(flag: FeatureFlag): boolean {
   return false;
 }
 
-export function getKnownFlags(): Record<string, { enabled: boolean; description: string }> {
+export function getKnownFlags(): Record<
+  string,
+  { enabled: boolean; description: string }
+> {
   const result: Record<string, { enabled: boolean; description: string }> = {};
   for (const [key, meta] of Object.entries(KNOWN_FLAGS)) {
-    result[key] = { enabled: isFeatureEnabled(key), description: meta.description };
+    result[key] = {
+      enabled: isFeatureEnabled(key),
+      description: meta.description,
+    };
   }
   return result;
 }
 
 export function setFeatureFlag(flag: FeatureFlag, enabled: boolean): void {
-  if (typeof window !== "undefined") {
+  if (typeof window !== 'undefined') {
     if (!window.__FEATURE_FLAGS) window.__FEATURE_FLAGS = {};
     window.__FEATURE_FLAGS[flag] = enabled;
   }

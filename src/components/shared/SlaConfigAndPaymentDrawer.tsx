@@ -1,5 +1,5 @@
-"use client";
-import { useState } from "react";
+'use client';
+import { useState } from 'react';
 // Closes #371: SLA config editor with live preview and validation feedback
 // Closes #372: payment detail drawer with transaction chain timeline
 // Closes #492: confirm before discarding unsaved changes on close
@@ -13,7 +13,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from '@/components/ui/alert-dialog';
 
 export interface SlaSeverityConfig {
   thresholdMinutes: number;
@@ -50,31 +50,58 @@ export function SlaConfigEditor({
 
   return (
     <>
-      <form onSubmit={(e) => { e.preventDefault(); if (!invalid) onSave(draft); }} className="space-y-2 text-sm">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (!invalid) onSave(draft);
+        }}
+        className="space-y-2 text-sm"
+      >
         <label className="flex justify-between">
           Threshold (min)
-          <input type="number" value={draft.thresholdMinutes}
-            onChange={(e) => setDraft({ ...draft, thresholdMinutes: Number(e.target.value) })} />
+          <input
+            type="number"
+            value={draft.thresholdMinutes}
+            onChange={(e) =>
+              setDraft({ ...draft, thresholdMinutes: Number(e.target.value) })
+            }
+          />
         </label>
         <label className="flex justify-between">
           Penalty/min
-          <input type="number" value={draft.penaltyPerMinute}
-            onChange={(e) => setDraft({ ...draft, penaltyPerMinute: Number(e.target.value) })} />
+          <input
+            type="number"
+            value={draft.penaltyPerMinute}
+            onChange={(e) =>
+              setDraft({ ...draft, penaltyPerMinute: Number(e.target.value) })
+            }
+          />
         </label>
-        {invalid && <p className="text-destructive">Threshold and penalty must be positive.</p>}
+        {invalid && (
+          <p className="text-destructive">
+            Threshold and penalty must be positive.
+          </p>
+        )}
         <div className="flex justify-end gap-2">
-          <button type="button" onClick={requestClose}>Close</button>
-          <button type="submit" disabled={invalid}>Save</button>
+          <button type="button" onClick={requestClose}>
+            Close
+          </button>
+          <button type="submit" disabled={invalid}>
+            Save
+          </button>
         </div>
       </form>
 
-      <AlertDialog open={showDiscardConfirm} onOpenChange={setShowDiscardConfirm}>
+      <AlertDialog
+        open={showDiscardConfirm}
+        onOpenChange={setShowDiscardConfirm}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Discard unsaved changes?</AlertDialogTitle>
             <AlertDialogDescription>
-              You have unsaved edits to this SLA configuration. Closing now
-              will discard them.
+              You have unsaved edits to this SLA configuration. Closing now will
+              discard them.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -99,7 +126,11 @@ export interface PaymentTimelineStep {
   label: string;
   timestamp: string;
 }
-export function PaymentDetailDrawer({ steps }: { steps: PaymentTimelineStep[] }) {
+export function PaymentDetailDrawer({
+  steps,
+}: {
+  steps: PaymentTimelineStep[];
+}) {
   return (
     <aside className="w-80 border-l p-4">
       <h3 className="text-sm font-semibold mb-2">Transaction Timeline</h3>
@@ -107,7 +138,9 @@ export function PaymentDetailDrawer({ steps }: { steps: PaymentTimelineStep[] })
         {steps.map((s, i) => (
           <li key={i} className="flex justify-between">
             <span>{s.label}</span>
-            <span className="text-muted-foreground">{new Date(s.timestamp).toLocaleString()}</span>
+            <span className="text-muted-foreground">
+              {new Date(s.timestamp).toLocaleString()}
+            </span>
           </li>
         ))}
       </ol>

@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 /**
  * SLA result re-simulation (opsoll/noc-iq-fe#498).
@@ -8,12 +8,12 @@
  * simulated penalty amount side by side with the original SLA result.
  */
 
-import { useState } from "react";
+import { useState } from 'react';
 
-import Modal from "@/components/ui/modal";
-import { Button } from "@/components/ui/button";
-import { previewSLA } from "@/services/sla";
-import type { SLAResult } from "@/types/sla";
+import Modal from '@/components/ui/modal';
+import { Button } from '@/components/ui/button';
+import { previewSLA } from '@/services/sla';
+import type { SLAResult } from '@/types/sla';
 
 interface SLAReSimulateModalProps {
   isOpen: boolean;
@@ -31,8 +31,8 @@ export default function SLAReSimulateModal({
   severity,
   originalResult,
 }: SLAReSimulateModalProps) {
-  const [mttr, setMttr] = useState<number | "">(
-    originalResult?.mttr_minutes ?? "",
+  const [mttr, setMttr] = useState<number | ''>(
+    originalResult?.mttr_minutes ?? ''
   );
   const [simulated, setSimulated] = useState<SLAResult | null>(null);
   const [running, setRunning] = useState(false);
@@ -46,12 +46,12 @@ export default function SLAReSimulateModal({
     setError(null);
 
     const mttrMinutes = Number(mttr);
-    if (mttr === "" || Number.isNaN(mttrMinutes)) {
-      setError("Enter MTTR minutes to re-simulate.");
+    if (mttr === '' || Number.isNaN(mttrMinutes)) {
+      setError('Enter MTTR minutes to re-simulate.');
       return;
     }
     if (mttrMinutes < 0) {
-      setError("MTTR minutes cannot be negative.");
+      setError('MTTR minutes cannot be negative.');
       return;
     }
 
@@ -65,7 +65,7 @@ export default function SLAReSimulateModal({
       });
       setSimulated(result);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Simulation failed.");
+      setError(err instanceof Error ? err.message : 'Simulation failed.');
     } finally {
       setRunning(false);
     }
@@ -83,7 +83,7 @@ export default function SLAReSimulateModal({
     >
       <div className="space-y-4">
         <p className="text-xs text-slate-500">
-          Re-runs the SLA contract calculation with a modified MTTR for outage{" "}
+          Re-runs the SLA contract calculation with a modified MTTR for outage{' '}
           <span className="font-mono">{outageId}</span>. Simulation results are
           informational only and are not persisted.
         </p>
@@ -102,7 +102,7 @@ export default function SLAReSimulateModal({
               min={0}
               value={mttr}
               onChange={(e) => {
-                setMttr(e.target.value === "" ? "" : Number(e.target.value));
+                setMttr(e.target.value === '' ? '' : Number(e.target.value));
                 setError(null);
               }}
               placeholder="MTTR in minutes..."
@@ -112,7 +112,7 @@ export default function SLAReSimulateModal({
           </div>
 
           <Button onClick={runSimulation} disabled={running}>
-            {running ? "Simulating..." : "Re-simulate SLA Calculation"}
+            {running ? 'Simulating...' : 'Re-simulate SLA Calculation'}
           </Button>
         </div>
 
@@ -136,7 +136,7 @@ export default function SLAReSimulateModal({
                   <tr>
                     <td className="px-3 py-2 text-slate-600">MTTR (min)</td>
                     <td className="px-3 py-2 font-mono">
-                      {original?.mttr_minutes ?? "—"}
+                      {original?.mttr_minutes ?? '—'}
                     </td>
                     <td className="px-3 py-2 font-mono">
                       {simulated.mttr_minutes}
@@ -144,7 +144,7 @@ export default function SLAReSimulateModal({
                   </tr>
                   <tr>
                     <td className="px-3 py-2 text-slate-600">Status</td>
-                    <td className="px-3 py-2">{original?.status ?? "—"}</td>
+                    <td className="px-3 py-2">{original?.status ?? '—'}</td>
                     <td className="px-3 py-2">{simulated.status}</td>
                   </tr>
                   <tr>
@@ -152,13 +152,13 @@ export default function SLAReSimulateModal({
                       Amount {original?.payment_type ?? simulated.payment_type}
                     </td>
                     <td className="px-3 py-2 font-mono">
-                      {original?.amount ?? "—"}
+                      {original?.amount ?? '—'}
                     </td>
                     <td
                       className={`px-3 py-2 font-mono font-semibold ${
                         penaltyDelta !== null && penaltyDelta !== 0
-                          ? "text-amber-700"
-                          : "text-slate-900"
+                          ? 'text-amber-700'
+                          : 'text-slate-900'
                       }`}
                     >
                       {simulated.amount}
@@ -166,7 +166,7 @@ export default function SLAReSimulateModal({
                   </tr>
                   <tr>
                     <td className="px-3 py-2 text-slate-600">Rating</td>
-                    <td className="px-3 py-2">{original?.rating ?? "—"}</td>
+                    <td className="px-3 py-2">{original?.rating ?? '—'}</td>
                     <td className="px-3 py-2">{simulated.rating}</td>
                   </tr>
                 </tbody>
@@ -175,9 +175,9 @@ export default function SLAReSimulateModal({
 
             {penaltyDelta !== null && penaltyDelta !== 0 ? (
               <p className="text-xs text-amber-700">
-                Simulated{" "}
-                {simulated.payment_type === "penalty" ? "penalty" : "reward"}{" "}
-                differs from the original by{" "}
+                Simulated{' '}
+                {simulated.payment_type === 'penalty' ? 'penalty' : 'reward'}{' '}
+                differs from the original by{' '}
                 <span className="font-mono font-semibold">{penaltyDelta}</span>.
               </p>
             ) : (

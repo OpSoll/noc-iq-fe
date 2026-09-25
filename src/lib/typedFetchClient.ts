@@ -5,11 +5,18 @@ export interface FetchClientOptions extends RequestInit {
   baseUrl?: string;
 }
 
-export async function typedFetch<T>(path: string, opts: FetchClientOptions = {}): Promise<T> {
-  const { baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api/v1", ...rest } = opts;
+export async function typedFetch<T>(
+  path: string,
+  opts: FetchClientOptions = {}
+): Promise<T> {
+  const {
+    baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ??
+      'http://localhost:8000/api/v1',
+    ...rest
+  } = opts;
   const res = await fetch(`${baseUrl}${path}`, {
-    credentials: "include",
-    headers: { "Content-Type": "application/json", ...rest.headers },
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', ...rest.headers },
     ...rest,
   });
   if (!res.ok) {
@@ -29,7 +36,7 @@ export interface HealResult<T> {
 export function validateAndHeal<T>(
   cache: Map<string, unknown>,
   key: string,
-  isValid: CacheShapeValidator<T>,
+  isValid: CacheShapeValidator<T>
 ): HealResult<T> {
   const entry = cache.get(key);
   if (entry !== undefined && isValid(entry)) {

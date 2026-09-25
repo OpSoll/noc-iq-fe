@@ -5,34 +5,34 @@
 
 /** Fields that should be redacted regardless of nesting depth */
 const SENSITIVE_KEYS = new Set([
-  "password",
-  "passwd",
-  "secret",
-  "token",
-  "access_token",
-  "refresh_token",
-  "api_key",
-  "apikey",
-  "authorization",
-  "auth",
-  "private_key",
-  "privatekey",
-  "client_secret",
-  "clientsecret",
-  "credentials",
-  "credential",
-  "ssn",
-  "cvv",
-  "card_number",
-  "cardnumber",
-  "account_number",
-  "accountnumber",
+  'password',
+  'passwd',
+  'secret',
+  'token',
+  'access_token',
+  'refresh_token',
+  'api_key',
+  'apikey',
+  'authorization',
+  'auth',
+  'private_key',
+  'privatekey',
+  'client_secret',
+  'clientsecret',
+  'credentials',
+  'credential',
+  'ssn',
+  'cvv',
+  'card_number',
+  'cardnumber',
+  'account_number',
+  'accountnumber',
 ]);
 
-export const REDACTED_PLACEHOLDER = "[REDACTED]";
+export const REDACTED_PLACEHOLDER = '[REDACTED]';
 
 function isSensitiveKey(key: string): boolean {
-  return SENSITIVE_KEYS.has(key.toLowerCase().replace(/[-_\s]/g, ""));
+  return SENSITIVE_KEYS.has(key.toLowerCase().replace(/[-_\s]/g, ''));
 }
 
 /**
@@ -40,7 +40,7 @@ function isSensitiveKey(key: string): boolean {
  * Returns a new object; the original is never mutated.
  */
 export function redactObject(value: unknown): unknown {
-  if (value === null || typeof value !== "object") return value;
+  if (value === null || typeof value !== 'object') return value;
 
   if (Array.isArray(value)) {
     return value.map(redactObject);

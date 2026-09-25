@@ -1,18 +1,18 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { api } from "@/lib/api";
-import usePasswordValidation from "@/hooks/usePasswordValidation";
-import PasswordStrength from "@/components/auth/PasswordStrength";
-import PasswordValidation from "@/components/auth/PasswordValidation";
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { api } from '@/lib/api';
+import usePasswordValidation from '@/hooks/usePasswordValidation';
+import PasswordStrength from '@/components/auth/PasswordStrength';
+import PasswordValidation from '@/components/auth/PasswordValidation';
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirm, setConfirm] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const { password_strength, validation_result, isStrong } =
@@ -26,26 +26,26 @@ export default function RegisterPage() {
     setError(null);
 
     if (password !== confirm) {
-      setError("Passwords do not match.");
+      setError('Passwords do not match.');
       return;
     }
     if (!isStrong) {
-      setError("Password must meet all five requirements.");
+      setError('Password must meet all five requirements.');
       return;
     }
 
     setLoading(true);
     try {
-      await api.post("/auth/register", { email, password });
+      await api.post('/auth/register', { email, password });
       // Auto-login after registration
-      await api.post("/auth/login", { email, password });
-      router.push("/");
+      await api.post('/auth/login', { email, password });
+      router.push('/');
       router.refresh();
     } catch (err) {
       setError(
         err instanceof Error
           ? err.message
-          : "Registration failed. Please try again.",
+          : 'Registration failed. Please try again.'
       );
     } finally {
       setLoading(false);
@@ -129,7 +129,7 @@ export default function RegisterPage() {
             }
             aria-describedby={
               confirm.length > 0 && !passwordsMatch
-                ? "confirm-password-error"
+                ? 'confirm-password-error'
                 : undefined
             }
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
@@ -155,12 +155,12 @@ export default function RegisterPage() {
           disabled={loading || !isStrong || !passwordsMatch}
           className="w-full rounded-lg bg-blue-600 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
         >
-          {loading ? "Creating account…" : "Create account"}
+          {loading ? 'Creating account…' : 'Create account'}
         </button>
       </form>
 
       <p className="text-center text-sm text-gray-500">
-        Already have an account?{" "}
+        Already have an account?{' '}
         <Link href="/login" className="text-blue-600 hover:underline">
           Sign in
         </Link>

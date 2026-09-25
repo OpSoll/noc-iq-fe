@@ -58,7 +58,7 @@ input:focus-visible,
 select:focus-visible,
 textarea:focus-visible,
 a:focus-visible,
-[role="button"]:focus-visible {
+[role='button']:focus-visible {
   outline: 2px solid #6366f1 !important;
   outline-offset: 2px !important;
   box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.4) !important;
@@ -79,13 +79,13 @@ html.a11y-high-contrast a {
 }
 
 html.a11y-high-contrast button,
-html.a11y-high-contrast [role="button"] {
+html.a11y-high-contrast [role='button'] {
   outline: 2px solid transparent;
   outline-offset: 2px;
 }
 
 html.a11y-high-contrast button:focus-visible,
-html.a11y-high-contrast [role="button"]:focus-visible,
+html.a11y-high-contrast [role='button']:focus-visible,
 html.a11y-high-contrast a:focus-visible,
 html.a11y-high-contrast input:focus-visible,
 html.a11y-high-contrast select:focus-visible {
@@ -208,7 +208,7 @@ html.a11y-reduced-motion .transition-transform {
 
   .animate-spin,
   .animate-pulse,
-  [role="status"],
+  [role='status'],
   .spinner {
     display: none !important;
   }

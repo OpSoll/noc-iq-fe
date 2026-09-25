@@ -1,26 +1,27 @@
-import { useEffect, useRef } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useRef } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 // Closes #345: optimistic UI updates for outage status changes
 // Closes #346: focus restoration when a modal/drawer closes
 
-export function useOptimisticStatusUpdate<T extends { id: string; status: string }>(
-  queryKey: unknown[],
-  mutateFn: (id: string, status: string) => Promise<T>,
-) {
+export function useOptimisticStatusUpdate<
+  T extends { id: string; status: string },
+>(queryKey: unknown[], mutateFn: (id: string, status: string) => Promise<T>) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, status }: { id: string; status: string }) => mutateFn(id, status),
+    mutationFn: ({ id, status }: { id: string; status: string }) =>
+      mutateFn(id, status),
     onMutate: async ({ id, status }) => {
       await queryClient.cancelQueries({ queryKey });
       const previous = queryClient.getQueryData<T[]>(queryKey);
       queryClient.setQueryData<T[]>(queryKey, (old) =>
-        old?.map((item) => (item.id === id ? { ...item, status } : item)),
+        old?.map((item) => (item.id === id ? { ...item, status } : item))
       );
       return { previous };
     },
     onError: (_err, _vars, context) => {
-      if (context?.previous) queryClient.setQueryData(queryKey, context.previous);
+      if (context?.previous)
+        queryClient.setQueryData(queryKey, context.previous);
     },
     onSettled: () => queryClient.invalidateQueries({ queryKey }),
   });

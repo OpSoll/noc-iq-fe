@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 /**
  * useMutationToast
@@ -17,9 +17,9 @@ import {
   type UseMutationOptions,
   type UseMutationResult,
   useMutation,
-} from "@tanstack/react-query";
-import { useToast } from "@/components/ui/toast";
-import { normalizeApiError } from "@/lib/api";
+} from '@tanstack/react-query';
+import { useToast } from '@/components/ui/toast';
+import { normalizeApiError } from '@/lib/api';
 
 // ─── Public types ─────────────────────────────────────────────────────────────
 
@@ -43,11 +43,15 @@ export interface ToastAction {
  * toast has been triggered, so callers retain full control over
  * side-effects (e.g. cache invalidation).
  */
-export interface MutationToastOptions<TData, TError, TVariables, TContext>
-  extends Omit<
-    UseMutationOptions<TData, TError, TVariables, TContext>,
-    "onSuccess" | "onError"
-  > {
+export interface MutationToastOptions<
+  TData,
+  TError,
+  TVariables,
+  TContext,
+> extends Omit<
+  UseMutationOptions<TData, TError, TVariables, TContext>,
+  'onSuccess' | 'onError'
+> {
   /**
    * Message shown in the success toast.
    * Accepts a static string or a factory that receives the mutation
@@ -79,8 +83,13 @@ export interface MutationToastOptions<TData, TError, TVariables, TContext>
   showRetry?: boolean;
 
   /** Pass-through callbacks; both are called after the toast fires. */
-  onSuccess?: UseMutationOptions<TData, TError, TVariables, TContext>["onSuccess"];
-  onError?: UseMutationOptions<TData, TError, TVariables, TContext>["onError"];
+  onSuccess?: UseMutationOptions<
+    TData,
+    TError,
+    TVariables,
+    TContext
+  >['onSuccess'];
+  onError?: UseMutationOptions<TData, TError, TVariables, TContext>['onError'];
 }
 
 // ─── Implementation ───────────────────────────────────────────────────────────
@@ -105,7 +114,7 @@ export function useMutationToast<
   TVariables = void,
   TContext = unknown,
 >(
-  options: MutationToastOptions<TData, TError, TVariables, TContext>,
+  options: MutationToastOptions<TData, TError, TVariables, TContext>
 ): UseMutationResult<TData, TError, TVariables, TContext> {
   const toast = useToast();
 
@@ -125,13 +134,13 @@ export function useMutationToast<
     onSuccess(data, variables, onMutateResult, context) {
       // ── Build the success message ──────────────────────────────────
       const msg =
-        typeof successMessage === "function"
+        typeof successMessage === 'function'
           ? successMessage(data)
-          : (successMessage ?? "Action completed successfully");
+          : (successMessage ?? 'Action completed successfully');
 
       // ── Resolve optional action link ───────────────────────────────
       const action =
-        typeof successAction === "function"
+        typeof successAction === 'function'
           ? successAction(data)
           : successAction;
 
@@ -142,7 +151,7 @@ export function useMutationToast<
           ? `${msg} — ${action.label}`
           : msg;
 
-      toast(fullMsg, "success");
+      toast(fullMsg, 'success');
 
       userOnSuccess?.(data, variables, onMutateResult, context);
     },
@@ -150,13 +159,13 @@ export function useMutationToast<
     onError(error, variables, onMutateResult, context) {
       // ── Parse the error message ────────────────────────────────────
       const msg =
-        typeof errorMessage === "function"
+        typeof errorMessage === 'function'
           ? errorMessage(error)
-          : errorMessage ?? parseErrorMessage(error);
+          : (errorMessage ?? parseErrorMessage(error));
 
       // ── Append retry hint when appropriate ────────────────────────
-      const retryHint = showRetry ? " (click Retry to try again)" : "";
-      toast(`${msg}${retryHint}`, "error");
+      const retryHint = showRetry ? ' (click Retry to try again)' : '';
+      toast(`${msg}${retryHint}`, 'error');
 
       userOnError?.(error, variables, onMutateResult, context);
     },
@@ -177,7 +186,7 @@ function parseErrorMessage(error: unknown): string {
   // Try the project's shared normalizer first (handles Axios responses)
   try {
     const normalized = normalizeApiError(error);
-    if (normalized.message && normalized.message !== "Unexpected API error") {
+    if (normalized.message && normalized.message !== 'Unexpected API error') {
       return normalized.message;
     }
   } catch {
@@ -189,13 +198,13 @@ function parseErrorMessage(error: unknown): string {
   }
 
   if (
-    typeof error === "object" &&
+    typeof error === 'object' &&
     error !== null &&
-    "message" in error &&
-    typeof (error as { message: unknown }).message === "string"
+    'message' in error &&
+    typeof (error as { message: unknown }).message === 'string'
   ) {
     return (error as { message: string }).message;
   }
 
-  return "An unexpected error occurred. Please try again.";
+  return 'An unexpected error occurred. Please try again.';
 }

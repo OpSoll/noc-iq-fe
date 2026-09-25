@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 /**
  * Dispute escalation prompt (opsoll/noc-iq-fe#496).
@@ -7,16 +7,16 @@
  * being routed to, then escalates via the SLA disputes service.
  */
 
-import { useState } from "react";
+import { useState } from 'react';
 
-import Modal from "@/components/ui/modal";
-import { Button } from "@/components/ui/button";
+import Modal from '@/components/ui/modal';
+import { Button } from '@/components/ui/button';
 import {
   ESCALATION_PRIORITIES,
   ESCALATION_PRIORITY_LABELS,
-} from "./disputeEscalation";
-import { escalateDispute } from "@/services/sla";
-import type { EscalationPriority, SLADispute } from "@/types/sla";
+} from './disputeEscalation';
+import { escalateDispute } from '@/services/sla';
+import type { EscalationPriority, SLADispute } from '@/types/sla';
 
 interface EscalateDisputeModalProps {
   dispute: SLADispute | null;
@@ -29,8 +29,8 @@ export default function EscalateDisputeModal({
   onClose,
   onEscalated,
 }: EscalateDisputeModalProps) {
-  const [priority, setPriority] = useState<EscalationPriority>("high");
-  const [managerTag, setManagerTag] = useState("");
+  const [priority, setPriority] = useState<EscalationPriority>('high');
+  const [managerTag, setManagerTag] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -40,7 +40,7 @@ export default function EscalateDisputeModal({
     setError(null);
 
     if (!managerTag.trim()) {
-      setError("A manager tag is required.");
+      setError('A manager tag is required.');
       return;
     }
 
@@ -53,7 +53,7 @@ export default function EscalateDisputeModal({
       onEscalated(escalated);
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Escalation failed.");
+      setError(err instanceof Error ? err.message : 'Escalation failed.');
     } finally {
       setSubmitting(false);
     }
@@ -75,9 +75,8 @@ export default function EscalateDisputeModal({
         }}
       >
         <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
-          This dispute has been pending for more than{" "}
-          <strong>7 days</strong>. Escalation routes it to senior management
-          for formal review.
+          This dispute has been pending for more than <strong>7 days</strong>.
+          Escalation routes it to senior management for formal review.
         </div>
 
         <div className="space-y-1.5">
@@ -124,11 +123,21 @@ export default function EscalateDisputeModal({
         {error ? <p className="text-xs text-red-600">{error}</p> : null}
 
         <div className="flex justify-end gap-2 pt-1">
-          <Button variant="outline" size="sm" onClick={onClose} disabled={submitting}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onClose}
+            disabled={submitting}
+          >
             Cancel
           </Button>
-          <Button size="sm" variant="destructive" type="submit" disabled={submitting}>
-            {submitting ? "Escalating..." : "Escalate dispute"}
+          <Button
+            size="sm"
+            variant="destructive"
+            type="submit"
+            disabled={submitting}
+          >
+            {submitting ? 'Escalating...' : 'Escalate dispute'}
           </Button>
         </div>
       </form>
