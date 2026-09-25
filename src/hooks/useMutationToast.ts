@@ -122,7 +122,7 @@ export function useMutationToast<
   return useMutation<TData, TError, TVariables, TContext>({
     ...rest,
 
-    onSuccess(data, variables, context) {
+    onSuccess(data, variables, onMutateResult, context) {
       // ── Build the success message ──────────────────────────────────
       const msg =
         typeof successMessage === "function"
@@ -144,10 +144,10 @@ export function useMutationToast<
 
       toast(fullMsg, "success");
 
-      userOnSuccess?.(data, variables, context);
+      userOnSuccess?.(data, variables, onMutateResult, context);
     },
 
-    onError(error, variables, context) {
+    onError(error, variables, onMutateResult, context) {
       // ── Parse the error message ────────────────────────────────────
       const msg =
         typeof errorMessage === "function"
@@ -155,10 +155,12 @@ export function useMutationToast<
           : errorMessage ?? parseErrorMessage(error);
 
       // ── Append retry hint when appropriate ────────────────────────
-      const retryHint = showRetry ? " (click Retry to try again)" : "";
+      const retryHint = showRetry && !errorMessage
+        ? " (click Retry to try again)"
+        : "";
       toast(`${msg}${retryHint}`, "error");
 
-      userOnError?.(error, variables, context);
+      userOnError?.(error, variables, onMutateResult, context);
     },
   });
 }

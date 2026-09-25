@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { createElement } from "react";
 
 import DisputeDeadlineBadge from "../DisputeDeadlineBadge";
 import {
@@ -75,33 +76,33 @@ describe("formatRemainingTime", () => {
 describe("DisputeDeadlineBadge", () => {
   it("renders a countdown badge for an open dispute", () => {
     render(
-      <DisputeDeadlineBadge
-        createdAt={createdAtDaysAgo(1)}
-        status="open"
-        now={now}
-      />,
+      createElement(DisputeDeadlineBadge, {
+        createdAt: createdAtDaysAgo(1),
+        status: "open",
+        now,
+      }),
     );
     expect(screen.getByText(/to deadline/)).toBeInTheDocument();
   });
 
   it("renders nothing for settled disputes", () => {
     const { container } = render(
-      <DisputeDeadlineBadge
-        createdAt={createdAtDaysAgo(1)}
-        status="resolved"
-        now={now}
-      />,
+      createElement(DisputeDeadlineBadge, {
+        createdAt: createdAtDaysAgo(1),
+        status: "resolved",
+        now,
+      }),
     );
     expect(container.firstChild).toBeNull();
   });
 
   it("highlights urgent disputes in amber", () => {
     render(
-      <DisputeDeadlineBadge
-        createdAt={createdAtDaysAgo(DISPUTE_RESOLUTION_SLA_DAYS - 1)}
-        status="open"
-        now={now}
-      />,
+      createElement(DisputeDeadlineBadge, {
+        createdAt: createdAtDaysAgo(DISPUTE_RESOLUTION_SLA_DAYS - 1),
+        status: "open",
+        now,
+      }),
     );
     const badge = screen.getByText(/left/);
     expect(badge.className).toContain("amber");
@@ -109,11 +110,11 @@ describe("DisputeDeadlineBadge", () => {
 
   it("shows Escalating for overdue disputes", () => {
     render(
-      <DisputeDeadlineBadge
-        createdAt={createdAtDaysAgo(DISPUTE_RESOLUTION_SLA_DAYS + 1)}
-        status="open"
-        now={now}
-      />,
+      createElement(DisputeDeadlineBadge, {
+        createdAt: createdAtDaysAgo(DISPUTE_RESOLUTION_SLA_DAYS + 1),
+        status: "open",
+        now,
+      }),
     );
     expect(screen.getByText("Escalating")).toBeInTheDocument();
   });

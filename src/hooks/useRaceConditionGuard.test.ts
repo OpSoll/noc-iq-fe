@@ -77,7 +77,7 @@ describe("useRaceConditionGuard", () => {
       expect(result.current.state).toBe("rejected");
     });
 
-    it("throws an error when operation fails", async () => {
+    it("rethrows the original operation error", async () => {
       const { result } = renderHook(() => useRaceConditionGuard());
 
       let caughtError: Error | undefined;
@@ -89,15 +89,14 @@ describe("useRaceConditionGuard", () => {
         }
       });
 
-      expect(caughtError?.message).toBe("Operation superseded by a newer request");
+      expect(caughtError?.message).toBe("fail");
     });
   });
 
-  describe("race condition cancellation", () => {
-    it("marks first request as superseded when a second request fires", async () => {
+  describe("duplicate execution", () => {
+    it("blocks a second request while the first is pending", async () => {
       const { result } = renderHook(() => useRaceConditionGuard());
 
-      // First request that never resolves
       let resolveFirst!: (v: string) => void;
       let firstPromise!: Promise<string>;
       act(() => {
@@ -105,70 +104,20 @@ describe("useRaceConditionGuard", () => {
           () => new Promise<string>((resolve) => { resolveFirst = resolve; }),
         );
       });
+      const operation = vi.fn(() => Promise.resolve("second-done"));
 
-      expect(result.current.state).toBe("pending");
+      expect(result.current.isPending).toBe(true);
+      await expect(result.current.execute(operation)).rejects.toThrow(
+        "Operation already in progress",
+      );
+      expect(operation).not.toHaveBeenCalled();
 
-      // Second request fires before first resolves
-      let resolveSecond!: (v: string) => void;
-      let secondPromise!: Promise<string>;
-      act(() => {
-        secondPromise = result.current.execute(
-          () => new Promise<string>((resolve) => { resolveSecond = resolve; }),
-        );
-      });
-
-      // Resolve the second one first
-      await act(async () => {
-        resolveSecond("second-done");
-      });
-      await secondPromise;
-
-      // State should reflect the latest request
-      expect(result.current.state).toBe("resolved");
-
-      // Now resolve the stale first request
       await act(async () => {
         resolveFirst("first-done");
+        await firstPromise;
       });
-      await firstPromise;
-
-      // State should be superseded since the first was stale
-      expect(result.current.state).toBe("superseded");
-    });
-
-    it("handles three rapid requests correctly", async () => {
-      const { result } = renderHook(() => useRaceConditionGuard());
-
-      const resolvers: Array<(v: string) => void> = [];
-
-      const promise1 = result.current.execute(
-        () => new Promise<string>((resolve) => { resolvers.push(resolve); }),
-      );
-      const promise2 = result.current.execute(
-        () => new Promise<string>((resolve) => { resolvers.push(resolve); }),
-      );
-      const promise3 = result.current.execute(
-        () => new Promise<string>((resolve) => { resolvers.push(resolve); }),
-      );
-
-      // Resolve them in order
-      await act(async () => {
-        resolvers[0]?.("first");
-      });
-      await promise1;
-      expect(result.current.state).toBe("superseded");
-
-      await act(async () => {
-        resolvers[1]?.("second");
-      });
-      await promise2;
-      expect(result.current.state).toBe("superseded");
-
-      await act(async () => {
-        resolvers[2]?.("third");
-      });
-      await promise3;
       expect(result.current.state).toBe("resolved");
+      expect(result.current.isPending).toBe(false);
     });
   });
 

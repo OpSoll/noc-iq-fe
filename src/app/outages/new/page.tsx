@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createOutage } from "@/services/outages";
 import { saveDraft, clearDraft, loadDraft } from "@/lib/drafts";
+import { useRaceConditionGuard } from "@/hooks/useRaceConditionGuard";
 import type { OutageCreate, Severity, OutageStatus } from "@/types/outages";
 
 const DRAFT_KEY = "outage-new";
@@ -27,9 +28,9 @@ const INITIAL_FORM = {
 export default function NewOutagePage() {
   const router = useRouter();
   const [hasDraft] = useState(() => !!loadDraft(DRAFT_KEY));
-  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [draftRestoreShown, setDraftRestoreShown] = useState(hasDraft);
+  const { execute, isPending } = useRaceConditionGuard();
 
   const [form, setForm] = useState(INITIAL_FORM);
 
@@ -73,7 +74,6 @@ export default function NewOutagePage() {
       return;
     }
 
-    setSubmitting(true);
     setError(null);
 
     const payload: OutageCreate = {
@@ -97,12 +97,13 @@ export default function NewOutagePage() {
     };
 
     try {
-      const outage = await createOutage(payload);
-      clearDraft(DRAFT_KEY);
-      router.push(`/outages/${outage.id}`);
+      await execute(async () => {
+        const outage = await createOutage(payload);
+        clearDraft(DRAFT_KEY);
+        router.push(`/outages/${outage.id}`);
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create outage.");
-      setSubmitting(false);
     }
   }
 
@@ -282,10 +283,16 @@ export default function NewOutagePage() {
           </button>
           <button
             type="submit"
-            disabled={submitting}
+            disabled={isPending}
             className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60"
           >
-            {submitting ? "Creating…" : "Create Outage"}
+            {isPending && (
+              <span
+                aria-hidden="true"
+                className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent align-[-2px]"
+              />
+            )}
+            {isPending ? "Creating…" : "Create Outage"}
           </button>
         </div>
       </form>

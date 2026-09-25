@@ -1,5 +1,5 @@
 export interface SLAResult {
-  outage_id: string;
+  outage_id?: string;
   status: "met" | "violated";
   mttr_minutes: number;
   threshold_minutes: number;
@@ -29,6 +29,7 @@ export interface SLADispute {
   reason: string;
   created_at: string;
   resolved_at?: string | null;
+  resolved_by?: string | null;
   resolution_note?: string | null;
   /** Evidence documents attached by the disputing party. */
   attachments?: DisputeAttachment[];

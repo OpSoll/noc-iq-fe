@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { api } from "@/lib/api";
 import {
   flagDispute,
   getDisputes,
@@ -22,6 +23,7 @@ import type {
 
 import DisputeDeadlineBadge from "./DisputeDeadlineBadge";
 import DisputeAuditTrail from "./DisputeAuditTrail";
+import { DisputeStats } from "./DisputeStatsView";
 import EvidencePreviewModal from "./EvidencePreviewModal";
 import EscalateDisputeModal from "./EscalateDisputeModal";
 import SLAReSimulateModal from "./SLAReSimulateModal";

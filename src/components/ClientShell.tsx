@@ -36,7 +36,6 @@ export default function ClientShell({ children, nonce }: { children: ReactNode; 
       <main id="main-content" tabIndex={-1} className="outline-none">
         {children}
       </main>
-      </main>
       {conflict && (
         <ConflictNotification
           conflict={conflict}
