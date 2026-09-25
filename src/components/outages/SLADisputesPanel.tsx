@@ -13,6 +13,7 @@ import {
   resolveDispute,
   triggerDisputeWebhook,
 } from "@/services/sla";
+import { api } from "@/lib/api";
 import type {
   DisputeAttachment,
   DisputeStatus,
@@ -22,6 +23,7 @@ import type {
 
 import DisputeDeadlineBadge from "./DisputeDeadlineBadge";
 import DisputeAuditTrail from "./DisputeAuditTrail";
+import { DisputeStats } from "./DisputeStatsView";
 import EvidencePreviewModal from "./EvidencePreviewModal";
 import EscalateDisputeModal from "./EscalateDisputeModal";
 import SLAReSimulateModal from "./SLAReSimulateModal";

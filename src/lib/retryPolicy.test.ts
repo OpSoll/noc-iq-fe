@@ -91,10 +91,10 @@ describe("fetchWithTimeoutAndRetry", () => {
       timeoutMs: 100,
       maxRetries: 0,
     });
+    const result = promise.catch((error) => error as RetryPolicyError);
     await vi.runAllTimersAsync();
 
-    await expect(promise).rejects.toBeInstanceOf(RetryPolicyError);
-    const err = await promise.catch((e) => e) as RetryPolicyError;
+    const err = await result;
     expect(err.timedOut).toBe(true);
   });
 
@@ -126,9 +126,10 @@ describe("fetchWithTimeoutAndRetry", () => {
     const promise = fetchWithTimeoutAndRetry("/api/resource", {
       fetchInit: { method: "POST" },
     });
+    const result = promise.catch((error) => error as RetryPolicyError);
     await vi.runAllTimersAsync();
 
-    await expect(promise).rejects.toBeInstanceOf(RetryPolicyError);
+    await expect(result).resolves.toBeInstanceOf(RetryPolicyError);
     // Only 1 attempt — no retry for mutating methods
     expect(fetchSpy).toHaveBeenCalledOnce();
   });
@@ -141,9 +142,10 @@ describe("fetchWithTimeoutAndRetry", () => {
     const promise = fetchWithTimeoutAndRetry("/api/resource", {
       fetchInit: { method: "PUT" },
     });
+    const result = promise.catch((error) => error as RetryPolicyError);
     await vi.runAllTimersAsync();
 
-    await expect(promise).rejects.toBeInstanceOf(RetryPolicyError);
+    await expect(result).resolves.toBeInstanceOf(RetryPolicyError);
     expect(fetchSpy).toHaveBeenCalledOnce();
   });
 
@@ -151,9 +153,10 @@ describe("fetchWithTimeoutAndRetry", () => {
     vi.spyOn(globalThis, "fetch").mockRejectedValue(new Error("fail"));
 
     const promise = fetchWithTimeoutAndRetry("/api/test", { maxRetries: 2 });
+    const result = promise.catch((error) => error as RetryPolicyError);
     await vi.runAllTimersAsync();
 
-    const err = await promise.catch((e) => e) as RetryPolicyError;
+    const err = await result;
     expect(err).toBeInstanceOf(RetryPolicyError);
     expect(err.attempts).toBe(3); // 1 initial + 2 retries
   });
