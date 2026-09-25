@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createOutage } from "@/services/outages";
 import { saveDraft, clearDraft, loadDraft } from "@/lib/drafts";
+import { SITE_ID_ERROR, SITE_ID_PATTERN, validateSiteId } from "@/lib/siteIdValidation";
 import type { OutageCreate, Severity, OutageStatus } from "@/types/outages";
 
 const DRAFT_KEY = "outage-new";
@@ -70,6 +71,10 @@ export default function NewOutagePage() {
     e.preventDefault();
     if (!form.site_name.trim() || !form.description.trim()) {
       setError("Site name and description are required.");
+      return;
+    }
+    if (validateSiteId(form.site_id)) {
+      setError(SITE_ID_ERROR);
       return;
     }
 
@@ -169,6 +174,8 @@ export default function NewOutagePage() {
               value={form.site_id}
               onChange={(e) => set("site_id", e.target.value)}
               placeholder="Optional"
+              pattern={SITE_ID_PATTERN.source}
+              title={SITE_ID_ERROR}
             />
           </div>
         </div>

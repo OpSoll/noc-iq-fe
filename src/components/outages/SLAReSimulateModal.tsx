@@ -130,7 +130,7 @@ export default function SLAReSimulateModal({
                     <th className="px-3 py-2 font-medium">Metric</th>
                     <th className="px-3 py-2 font-medium">Original</th>
                     <th className="px-3 py-2 font-medium">Simulated</th>
-                  </thead>
+                  </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   <tr>

@@ -240,15 +240,15 @@ export default function SLADashboardView() {
 
   const onTrendClick = useCallback((point: TrendPoint) => {
     pushOutageDrilldown(point);
-  }, []);
+  }, [pushOutageDrilldown]);
 
   const onPenaltyClick = useCallback((point: TrendPoint) => {
     pushPaymentDrilldown("penalty", point);
-  }, []);
+  }, [pushPaymentDrilldown]);
 
   const onRewardClick = useCallback((point: TrendPoint) => {
     pushPaymentDrilldown("reward", point);
-  }, []);
+  }, [pushPaymentDrilldown]);
 
   if (primary.isLoading) {
     return (
