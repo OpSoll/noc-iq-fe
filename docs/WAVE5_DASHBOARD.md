@@ -1,19 +1,30 @@
 # Wave 5 Closure Dashboard
 
-> Last updated: 2026-09-24
+> Last updated: 2026-09-25
 
 ## Issue Completion
 
 | Metric | Value |
 |--------|-------|
-| Total Wave 5 issues | 100 |
+| Total Wave 5 issues | 112 |
 | Closed | 100 |
-| Open | 0 |
-| Completion | 100% |
+| Open | 12 |
+| Completion | 89% |
 
 ## Open Issues
 
-_All issues closed! 🎉_
+- [ ] #695 Form Validation: Add input character counter for text area fields
+- [ ] #694 Form Validation: Implement auto-save draft form state to local storage
+- [ ] #693 Form Validation: Add custom regex format validator for site ID input fields
+- [ ] #692 Form Validation: Implement race condition guard hook for concurrent mutation requests
+- [ ] #691 Form Validation: Add Optimistic UI update and rollback hook for status toggles
+- [ ] #690 Form Validation: Implement password strength meter and validator component
+- [ ] #689 Form Validation: Add debounced live input validation feedback
+- [ ] #688 Form Validation: Implement stale data detection guard hook on form submission
+- [ ] #687 Form Validation: Add Zod schema validation for outage creation form
+- [ ] #686 Navigation: Implement custom theme switcher toggle (Light, Dark, System)
+- [ ] #685 Navigation: Add global notification bell dropdown menu in header
+- [ ] #684 Navigation: Implement URL query parameter synchronization hook for table filters
 
 ## Closed Issues
 
