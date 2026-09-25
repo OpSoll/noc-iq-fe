@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useCallback } from "react";
+import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 
@@ -92,7 +92,7 @@ export default function SLADashboardView() {
       }
     }
     return { severity: filters.severity, site: filters.site };
-  }, [compareMode, urlState.compare_from, urlState.compare_to, filters]);
+  }, [compareMode, urlState.compare_from, urlState.compare_to, urlState.severity, urlState.site, filters]);
 
   const compareLabel = useMemo(() => {
     if (urlState.compare_from || urlState.compare_to) {
@@ -238,17 +238,17 @@ export default function SLADashboardView() {
     refetchInterval: autoRefresh.refetchInterval,
   });
 
-  const onTrendClick = useCallback((point: TrendPoint) => {
+  const onTrendClick = (point: TrendPoint) => {
     pushOutageDrilldown(point);
-  }, []);
+  };
 
-  const onPenaltyClick = useCallback((point: TrendPoint) => {
+  const onPenaltyClick = (point: TrendPoint) => {
     pushPaymentDrilldown("penalty", point);
-  }, []);
+  };
 
-  const onRewardClick = useCallback((point: TrendPoint) => {
+  const onRewardClick = (point: TrendPoint) => {
     pushPaymentDrilldown("reward", point);
-  }, []);
+  };
 
   if (primary.isLoading) {
     return (

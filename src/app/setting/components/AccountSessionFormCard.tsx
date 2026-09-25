@@ -50,12 +50,17 @@ export function AccountSessionFormCard({
     password: "secure123",
   });
 
-  const { password_strength, validation_result } = usePasswordValidation(
-    registerForm.password,
-  );
-  const hasRegisterPasswordErrors = registerForm.password.length > 0 && !Object.values(validation_result).every(Boolean);
+  const { password_strength, validation_result, isStrong } =
+    usePasswordValidation(registerForm.password);
+  const hasRegisterPasswordErrors =
+    registerForm.password.length > 0 &&
+    !Object.values(validation_result).every(Boolean);
 
   async function handleRegister() {
+    if (!isStrong) {
+      toast("Password must meet all five requirements.", "error");
+      return;
+    }
     try {
       const response = await api.post<AuthUser>("/auth/register", registerForm);
       setCurrentUser(response.data);
@@ -175,16 +180,14 @@ export function AccountSessionFormCard({
             aria-live="polite"
             className="text-sm text-gray-500"
           >
-            {registerForm.password.length > 0 && (
-              <div className="mt-2 space-y-2">
-                <PasswordStrength password_strength={password_strength} />
-                <PasswordValidation validation_result={validation_result} />
-              </div>
-            )}
+            <div className="mt-2 space-y-2">
+              <PasswordStrength password_strength={password_strength} />
+              <PasswordValidation validation_result={validation_result} />
+            </div>
           </div>
           <button
             onClick={handleRegister}
-            disabled={password_strength < 4}
+            disabled={!isStrong}
             className="w-full rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
           >
             Register account

@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { ThemeSwitcher } from "@/components/ThemeSwitcher";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { usePathname } from "next/navigation";
 import { useSession } from "@/hooks/useSession";
 import {
@@ -98,6 +100,8 @@ const Navigation = () => {
       </div>
 
       <div className="flex items-center gap-2 text-sm text-slate-600">
+        <NotificationBell />
+        <ThemeSwitcher />
         <select
           value={mode}
           onChange={(e) => setMode(e.target.value as AccessibilityMode)}

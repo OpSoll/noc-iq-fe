@@ -15,10 +15,11 @@ export default function RegisterPage() {
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const { password_strength, validation_result } =
+  const { password_strength, validation_result, isStrong } =
     usePasswordValidation(password);
   const passwordsMatch = password === confirm;
-  const hasPasswordErrors = password.length > 0 && !Object.values(validation_result).every(Boolean);
+  const hasPasswordErrors =
+    password.length > 0 && !Object.values(validation_result).every(Boolean);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -28,8 +29,8 @@ export default function RegisterPage() {
       setError("Passwords do not match.");
       return;
     }
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters.");
+    if (!isStrong) {
+      setError("Password must meet all five requirements.");
       return;
     }
 
@@ -102,12 +103,10 @@ export default function RegisterPage() {
             aria-live="polite"
             className="text-sm text-gray-500"
           >
-            {password.length > 0 && (
-              <div className="mt-2 space-y-2">
-                <PasswordStrength password_strength={password_strength} />
-                <PasswordValidation validation_result={validation_result} />
-              </div>
-            )}
+            <div className="mt-2 space-y-2">
+              <PasswordStrength password_strength={password_strength} />
+              <PasswordValidation validation_result={validation_result} />
+            </div>
           </div>
         </div>
 
@@ -125,12 +124,21 @@ export default function RegisterPage() {
             autoComplete="new-password"
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
-            aria-invalid={confirm.length > 0 && !passwordsMatch ? true : undefined}
-            aria-describedby={confirm.length > 0 && !passwordsMatch ? "confirm-password-error" : undefined}
+            aria-invalid={
+              confirm.length > 0 && !passwordsMatch ? true : undefined
+            }
+            aria-describedby={
+              confirm.length > 0 && !passwordsMatch
+                ? "confirm-password-error"
+                : undefined
+            }
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
           {confirm.length > 0 && !passwordsMatch && (
-            <p id="confirm-password-error" className="mt-1 text-sm text-red-600">
+            <p
+              id="confirm-password-error"
+              className="mt-1 text-sm text-red-600"
+            >
               Passwords do not match.
             </p>
           )}
@@ -144,7 +152,7 @@ export default function RegisterPage() {
 
         <button
           type="submit"
-          disabled={loading || password_strength < 4}
+          disabled={loading || !isStrong || !passwordsMatch}
           className="w-full rounded-lg bg-blue-600 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
         >
           {loading ? "Creating account…" : "Create account"}

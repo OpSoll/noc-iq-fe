@@ -134,7 +134,7 @@ export default function WebhooksPage() {
 
   const handleExportCSV = () => {
     const headers = ["ID", "Event", "Response Code", "Timestamp"];
-    const rows = filteredDeliveries.map(d => [d.id, d.event, d.response_code ?? "N/A", d.timestamp]);
+    const rows = filteredDeliveries.map(d => [d.id, d.event, d.response_code ?? "N/A", d.created_at]);
     const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
     const link = document.createElement("a");
     link.href = encodeURI(csvContent);

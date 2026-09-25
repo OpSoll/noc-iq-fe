@@ -29,6 +29,7 @@ export interface SLADispute {
   reason: string;
   created_at: string;
   resolved_at?: string | null;
+  resolved_by?: string | null;
   resolution_note?: string | null;
   /** Evidence documents attached by the disputing party. */
   attachments?: DisputeAttachment[];

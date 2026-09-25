@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { api } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,6 +21,7 @@ import type {
   SLAResult,
 } from "@/types/sla";
 
+import { DisputeStats } from "./DisputeStatsPanel";
 import DisputeDeadlineBadge from "./DisputeDeadlineBadge";
 import DisputeAuditTrail from "./DisputeAuditTrail";
 import EvidencePreviewModal from "./EvidencePreviewModal";

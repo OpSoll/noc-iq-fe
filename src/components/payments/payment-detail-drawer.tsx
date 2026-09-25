@@ -1,5 +1,6 @@
 "use client";
 
+import { TextArea } from "@/components/ui/TextArea";
 import { useEffect, useRef, useState } from "react";
 import { useSession } from "@/hooks/useSession";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
@@ -382,7 +383,8 @@ export function PaymentDetailDrawer({
               >
                 Operator note (optional)
               </label>
-              <textarea
+              <TextArea
+                maxLength={500}
                 id="action-note"
                 value={actionNote}
                 onChange={(e) => setActionNote(e.target.value)}

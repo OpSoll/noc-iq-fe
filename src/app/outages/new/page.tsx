@@ -1,5 +1,6 @@
 "use client";
 
+import { TextArea } from "@/components/ui/TextArea";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createOutage } from "@/services/outages";
@@ -220,10 +221,15 @@ export default function NewOutagePage() {
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">
+          <label
+            htmlFor="outage-description"
+            className="mb-1 block text-sm font-medium text-slate-700"
+          >
             Description <span className="text-red-500">*</span>
           </label>
-          <textarea
+          <TextArea
+            id="outage-description"
+            maxLength={500}
             className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
             rows={3}
             value={form.description}

@@ -157,6 +157,8 @@ describe("useMutationToast", () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
     expect(spy).toHaveBeenCalledOnce();
+    expect(spy.mock.calls[0]).toHaveLength(4);
+    expect(spy.mock.calls[0][3]).toEqual(expect.objectContaining({ client }));
   });
 
   // ── Error path ───────────────────────────────────────────────────────────
@@ -290,6 +292,8 @@ describe("useMutationToast", () => {
     await waitFor(() => expect(result.current.isError).toBe(true));
 
     expect(spy).toHaveBeenCalledOnce();
+    expect(spy.mock.calls[0]).toHaveLength(4);
+    expect(spy.mock.calls[0][3]).toEqual(expect.objectContaining({ client }));
   });
 
   // ── Default message fallback ─────────────────────────────────────────────

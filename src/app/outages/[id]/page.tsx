@@ -1,5 +1,6 @@
 "use client";
 
+import { TextArea } from "@/components/ui/TextArea";
 import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
@@ -326,8 +327,15 @@ export default function OutageDetailsPage() {
               </div>
             </div>
             <div>
-              <label className="mb-1 block font-medium text-slate-700">Description</label>
-              <textarea
+              <label
+                htmlFor="outage-description"
+                className="mb-1 block font-medium text-slate-700"
+              >
+                Description
+              </label>
+              <TextArea
+                id="outage-description"
+                maxLength={500}
                 className="w-full rounded-md border border-slate-200 px-3 py-2"
                 rows={3}
                 value={editForm.description ?? ""}
@@ -555,7 +563,7 @@ export default function OutageDetailsPage() {
           outageId={outage.id}
           canResolve={isResolved}
           outageSeverity={outage.severity}
-          originalSlaResult={outage.sla_status ?? null}
+          originalSlaResult={outage.sla_status ? { ...outage.sla_status, outage_id: outage.id } : null}
         />
       </div>
 
