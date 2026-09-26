@@ -37,7 +37,7 @@ jobs:
           NODE_ENV: production
 
       - name: Run Lighthouse CI
-        run: npx lhci autorun
+        run: npx --yes --package=@lhci/cli@0.15.1 lhci autorun
 
       - name: Upload Lighthouse reports
         if: always()
