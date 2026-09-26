@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 /**
  * StaleDataConflictModal
@@ -9,8 +9,8 @@
  *   2. **Overwrite** — invokes `onOverwrite` which runs the original submit.
  */
 
-import Modal from "@/components/ui/modal";
-import type { StaleConflict } from "@/hooks/useStaleGuard";
+import Modal from '@/components/ui/modal';
+import type { StaleConflict } from '@/hooks/useStaleGuard';
 
 export interface StaleDataConflictModalProps {
   /** Non-null when a conflict is active. */
@@ -36,12 +36,12 @@ export default function StaleDataConflictModal({
 
   const formatTimestamp = (d: Date): string =>
     d.toLocaleString(undefined, {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
     });
 
   return (

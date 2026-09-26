@@ -1,5 +1,5 @@
 export interface SLAResult {
-  outage_id: string;
+  outage_id?: string;
   status: 'met' | 'violated';
   mttr_minutes: number;
   threshold_minutes: number;

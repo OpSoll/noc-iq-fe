@@ -64,7 +64,6 @@ const ResolveOutageModal = dynamic(
     loading: () => <ResolveModalSkeleton />,
   }
 );
-
 function getErrorMessage(err: unknown) {
   return err instanceof Error ? err.message : 'Failed to load outage';
 }
