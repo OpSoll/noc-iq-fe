@@ -31,7 +31,7 @@ export const exportOutages = async (
   });
 
   const mimeType =
-    response.headers['content-type'] ??
+    (response.headers['content-type'] as string | undefined) ??
     (format === 'csv' ? 'text/csv' : 'application/json');
   const blob =
     response.data instanceof Blob
@@ -50,7 +50,7 @@ export const exportOutages = async (
         );
   const url = URL.createObjectURL(blob);
   const filename = getFilenameFromDisposition(
-    response.headers['content-disposition'],
+    response.headers['content-disposition'] as string | undefined,
     format
   );
   const anchor = document.createElement('a');

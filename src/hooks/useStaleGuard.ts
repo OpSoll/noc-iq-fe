@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
 import type { UseQueryResult } from '@tanstack/react-query';
+import { api } from '@/lib/api';
 
 import { api } from '@/lib/api';
 
@@ -33,7 +34,61 @@ export interface QueryStaleGuardResult<T> extends UseStaleGuardReturn {
   isLoading: boolean;
   isError: boolean;
   error: UseQueryResult<T, Error>['error'];
-}
+} {
+  const options = 'endpoint' in input ? input : null;
+  const query: UseQueryResult<T, Error> | null = options
+    ? null
+    : (input as UseQueryResult<T, Error>);
+  const [conflict, setConflict] = useState<StaleConflict | null>(null);
+  const [isChecking, setIsChecking] = useState(false);
+  const [checkError, setCheckError] = useState<string | null>(null);
+  const pendingSubmit = useRef<(() => void | Promise<void>) | null>(null);
+
+  const guardedSubmit = useCallback(
+    async (onSubmit: () => void | Promise<void>) => {
+      if (!options) return;
+      setIsChecking(true);
+      setCheckError(null);
+      setConflict(null);
+      pendingSubmit.current = null;
+      try {
+        const response = await api.get<{ updated_at: string | number | Date }>(
+          options.endpoint
+        );
+        const serverUpdatedAt = response.data.updated_at;
+        if (timestamp(serverUpdatedAt) > timestamp(options.formUpdatedAt)) {
+          pendingSubmit.current = onSubmit;
+          setConflict({
+            formUpdatedAt: options.formUpdatedAt,
+            serverUpdatedAt,
+          });
+        } else {
+          await onSubmit();
+        }
+      } catch (error) {
+        setCheckError(
+          error instanceof Error
+            ? error.message
+            : 'Failed to verify record freshness'
+        );
+      } finally {
+        setIsChecking(false);
+      }
+    },
+    [options]
+  );
+
+  const dismissConflict = useCallback(() => {
+    pendingSubmit.current = null;
+    setConflict(null);
+  }, []);
+
+  const forceSubmit = useCallback(async () => {
+    const submit = pendingSubmit.current;
+    pendingSubmit.current = null;
+    setConflict(null);
+    if (submit) await submit();
+  }, []);
 
 type StaleCheckResult =
   | { decision: 'proceed'; formUpdatedAt: string; serverUpdatedAt: string }
@@ -129,10 +184,17 @@ export function useStaleGuard<T>(
   const result: UseStaleGuardReturn = {
     guardedSubmit,
     conflict,
-    dismissConflict,
-    forceSubmit,
     isChecking,
     checkError,
+    guardedSubmit,
+    dismissConflict,
+    forceSubmit,
+    data: query?.isStale && query.isFetching ? undefined : query?.data,
+    isStale: query?.isStale ?? false,
+    isFetching: query?.isFetching ?? false,
+    isLoading: query?.isLoading ?? false,
+    isError: query?.isError ?? false,
+    error: query?.error ?? null,
   };
 
   if (isQueryResult) {
