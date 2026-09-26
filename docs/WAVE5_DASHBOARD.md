@@ -4,25 +4,17 @@
 
 ## Issue Completion
 
-| Metric              | Value |
-| ------------------- | ----- |
-| Total Wave 5 issues | 105   |
-| Closed              | 100   |
-| Open                | 5     |
-| Completion          | 95%   |
 | Metric | Value |
 |--------|-------|
-| Total Wave 5 issues | 128 |
+| Total Wave 5 issues | 150 |
 | Closed | 100 |
-| Open | 28 |
-| Completion | 78% |
+| Open | 50 |
+| Completion | 67% |
 
 ## Open Issues
 
-- [ ] #692 Form Validation: Implement race condition guard hook for concurrent mutation requests
 - [ ] #691 Form Validation: Add Optimistic UI update and rollback hook for status toggles
 - [ ] #689 Form Validation: Add debounced live input validation feedback
-- [ ] #684 Navigation: Implement URL query parameter synchronization hook for table filters
 - [ ] #679 Navigation: Add active route focus indicator for screen readers
 - [ ] #678 Navigation: Implement global keyboard shortcuts helper modal (Shift+?)
 - [ ] #677 Navigation: Add breadcrumb navigation bar with dynamic route labels
@@ -47,6 +39,30 @@
 - [ ] #658 Wallet: Implement QR code modal for public key sharing
 - [ ] #657 Wallet: Add wallet disconnect button with session state cleanup
 - [ ] #656 Wallet: Implement active network passphrase mismatch detection alert
+- [ ] #655 Wallet: Add transaction submission status tracker drawer
+- [ ] #654 Wallet: Implement multi-sig signature collection progress meter for disbursements
+- [ ] #653 Wallet: Add SLA penalty disbursement transaction builder modal
+- [ ] #652 Wallet: Implement XLM and custom SAC token balance inspector
+- [ ] #651 Wallet: Add Freighter wallet connection status indicator and auto-connect prompt
+- [ ] #650 Dispute View: Add dispute submission rate limit warning toast
+- [ ] #649 Dispute View: Implement dispute export report generator
+- [ ] #646 Dispute View: Add dispute countdown timer to arbitration deadline
+- [ ] #643 Dispute View: Implement dispute filtering drawer on dashboard view
+- [ ] #642 Dispute View: Add dispute SLA metric impact calculator component
+- [ ] #641 Dispute View: Implement dispute arbitration vote decision panel for admins
+- [ ] #640 Dispute View: Add arbitration evidence attachment manager
+- [ ] #639 Dispute View: Implement dispute status timeline visualizer component
+- [ ] #638 Dispute View: Add formal dispute filing modal component
+- [ ] #637 Bulk Import: Add bulk import dry-run simulation mode toggle
+- [ ] #636 Bulk Import: Implement multi-file bulk import queue manager
+- [ ] #635 Bulk Import: Add import history log drawer
+- [ ] #634 Bulk Import: Implement timezone offset converter in import wizard
+- [ ] #633 Bulk Import: Add client-side CSV parsing worker thread
+- [ ] #632 Bulk Import: Implement import execution summary notification modal
+- [ ] #631 Bulk Import: Add duplicate row detection and skip option
+- [ ] #630 Bulk Import: Implement import progress bar with cancel capability
+- [ ] #629 Bulk Import: Add downloadable sample CSV template builder
+- [ ] #628 Bulk Import: Implement inline cell error editing in validation preview
 
 ## Closed Issues
 
@@ -81,15 +97,21 @@
 - [x] #695 Form Validation: Add input character counter for text area fields
 - [x] #694 Form Validation: Implement auto-save draft form state to local storage
 - [x] #693 Form Validation: Add custom regex format validator for site ID input fields
+- [x] #692 Form Validation: Implement race condition guard hook for concurrent mutation requests
 - [x] #690 Form Validation: Implement password strength meter and validator component
 - [x] #688 Form Validation: Implement stale data detection guard hook on form submission
 - [x] #687 Form Validation: Add Zod schema validation for outage creation form
 - [x] #686 Navigation: Implement custom theme switcher toggle (Light, Dark, System)
 - [x] #685 Navigation: Add global notification bell dropdown menu in header
+- [x] #684 Navigation: Implement URL query parameter synchronization hook for table filters
 - [x] #683 Navigation: Add responsive mobile navigation drawer menu
 - [x] #682 Navigation: Implement un-saved form changes prompt before route navigation
 - [x] #681 Navigation: Add recently visited pages history dropdown in search bar
 - [x] #680 Navigation: Implement quick action floating action button (FAB) for mobile viewport
+- [x] #648 Dispute View: Add dispute outcome notification banner on outage page
+- [x] #647 Dispute View: Implement dispute notes and internal comment thread component
+- [x] #645 Dispute View: Implement dispute resolution confirmation modal
+- [x] #644 Dispute View: Add dispute bond collateral summary card
 - [x] #571 CI: Add automated release evidence package builder script
 - [x] #570 CI: Add automated Visual Regression Testing via Playwright screenshots
 - [x] #569 CI: Add Mock Service Worker (MSW) integration for offline Vitest component tests
@@ -144,13 +166,6 @@
 - [x] #520 Webhooks: Add webhook payload schema documentation popover
 - [x] #519 Webhooks: Add export webhook delivery logs to JSON / CSV
 - [x] #518 Webhooks: Add webhook delivery log retention period selector
-- [x] #517 Webhooks: Add custom HTTP headers key-value editor for webhook dispatches
-- [x] #516 Webhooks: Add webhook endpoint disable toggle on consecutive failure threshold
-- [x] #515 Webhooks: Add webhook max retries and exponential backoff configuration slider
-- [x] #514 Webhooks: Add HMAC SHA-256 signature verification code generator snippet
-- [x] #513 Webhooks: Add GIN index search box for searching webhook JSON payloads
-- [x] #512 Webhooks: Add webhook event subscription multi-select checkboxes (sla.violation, sla.warning, sla.resolved)
 
 ---
-
 _Auto-generated by `scripts/update-wave5-dashboard.mjs`. Do not edit manually._
