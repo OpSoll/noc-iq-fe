@@ -13,6 +13,7 @@ import DashboardGrid, {
   type DashboardWidget,
 } from '@/components/dashboard/DashboardGrid';
 import FinancialSummaryWidget from '@/components/dashboard/FinancialSummaryWidget';
+import PenaltyCreditsWidget from '@/components/dashboard/PenaltyCreditsWidget';
 import MTTRHistogramChart from '@/components/dashboard/MTTRHistogramChart';
 import SLABreachCountdownCard from '@/components/dashboard/SLABreachCountdownCard';
 import BreachToast from '@/components/notifications/BreachToast';
@@ -485,15 +486,20 @@ export default function SLADashboardView() {
       title: 'Compliance and Payout Trends',
       render: () => trendCharts,
     },
-    {
+{
       id: 'mttr-histogram',
       title: 'MTTR Distribution',
-      render: () => (
+      render: (
         <MTTRHistogramChart
           dateFrom={filters.date_from}
           dateTo={filters.date_to}
         />
       ),
+    },
+    {
+      id: 'penalty-credits',
+      title: 'Penalty Credits',
+      render: () => <PenaltyCreditsWidget metrics={metrics} />,
     },
     ...(compareMode
       ? [
