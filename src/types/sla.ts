@@ -24,6 +24,25 @@ export interface SLADispute {
 export interface FlagDisputePayload {
   outage_id: string;
   reason: string;
+  /** SLA result the dispute contests, when the caller knows it. */
+  sla_result_id?: string;
+  /**
+   * Supporting evidence URLs (issue #638).
+   *
+   * TODO(#638): optional until the backend accepts it. The dispute form collects
+   * these and sends them; a backend that ignores unknown keys will simply drop
+   * them, so nothing breaks in the meantime. Migration: make this part of the
+   * documented contract, and surface the stored links in SLADispute so the
+   * evidence manager can read them back.
+   */
+  evidence_links?: string[];
+  /**
+   * Penalty amount the customer claims is owed (issue #638).
+   *
+   * TODO(#638): optional until the backend accepts it. Same migration note as
+   * evidence_links.
+   */
+  claimed_penalty_amount?: number;
 }
 
 export interface ResolveDisputePayload {
