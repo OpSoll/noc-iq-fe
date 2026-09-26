@@ -1,15 +1,16 @@
-import type { AxiosError as IAxiosError } from "axios";
+import type { AxiosError as IAxiosError } from 'axios';
 
-import { api } from "@/lib/api";
+import { api } from '@/lib/api';
 
 import type {
   DisputeListParams,
+  EscalateDisputePayload,
   FlagDisputePayload,
   PaginatedDisputes,
   ResolveDisputePayload,
   SLADispute,
   SLAResult,
-} from "@/types/sla";
+} from '@/types/sla';
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */
@@ -35,9 +36,9 @@ interface APIErrorResponse {
 /* -------------------------------------------------------------------------- */
 
 const SLA_ENDPOINTS = {
-  CALCULATE: "/sla/calculate",
-  PREVIEW: "/sla/preview",
-  DISPUTES: "/sla/disputes",
+  CALCULATE: '/sla/calculate',
+  PREVIEW: '/sla/preview',
+  DISPUTES: '/sla/disputes',
 } as const;
 
 /* -------------------------------------------------------------------------- */
@@ -50,26 +51,21 @@ function extractErrorMessage(error: unknown): string {
   return (
     axiosError.response?.data?.message ||
     axiosError.message ||
-    "An unexpected error occurred."
+    'An unexpected error occurred.'
   );
 }
 
-function sanitizeParams<T extends object>(
-  params: T
-): Partial<T> {
+function sanitizeParams<T extends object>(params: T): Partial<T> {
   return Object.fromEntries(
     Object.entries(params).filter(
-      ([, value]) =>
-        value !== undefined &&
-        value !== null &&
-        value !== ""
+      ([, value]) => value !== undefined && value !== null && value !== ''
     )
   ) as Partial<T>;
 }
 
 function validateMTTR(mttr: number): void {
   if (mttr < 0) {
-    throw new Error("MTTR minutes cannot be negative.");
+    throw new Error('MTTR minutes cannot be negative.');
   }
 }
 
@@ -86,12 +82,9 @@ export async function calculateSLA(
   validateMTTR(params.mttr_minutes);
 
   try {
-    const response = await api.get<SLAResult>(
-      SLA_ENDPOINTS.CALCULATE,
-      {
-        params: sanitizeParams(params),
-      }
-    );
+    const response = await api.get<SLAResult>(SLA_ENDPOINTS.CALCULATE, {
+      params: sanitizeParams(params),
+    });
 
     return response.data;
   } catch (error: unknown) {
@@ -102,9 +95,7 @@ export async function calculateSLA(
 /**
  * Preview SLA impact before saving or resolving outage.
  */
-export async function previewSLA(
-  params: PreviewSLAParams
-): Promise<SLAResult> {
+export async function previewSLA(params: PreviewSLAParams): Promise<SLAResult> {
   validateMTTR(params.mttr_minutes);
 
   try {
@@ -126,12 +117,9 @@ export async function getDisputes(
   params: DisputeListParams
 ): Promise<PaginatedDisputes> {
   try {
-    const response = await api.get<PaginatedDisputes>(
-      SLA_ENDPOINTS.DISPUTES,
-      {
-        params: sanitizeParams(params),
-      }
-    );
+    const response = await api.get<PaginatedDisputes>(SLA_ENDPOINTS.DISPUTES, {
+      params: sanitizeParams(params),
+    });
 
     return response.data;
   } catch (error: unknown) {
@@ -165,7 +153,7 @@ export async function resolveDispute(
   payload: ResolveDisputePayload
 ): Promise<SLADispute> {
   if (!disputeId?.trim()) {
-    throw new Error("Dispute ID is required.");
+    throw new Error('Dispute ID is required.');
   }
 
   try {
@@ -180,25 +168,65 @@ export async function resolveDispute(
   }
 }
 
+/**
+ * Manually (re-)triggers the `dispute.resolved` webhook notification for a
+ * dispute, so external CRM/ERP integrations can be notified of the status
+ * change even if the original automatic delivery failed.
+ */
+export async function triggerDisputeWebhook(disputeId: string): Promise<void> {
+  if (!disputeId?.trim()) {
+    throw new Error('Dispute ID is required.');
+  }
+
+  try {
+    await api.post(`${SLA_ENDPOINTS.DISPUTES}/${disputeId}/notify-webhook`);
+  } catch (error: unknown) {
+    throw new Error(extractErrorMessage(error));
+  }
+}
+
+/**
+ * Escalate a dispute to senior management (opsoll/noc-iq-fe#496).
+ * The dispute must be pending (open or under_review) and older than the
+ * 7-day escalation threshold; the backend enforces this as well.
+ */
+export async function escalateDispute(
+  disputeId: string,
+  payload: EscalateDisputePayload
+): Promise<SLADispute> {
+  if (!disputeId?.trim()) {
+    throw new Error('Dispute ID is required.');
+  }
+  if (!payload.manager_tag?.trim()) {
+    throw new Error('A manager tag is required to escalate a dispute.');
+  }
+
+  try {
+    const response = await api.post<SLADispute>(
+      `${SLA_ENDPOINTS.DISPUTES}/${disputeId}/escalate`,
+      payload
+    );
+
+    return response.data;
+  } catch (error: unknown) {
+    throw new Error(extractErrorMessage(error));
+  }
+}
+
 /* -------------------------------------------------------------------------- */
 /*                            Optional Query Keys                             */
 /* -------------------------------------------------------------------------- */
 
 export const slaQueryKeys = {
-  all: ["sla"] as const,
+  all: ['sla'] as const,
 
-  calculate: (
-    params: CalculateSLAParams
-  ) => ["sla", "calculate", params] as const,
+  calculate: (params: CalculateSLAParams) =>
+    ['sla', 'calculate', params] as const,
 
-  preview: (
-    params: PreviewSLAParams
-  ) => ["sla", "preview", params] as const,
+  preview: (params: PreviewSLAParams) => ['sla', 'preview', params] as const,
 
-  disputes: (
-    params?: Partial<DisputeListParams>
-  ) => ["sla", "disputes", params] as const,
+  disputes: (params?: Partial<DisputeListParams>) =>
+    ['sla', 'disputes', params] as const,
 
-  dispute: (id: string) =>
-    ["sla", "dispute", id] as const,
+  dispute: (id: string) => ['sla', 'dispute', id] as const,
 };

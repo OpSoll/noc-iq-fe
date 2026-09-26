@@ -1,12 +1,21 @@
-"use client";
+'use client';
 
-import type { ReactNode } from "react";
-import { useConflictDetection } from "@/components/notifications/ConflictNotification";
-import { ConflictNotification } from "@/components/notifications/ConflictNotification";
-import SessionExpiryModal from "@/components/session/SessionExpiryModal";
-import { getPendingMutations, clearAllPendingMutations } from "@/lib/mutationTracker";
+import type { ReactNode } from 'react';
+import { useConflictDetection } from '@/components/notifications/ConflictNotification';
+import { ConflictNotification } from '@/components/notifications/ConflictNotification';
+import SessionExpiryModal from '@/components/session/SessionExpiryModal';
+import {
+  getPendingMutations,
+  clearAllPendingMutations,
+} from '@/lib/mutationTracker';
 
-export default function ClientShell({ children, nonce }: { children: ReactNode; nonce?: string }) {
+export default function ClientShell({
+  children,
+  nonce,
+}: {
+  children: ReactNode;
+  nonce?: string;
+}) {
   const { conflict, dismiss, refreshContext } = useConflictDetection();
   const pendingMutations = getPendingMutations().map((m) => ({
     id: m.id,
@@ -15,7 +24,7 @@ export default function ClientShell({ children, nonce }: { children: ReactNode; 
       try {
         const res = await fetch(m.url, {
           method: m.method,
-          headers: { "Content-Type": "application/json" },
+          headers: { 'Content-Type': 'application/json' },
           body: m.data ? JSON.stringify(m.data) : undefined,
         });
         if (!res.ok) throw new Error(`Retry failed: ${res.status}`);
@@ -27,7 +36,15 @@ export default function ClientShell({ children, nonce }: { children: ReactNode; 
 
   return (
     <>
-      {children}
+      {/*
+       * #main-content is the focus target of the SkipNav link (closes #702).
+       * tabIndex={-1} makes the <main> element programmatically focusable
+       * without adding it to the natural tab order, so the skip link can
+       * hand focus directly here and screen readers announce the landmark.
+       */}
+      <main id="main-content" tabIndex={-1} className="outline-none">
+        {children}
+      </main>
       {conflict && (
         <ConflictNotification
           conflict={conflict}

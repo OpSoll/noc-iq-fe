@@ -12,7 +12,7 @@ export function getVirtualRange(
   viewportHeight: number,
   rowHeight: number,
   totalRows: number,
-  overscan = 5,
+  overscan = 5
 ): VirtualRange {
   const start = Math.max(0, Math.floor(scrollTop / rowHeight) - overscan);
   const visibleCount = Math.ceil(viewportHeight / rowHeight) + overscan * 2;
@@ -30,7 +30,10 @@ function relativeLuminance([r, g, b]: [number, number, number]): number {
 }
 
 // rgbA/rgbB as [r,g,b] 0-255 tuples. Returns the WCAG contrast ratio (1-21).
-export function contrastRatio(rgbA: [number, number, number], rgbB: [number, number, number]): number {
+export function contrastRatio(
+  rgbA: [number, number, number],
+  rgbB: [number, number, number]
+): number {
   const l1 = relativeLuminance(rgbA);
   const l2 = relativeLuminance(rgbB);
   const lighter = Math.max(l1, l2);
@@ -38,6 +41,10 @@ export function contrastRatio(rgbA: [number, number, number], rgbB: [number, num
   return (lighter + 0.05) / (darker + 0.05);
 }
 
-export function passesAA(rgbA: [number, number, number], rgbB: [number, number, number], largeText = false): boolean {
+export function passesAA(
+  rgbA: [number, number, number],
+  rgbB: [number, number, number],
+  largeText = false
+): boolean {
   return contrastRatio(rgbA, rgbB) >= (largeText ? 3 : 4.5);
 }

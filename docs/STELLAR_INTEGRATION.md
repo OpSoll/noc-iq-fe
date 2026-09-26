@@ -113,6 +113,7 @@ NOCIQ integrates Stellar to solve key problems in telecom network operations:
    - Python: `pip install stellar-sdk`
 
 4. **Soroban CLI** (for smart contracts)
+
    ```bash
    cargo install --locked soroban-cli
    ```
@@ -128,6 +129,7 @@ NOCIQ integrates Stellar to solve key problems in telecom network operations:
 ### 1. Environment Variables
 
 **Frontend (.env.local):**
+
 ```env
 # Stellar Network
 VITE_STELLAR_NETWORK=testnet
@@ -141,6 +143,7 @@ VITE_NOCIQ_TOKEN_ADDRESS=CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 ```
 
 **Backend (.env):**
+
 ```env
 # Stellar Configuration
 STELLAR_NETWORK=testnet
@@ -172,6 +175,7 @@ MAX_AUTO_PAYMENT_AMOUNT=10000
 5. Click "Fund account" to get testnet XLM from Friendbot
 
 **Create two accounts:**
+
 - **Pool Account**: For holding and distributing funds
 - **Operator Account**: For testing penalty payments
 
@@ -189,6 +193,7 @@ Before receiving USDC, accounts must establish a trustline:
 6. Sign and submit
 
 **Using Stellar SDK (Python):**
+
 ```python
 from stellar_sdk import Server, Keypair, TransactionBuilder, Network, Asset
 
@@ -218,12 +223,14 @@ print(f"Transaction hash: {response['hash']}")
 ### 4. Deploy Smart Contracts
 
 **Build contracts:**
+
 ```bash
 cd contracts/sla_calculator
 cargo build --target wasm32-unknown-unknown --release
 ```
 
 **Deploy to testnet:**
+
 ```bash
 soroban contract deploy \
   --wasm target/wasm32-unknown-unknown/release/sla_calculator.wasm \
@@ -232,6 +239,7 @@ soroban contract deploy \
 ```
 
 **Initialize contract:**
+
 ```bash
 soroban contract invoke \
   --id CCCC... \
@@ -252,7 +260,11 @@ Save the contract ID to your `.env` files.
 ### Frontend: Connect Wallet
 
 ```typescript
-import { isConnected, requestAccess, getPublicKey } from '@stellar/freighter-api';
+import {
+  isConnected,
+  requestAccess,
+  getPublicKey,
+} from '@stellar/freighter-api';
 
 async function connectWallet() {
   // Check if Freighter is installed
@@ -261,11 +273,11 @@ async function connectWallet() {
     alert('Please install Freighter wallet');
     return;
   }
-  
+
   // Request access
   const publicKey = await requestAccess();
   console.log('Connected:', publicKey);
-  
+
   return publicKey;
 }
 ```
@@ -278,7 +290,7 @@ from stellar_sdk import Keypair
 def create_wallet():
     """Create a new Stellar keypair"""
     keypair = Keypair.random()
-    
+
     return {
         "public_key": keypair.public_key,
         "secret_key": keypair.secret  # Store securely!
@@ -293,16 +305,16 @@ import { Server } from 'stellar-sdk';
 async function getBalance(publicKey: string) {
   const server = new Server('https://horizon-testnet.stellar.org');
   const account = await server.loadAccount(publicKey);
-  
+
   const balances = {};
-  account.balances.forEach(balance => {
+  account.balances.forEach((balance) => {
     if (balance.asset_type === 'native') {
       balances.XLM = balance.balance;
     } else {
       balances[balance.asset_code] = balance.balance;
     }
   });
-  
+
   return balances;
 }
 ```
@@ -322,7 +334,7 @@ async function getBalance(publicKey: string) {
 ### SLA Thresholds
 
 | Severity | Threshold | Penalty Rate | Base Reward |
-|----------|-----------|--------------|-------------|
+| -------- | --------- | ------------ | ----------- |
 | Critical | 15 min    | $100/min     | $750        |
 | High     | 30 min    | $50/min      | $750        |
 | Medium   | 60 min    | $25/min      | $750        |
@@ -333,13 +345,13 @@ async function getBalance(publicKey: string) {
 ```
 If MTTR > Threshold:
   Penalty = (MTTR - Threshold) × Penalty_Rate
-  
+
 Example:
   Severity: Critical
   MTTR: 25 minutes
   Threshold: 15 minutes
   Penalty Rate: $100/min
-  
+
   Penalty = (25 - 15) × 100 = $1,000
 ```
 
@@ -348,11 +360,11 @@ Example:
 ```
 If MTTR ≤ Threshold:
   Performance % = (MTTR / Threshold) × 100
-  
+
   If Performance < 50%:    Multiplier = 2.0 (Exceptional)
   If Performance < 75%:    Multiplier = 1.5 (Excellent)
   If Performance ≤ 100%:   Multiplier = 1.0 (Good)
-  
+
   Reward = Base_Reward × Multiplier
 
 Example:
@@ -361,7 +373,7 @@ Example:
   Threshold: 30 minutes
   Performance: 33% (< 50%)
   Base Reward: $750
-  
+
   Reward = $750 × 2.0 = $1,500
 ```
 
@@ -373,21 +385,21 @@ from app.services.stellar.payment_service import PaymentService
 
 async def process_outage_resolution(outage_id: str):
     """Process SLA payment after outage resolution"""
-    
+
     # Get outage details
     outage = await get_outage(outage_id)
-    
+
     # Calculate SLA result
     calculator = SLACalculator()
     sla_result = await calculator.calculate_sla_result(outage)
-    
+
     # Invoke smart contract
     contract_result = await calculator.invoke_sla_contract(
         outage_id=outage["id"],
         severity=outage["severity"],
         mttr_minutes=sla_result["mttr_minutes"]
     )
-    
+
     # Execute payment if auto-payment enabled
     if AUTO_PAYMENT_ENABLED:
         payment_service = PaymentService()
@@ -396,7 +408,7 @@ async def process_outage_resolution(outage_id: str):
             operator_address=outage["operator_wallet"],
             noc_team_address=outage["noc_team_wallet"]
         )
-        
+
         return {
             "sla_result": contract_result,
             "payment": payment
@@ -425,13 +437,13 @@ from stellar_sdk.soroban_rpc import GetTransactionStatus
 
 async def invoke_sla_contract(outage_id: str, severity: str, mttr: int):
     """Invoke SLA calculator contract"""
-    
+
     soroban_server = SorobanServer("https://soroban-testnet.stellar.org")
     source_keypair = Keypair.from_secret(os.getenv("STELLAR_POOL_SECRET_KEY"))
-    
+
     # Build contract invocation
     source_account = server.load_account(source_keypair.public_key)
-    
+
     transaction = (
         TransactionBuilder(source_account, Network.TESTNET_NETWORK_PASSPHRASE, base_fee=100)
         .append_invoke_contract_function_op(
@@ -446,24 +458,24 @@ async def invoke_sla_contract(outage_id: str, severity: str, mttr: int):
         .set_timeout(30)
         .build()
     )
-    
+
     # Simulate first
     simulated = soroban_server.simulate_transaction(transaction)
-    
+
     # Prepare and sign
     prepared = soroban_server.prepare_transaction(transaction, simulated)
     prepared.sign(source_keypair)
-    
+
     # Submit
     response = soroban_server.send_transaction(prepared)
-    
+
     # Wait for confirmation
     while True:
         status = soroban_server.get_transaction(response.hash)
         if status.status != GetTransactionStatus.NOT_FOUND:
             break
         await asyncio.sleep(1)
-    
+
     # Parse result
     return parse_contract_result(status.return_value)
 ```
@@ -534,6 +546,7 @@ curl http://localhost:8000/api/v1/sla/status/OUT001
 ### 5. Verify on Blockchain
 
 Visit [Stellar Expert](https://stellar.expert/explorer/testnet) and search for your transaction hash to see:
+
 - Transaction details
 - Payment amount
 - Source and destination
@@ -595,6 +608,7 @@ Transfer sufficient USDC to your pool account to cover expected payments.
 ### Payments
 
 **POST `/api/v1/payments/process-sla`**
+
 ```json
 {
   "outage_id": "OUT001"
@@ -602,13 +616,14 @@ Transfer sufficient USDC to your pool account to cover expected payments.
 ```
 
 **GET `/api/v1/payments/history`**
+
 ```json
 {
   "transactions": [
     {
       "tx_hash": "abc123...",
       "type": "penalty",
-      "amount": 1000.00,
+      "amount": 1000.0,
       "asset": "USDC",
       "status": "confirmed",
       "timestamp": "2026-01-16T10:30:00Z"
@@ -620,6 +635,7 @@ Transfer sufficient USDC to your pool account to cover expected payments.
 ### Wallets
 
 **POST `/api/v1/wallets/create`**
+
 ```json
 {
   "user_id": "user123"
@@ -627,23 +643,25 @@ Transfer sufficient USDC to your pool account to cover expected payments.
 ```
 
 **GET `/api/v1/wallets/{address}/balance`**
+
 ```json
 {
-  "XLM": 1000.00,
-  "USDC": 5000.00,
-  "NOCIQ": 500.00
+  "XLM": 1000.0,
+  "USDC": 5000.0,
+  "NOCIQ": 500.0
 }
 ```
 
 ### SLA
 
 **GET `/api/v1/sla/status/{outage_id}`**
+
 ```json
 {
   "status": "violated",
   "mttr_minutes": 25,
   "threshold_minutes": 15,
-  "penalty_amount": 1000.00,
+  "penalty_amount": 1000.0,
   "contract_tx_hash": "def456..."
 }
 ```
@@ -655,36 +673,45 @@ Transfer sufficient USDC to your pool account to cover expected payments.
 ### Wallet Connection Issues
 
 **Problem**: "Freighter not detected"
+
 - **Solution**: Install Freighter browser extension from [freighter.app](https://freighter.app/)
 
 **Problem**: "Wrong network"
+
 - **Solution**: Open Freighter → Settings → Switch to Testnet (for development)
 
 ### Transaction Failures
 
 **Problem**: "Transaction failed: Insufficient balance"
+
 - **Solution**: Ensure account has enough XLM for fees (~0.00001 XLM per operation)
 
 **Problem**: "Transaction failed: No trustline"
+
 - **Solution**: Establish trustline for USDC before receiving payments
 
 **Problem**: "Transaction timeout"
+
 - **Solution**: Stellar network may be congested. Wait and retry, or increase timeout
 
 ### Smart Contract Issues
 
 **Problem**: "Contract not found"
+
 - **Solution**: Verify contract ID in environment variables. Ensure contract is deployed.
 
 **Problem**: "Contract invocation failed"
+
 - **Solution**: Check contract parameters. Ensure source account is authorized.
 
 ### Payment Issues
 
 **Problem**: "Payment not executing"
+
 - **Solution**: Check `AUTO_PAYMENT_ENABLED` flag. Verify wallet balances. Check logs for errors.
 
 **Problem**: "Payment stuck in pending"
+
 - **Solution**: Check transaction status on Stellar Explorer. May need to resubmit.
 
 ---

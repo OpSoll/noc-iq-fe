@@ -37,6 +37,7 @@ The frontend consumes the backend API (noc-iq-be) and integrates with Stellar wa
 - update outage status
 
 Depends on:
+
 - /api/v1/outages
 
 ---
@@ -49,6 +50,7 @@ Depends on:
 - display SLA timeline
 
 Depends on:
+
 - /api/v1/sla/status
 - /api/v1/sla/calculate
 
@@ -61,6 +63,7 @@ Depends on:
 - display blockchain explorer links
 
 Depends on:
+
 - /api/v1/payments/history
 
 ---
@@ -72,6 +75,7 @@ Depends on:
 - show wallet address
 
 Depends on:
+
 - Stellar wallet APIs
 - /api/v1/wallets
 
@@ -84,6 +88,7 @@ Depends on:
 - payment trends
 
 Depends on:
+
 - /api/v1/analytics
 
 ---
@@ -109,21 +114,25 @@ Depends on:
 ## Known Risk Areas (Generate Issues)
 
 ### API Integration
+
 - inconsistent API responses
 - missing error handling
 - duplicated fetch logic
 
 ### State Management
+
 - stale data
 - inconsistent caching
 - race conditions
 
 ### Wallet Integration
+
 - connection failures
 - network mismatch (testnet vs mainnet)
 - signing errors
 
 ### UX
+
 - poor loading states
 - unclear error messages
 - lack of feedback on actions
@@ -145,6 +154,7 @@ Depends on:
 - noc-iq-contracts → indirectly via backend
 
 Important:
+
 - API changes must reflect in frontend
 - SLA/payment logic must match backend output
 

@@ -1,8 +1,11 @@
-import * as React from "react";
+import * as React from 'react';
 
 type IconProps = React.SVGProps<SVGSVGElement>;
 
-function SvgIcon({ children, ...props }: IconProps & { children: React.ReactNode }) {
+function SvgIcon({
+  children,
+  ...props
+}: IconProps & { children: React.ReactNode }) {
   return (
     <svg
       viewBox="0 0 24 24"

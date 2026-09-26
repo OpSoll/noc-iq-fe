@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 // Closes #375: full-text outage search with debounced input
 // Closes #376: dashboard widget layout persistence
 
 export function useDebouncedOutageSearch(delayMs = 300) {
-  const [query, setQuery] = useState("");
-  const [debounced, setDebounced] = useState("");
+  const [query, setQuery] = useState('');
+  const [debounced, setDebounced] = useState('');
 
   useEffect(() => {
     const timer = setTimeout(() => setDebounced(query), delayMs);
@@ -14,11 +14,11 @@ export function useDebouncedOutageSearch(delayMs = 300) {
   return { query, setQuery, debouncedQuery: debounced };
 }
 
-const LAYOUT_KEY = "noc_dashboard_widget_order";
+const LAYOUT_KEY = 'noc_dashboard_widget_order';
 
 export function useDashboardWidgetLayout(defaultOrder: string[]) {
   const [order, setOrder] = useState<string[]>(() => {
-    if (typeof window === "undefined") return defaultOrder;
+    if (typeof window === 'undefined') return defaultOrder;
     const stored = localStorage.getItem(LAYOUT_KEY);
     if (stored) {
       try {

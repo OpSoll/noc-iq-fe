@@ -16,10 +16,14 @@ export function validateChartData(
 ): ValidationResult {
   const errors: string[] = [];
   if (!Array.isArray(data) || data.length === 0) {
-    return { valid: false, errors: ["Data is empty or not an array"], sanitized: [] };
+    return {
+      valid: false,
+      errors: ['Data is empty or not an array'],
+      sanitized: [],
+    };
   }
   const sanitized = data.filter((item, idx) => {
-    if (!item || typeof item !== "object") {
+    if (!item || typeof item !== 'object') {
       errors.push(`Item at index ${idx} is not an object`);
       return false;
     }
@@ -32,7 +36,7 @@ export function validateChartData(
     }
     if (schema.numericFields) {
       for (const field of schema.numericFields) {
-        if (obj[field] !== undefined && typeof obj[field] !== "number") {
+        if (obj[field] !== undefined && typeof obj[field] !== 'number') {
           errors.push(`Field "${field}" at index ${idx} is not a number`);
           return false;
         }
@@ -40,5 +44,9 @@ export function validateChartData(
     }
     return true;
   });
-  return { valid: errors.length === 0, errors, sanitized: sanitized as Record<string, unknown>[] };
+  return {
+    valid: errors.length === 0,
+    errors,
+    sanitized: sanitized as Record<string, unknown>[],
+  };
 }

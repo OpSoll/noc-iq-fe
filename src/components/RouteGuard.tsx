@@ -1,21 +1,21 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useCallback, useEffect } from "react";
-import { useSession } from "@/hooks/useSession";
-import { ADMIN_ROUTES } from "@/components/Navigation";
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
+import { useCallback, useEffect } from 'react';
+import { useSession } from '@/hooks/useSession';
+import { ADMIN_ROUTES } from '@/components/Navigation';
 import {
   getCapabilityForPath,
   hasCapability,
   getModeFromBackend,
   type CapabilityMode,
-} from "@/services/capabilities";
+} from '@/services/capabilities';
 
 // Routes that do not require authentication
-const PUBLIC_PATHS = ["/login", "/register"];
+const PUBLIC_PATHS = ['/login', '/register'];
 // Routes that are always allowed for any authenticated user
-const ALWAYS_ALLOWED = ["/setting"];
+const ALWAYS_ALLOWED = ['/setting'];
 
 export default function RouteGuard({
   children,
@@ -28,11 +28,11 @@ export default function RouteGuard({
 
   const isPublic = PUBLIC_PATHS.some((p) => pathname.startsWith(p));
   const isAdminRoute = ADMIN_ROUTES.some((p) => pathname.startsWith(p));
-  const isAdmin = user?.role === "admin";
+  const isAdmin = user?.role === 'admin';
   const isAlwaysAllowed = ALWAYS_ALLOWED.some((p) => pathname.startsWith(p));
 
   const checkCapability = useCallback(() => {
-    if (!user || state !== "authenticated") return true;
+    if (!user || state !== 'authenticated') return true;
     if (isPublic || isAlwaysAllowed) return true;
     const required = getCapabilityForPath(pathname);
     if (!required) return true;
@@ -41,13 +41,13 @@ export default function RouteGuard({
   }, [user, state, isPublic, isAlwaysAllowed, pathname]);
 
   useEffect(() => {
-    if (state === "unauthenticated" && !isPublic) {
-      router.replace("/login");
+    if (state === 'unauthenticated' && !isPublic) {
+      router.replace('/login');
     }
   }, [state, isPublic, router]);
 
   // Loading — don't flash protected content
-  if (state === "loading") {
+  if (state === 'loading') {
     return (
       <div className="flex min-h-screen items-center justify-center text-sm text-slate-400">
         Loading…
@@ -56,12 +56,12 @@ export default function RouteGuard({
   }
 
   // Unauthenticated on a protected route — redirect in progress, render nothing
-  if (state === "unauthenticated" && !isPublic) {
+  if (state === 'unauthenticated' && !isPublic) {
     return null;
   }
 
   // Role-based capability check
-  if (state === "authenticated" && user && !isPublic && !isAlwaysAllowed) {
+  if (state === 'authenticated' && user && !isPublic && !isAlwaysAllowed) {
     const required = getCapabilityForPath(pathname);
     if (required && !hasCapability(user.role, required)) {
       return (
@@ -88,7 +88,7 @@ export default function RouteGuard({
             This area is not available with your current permissions.
           </p>
           <button
-            onClick={() => router.push("/")}
+            onClick={() => router.push('/')}
             className="rounded-lg bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
           >
             Return to dashboard
@@ -99,7 +99,7 @@ export default function RouteGuard({
   }
 
   // Admin route fallback
-  if (state === "authenticated" && isAdminRoute && !isAdmin) {
+  if (state === 'authenticated' && isAdminRoute && !isAdmin) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-3 text-center">
         <p className="text-lg font-semibold text-slate-800">Access denied</p>

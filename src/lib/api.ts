@@ -1,17 +1,17 @@
-import axios from "axios";
-import { getCorrelationId } from "@/lib/telemetry/tracer";
-import { networkEvents } from "@/lib/network-events";
+import axios from 'axios';
+import { getCorrelationId } from '@/lib/telemetry/tracer';
+import { networkEvents } from '@/lib/network-events';
 
-export const TOKEN_KEY = "noc_access_token";
-export const REFRESH_KEY = "noc_refresh_token";
+export const TOKEN_KEY = 'noc_access_token';
+export const REFRESH_KEY = 'noc_refresh_token';
 
 export function getAccessToken(): string | null {
-  if (typeof window === "undefined") return null;
+  if (typeof window === 'undefined') return null;
   return localStorage.getItem(TOKEN_KEY);
 }
 
 export function getRefreshToken(): string | null {
-  if (typeof window === "undefined") return null;
+  if (typeof window === 'undefined') return null;
   return localStorage.getItem(REFRESH_KEY);
 }
 
@@ -26,13 +26,13 @@ export function clearTokens(): void {
 }
 
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api/v1";
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000/api/v1';
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 15_000,
   headers: {
-    "Content-Type": "application/json",
+    'Content-Type': 'application/json',
   },
   withCredentials: true,
 });
@@ -45,7 +45,7 @@ api.interceptors.request.use((config) => {
   }
   const correlationId = getCorrelationId();
   if (correlationId && config.headers) {
-    config.headers["X-Correlation-ID"] = correlationId;
+    config.headers['X-Correlation-ID'] = correlationId;
   }
   return config;
 });
@@ -57,11 +57,11 @@ const retried = new WeakSet<object>();
 
 async function doRefresh(): Promise<string> {
   const refreshToken = getRefreshToken();
-  if (!refreshToken) throw new Error("No refresh token");
+  if (!refreshToken) throw new Error('No refresh token');
 
   const res = await axios.post<{ access_token: string; refresh_token: string }>(
     `${API_BASE_URL}/auth/refresh`,
-    { refresh_token: refreshToken },
+    { refresh_token: refreshToken }
   );
   setTokens(res.data.access_token, res.data.refresh_token);
   return res.data.access_token;
@@ -83,7 +83,7 @@ api.interceptors.response.use(
     const config = axiosErr?.config;
 
     // Handle network errors (e.g., backend unreachable)
-    if (axiosErr.code === "ECONNABORTED" || axiosErr.code === "ERR_NETWORK") {
+    if (axiosErr.code === 'ECONNABORTED' || axiosErr.code === 'ERR_NETWORK') {
       networkEvents.emit(false);
       return Promise.reject(normalizeApiError(err));
     }
@@ -106,20 +106,20 @@ api.interceptors.response.use(
         return api(config as unknown as Parameters<typeof api>[0]);
       } catch {
         clearTokens();
-        if (typeof window !== "undefined") {
-          window.dispatchEvent(new Event("auth:logout"));
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new Event('auth:logout'));
         }
         return Promise.reject(
-          new Error("Session expired. Please sign in again."),
+          new Error('Session expired. Please sign in again.')
         );
       }
     }
 
     return Promise.reject(normalizeApiError(err));
-  },
+  }
 );
 
-export type ApiErrorKind = "auth" | "validation" | "not_found" | "unknown";
+export type ApiErrorKind = 'auth' | 'validation' | 'not_found' | 'unknown';
 
 export interface NormalizedApiError {
   message: string;
@@ -138,20 +138,20 @@ export function normalizeApiError(err: unknown): NormalizedApiError {
   const status = e?.response?.status;
   const detail = e?.response?.data?.detail;
   const message = Array.isArray(detail)
-    ? detail.map((d) => d.msg).join("; ")
+    ? detail.map((d) => d.msg).join('; ')
     : (detail ??
       e?.response?.data?.message ??
       e?.message ??
-      "Unexpected API error");
+      'Unexpected API error');
 
   const kind: ApiErrorKind =
     status === 401 || status === 403
-      ? "auth"
+      ? 'auth'
       : status === 422
-        ? "validation"
+        ? 'validation'
         : status === 404
-          ? "not_found"
-          : "unknown";
+          ? 'not_found'
+          : 'unknown';
 
   return { message, kind, status };
 }

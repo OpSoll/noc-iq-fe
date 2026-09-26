@@ -1,43 +1,45 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef } from 'react';
 
-export type RaceGuardState = "idle" | "pending" | "resolved" | "rejected" | "superseded";
+export type RaceGuardState =
+  'idle' | 'pending' | 'resolved' | 'rejected' | 'superseded';
 
 export type RaceGuardResult<T> = {
-  execute: (...args: unknown[]) => Promise<T>;
+  execute: (operation: () => Promise<T>) => Promise<T>;
   state: RaceGuardState;
+  isPending: boolean;
   reset: () => void;
 };
 
 export function useRaceConditionGuard<T = unknown>(): RaceGuardResult<T> {
-  const [state, setState] = useState<RaceGuardState>("idle");
+  const [state, setState] = useState<RaceGuardState>('idle');
   const pendingRef = useRef<symbol | null>(null);
 
   const execute = useCallback(async (...args: unknown[]): Promise<T> => {
     const token = Symbol();
     pendingRef.current = token;
-    setState("pending");
+    setState('pending');
 
     try {
       const fn = args[0] as () => Promise<T>;
       const result = await fn();
       if (pendingRef.current !== token) {
-        setState("superseded");
+        setState('superseded');
         return result;
       }
-      setState("resolved");
+      setState('resolved');
       return result;
     } catch {
       if (pendingRef.current === token) {
-        setState("rejected");
+        setState('rejected');
       }
-      throw new Error("Operation superseded by a newer request");
+      throw new Error('Operation superseded by a newer request');
     }
   }, []);
 
   const reset = useCallback(() => {
     pendingRef.current = null;
-    setState("idle");
+    setState('idle');
   }, []);
 
-  return { execute, state, reset };
+  return { execute, state, isPending: state === 'pending', reset };
 }

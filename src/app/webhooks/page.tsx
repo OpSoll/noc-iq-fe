@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useSearchParams } from "next/navigation";
-import { useState, useEffect, useMemo } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { FixedSizeList } from "react-window";
+import { useSearchParams } from 'next/navigation';
+import { useState, useEffect, useMemo } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { FixedSizeList } from 'react-window';
 import {
   fetchWebhooks,
   createWebhook,
@@ -11,23 +11,41 @@ import {
   deleteWebhook,
   fetchWebhookDeliveries,
   retryDelivery,
-} from "@/services/webhookService";
-import { saveDraft, loadDraft, clearDraft } from "@/lib/drafts";
-import type { Webhook, WebhookDelivery } from "@/types/webhook";
+  testWebhookConnection,
+  rotateWebhookSecret,
+} from '@/services/webhookService';
+import { saveDraft, loadDraft, clearDraft } from '@/lib/drafts';
+import type { Webhook, WebhookDelivery } from '@/types/webhook';
+import { WebhookDeliveryChart } from '@/components/webhooks/WebhookDeliveryChart';
+import { DeliverySearchFilter } from '@/components/webhooks/DeliverySearchFilter';
+import {
+  filterDeliveryLogs,
+  type DeliveryLogFilters,
+  type DeliveryStatusCategory,
+} from '@/lib/webhookDeliveryFilter';
+import { JsonPayloadViewer } from '@/components/webhooks/JsonPayloadViewer';
+import { useToast } from '@/components/ui/toast';
+import { RotateSecretModal } from '@/components/webhooks/RotateSecretModal';
 
 const AVAILABLE_EVENTS = [
-  "outage.created",
-  "outage.resolved",
-  "payment.processed",
-  "sla.breached",
+  'outage.created',
+  'outage.resolved',
+  'payment.processed',
+  'sla.breached',
 ];
-const DRAFT_KEY = "webhook-new";
+const DRAFT_KEY = 'webhook-new';
 
 export default function WebhooksPage() {
   const qc = useQueryClient();
+  const toast = useToast();
   const [selectedWebhook, setSelectedWebhook] = useState<Webhook | null>(null);
+  const [inspectedDelivery, setInspectedDelivery] =
+    useState<WebhookDelivery | null>(null);
+  const [rotatingWebhookId, setRotatingWebhookId] = useState<string | null>(
+    null
+  );
   const [showForm, setShowForm] = useState(false);
-  const [formUrl, setFormUrl] = useState("");
+  const [formUrl, setFormUrl] = useState('');
   const [formEvents, setFormEvents] = useState<string[]>([]);
   const [formError, setFormError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -36,12 +54,22 @@ export default function WebhooksPage() {
   const [draftRestored, setDraftRestored] = useState(hasDraft);
 
   const searchParams = useSearchParams();
-  const [statusFilter, setStatusFilter] = useState(
-    searchParams.get("status") || "all",
-  );
-  const [eventFilter, setEventFilter] = useState(
-    searchParams.get("event") || "all",
-  );
+  // Normalizes legacy `?status=` values (success/client_error/server_error)
+  // to the HTTP status categories used by DeliverySearchFilter (#674).
+  const initialStatus = (() => {
+    const raw = searchParams.get('status') || 'all';
+    if (raw === 'success') return '2xx';
+    if (raw === 'client_error') return '4xx';
+    if (raw === 'server_error') return '5xx';
+    if (raw === '2xx' || raw === '4xx' || raw === '5xx') return raw;
+    return 'all';
+  })();
+  const [deliveryFilters, setDeliveryFilters] = useState<DeliveryLogFilters>({
+    search: '',
+    statusCategory: initialStatus as DeliveryStatusCategory,
+    eventTopic: searchParams.get('event') || 'all',
+    date: '',
+  });
 
   useEffect(() => {
     if (!showForm || editingId || !draftRestored) return;
@@ -57,9 +85,9 @@ export default function WebhooksPage() {
   function restoreWebhookDraft() {
     const draft = loadDraft(DRAFT_KEY);
     if (draft) {
-      setFormUrl(draft.values.url || "");
+      setFormUrl(draft.values.url || '');
       try {
-        setFormEvents(JSON.parse(draft.values.events || "[]"));
+        setFormEvents(JSON.parse(draft.values.events || '[]'));
       } catch {
         setFormEvents([]);
       }
@@ -73,33 +101,82 @@ export default function WebhooksPage() {
   }
 
   const { data: webhooks = [], isLoading } = useQuery({
-    queryKey: ["webhooks"],
+    queryKey: ['webhooks'],
     queryFn: fetchWebhooks,
   });
 
   const { data: deliveries = [], isLoading: deliveriesLoading } = useQuery({
-    queryKey: ["webhook-deliveries", selectedWebhook?.id],
+    queryKey: ['webhook-deliveries', selectedWebhook?.id],
     queryFn: () => fetchWebhookDeliveries(selectedWebhook!.id),
     enabled: !!selectedWebhook,
   });
 
   const filteredDeliveries = useMemo(() => {
-    return deliveries.filter((d) => {
-      const code = d.response_code ?? -1;
-      const statusMatch =
-        statusFilter === "all" ||
-        (statusFilter === "success" && code >= 200 && code < 300) ||
-        (statusFilter === "client_error" && code >= 400 && code < 500) ||
-        (statusFilter === "server_error" && code >= 500);
-      const eventMatch = eventFilter === "all" || d.event === eventFilter;
-      return statusMatch && eventMatch;
+    return filterDeliveryLogs(deliveries, deliveryFilters, {
+      webhookUrl: selectedWebhook?.url,
     });
-  }, [deliveries, statusFilter, eventFilter]);
+  }, [deliveries, deliveryFilters, selectedWebhook?.url]);
+
+  const [customHeaders, setCustomHeaders] = useState<
+    Array<{ key: string; value: string }>
+  >([]);
+  const [retentionDays, setRetentionDays] = useState(30);
+  const [disableThreshold, setDisableThreshold] = useState(5);
+
+  const addHeader = () =>
+    setCustomHeaders([...customHeaders, { key: '', value: '' }]);
+  const removeHeader = (index: number) =>
+    setCustomHeaders(customHeaders.filter((_, i) => i !== index));
+  const updateHeader = (index: number, k: string, v: string) => {
+    const updated = [...customHeaders];
+    updated[index] = { key: k, value: v };
+    setCustomHeaders(updated);
+  };
+
+  const handleExportCSV = () => {
+    const headers = ['ID', 'Event', 'Response Code', 'Timestamp'];
+    const rows = filteredDeliveries.map((d) => [
+      d.id,
+      d.event,
+      d.response_code ?? 'N/A',
+      d.created_at,
+    ]);
+    const csvContent =
+      'data:text/csv;charset=utf-8,' +
+      [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+    const link = document.createElement('a');
+    link.href = encodeURI(csvContent);
+    link.download = 'webhook_deliveries.csv';
+    link.click();
+  };
+
+  const handleExportJSON = () => {
+    const blob = new Blob([JSON.stringify(filteredDeliveries, null, 2)], {
+      type: 'application/json',
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'webhook_deliveries.json';
+    link.click();
+  };
+  const [maxRetries, setMaxRetries] = useState(3);
+  const [backoffSeconds, setBackoffSeconds] = useState(5);
+
+  const verifySnippetNode = `const crypto = require('crypto');
+const signature = req.headers['x-signature'];
+const hash = crypto.createHmac('sha256', secret).update(payload).digest('hex');
+const isValid = crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(hash));`;
+
+  const verifySnippetPython = `import hmac, hashlib
+signature = request.headers.get('X-Signature')
+hash = hmac.new(secret.encode(), payload.encode(), hashlib.sha256).hexdigest()
+is_valid = hmac.compare_digest(signature, hash)`;
 
   const createMutation = useMutation({
     mutationFn: createWebhook,
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["webhooks"] });
+      qc.invalidateQueries({ queryKey: ['webhooks'] });
       clearDraft(DRAFT_KEY);
       resetForm();
     },
@@ -115,7 +192,7 @@ export default function WebhooksPage() {
       payload: Parameters<typeof updateWebhook>[1];
     }) => updateWebhook(id, payload),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["webhooks"] });
+      qc.invalidateQueries({ queryKey: ['webhooks'] });
       resetForm();
     },
     onError: (err: Error) => setFormError(err.message),
@@ -124,8 +201,22 @@ export default function WebhooksPage() {
   const deleteMutation = useMutation({
     mutationFn: deleteWebhook,
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["webhooks"] });
+      qc.invalidateQueries({ queryKey: ['webhooks'] });
       if (selectedWebhook) setSelectedWebhook(null);
+    },
+  });
+
+  const rotateMutation = useMutation({
+    mutationFn: ({
+      webhookId,
+      graceHours,
+    }: {
+      webhookId: string;
+      graceHours: number;
+    }) => rotateWebhookSecret(webhookId, { grace_period_hours: graceHours }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['webhooks'] });
+      setRotatingWebhookId(null);
     },
   });
 
@@ -137,15 +228,23 @@ export default function WebhooksPage() {
       webhookId: string;
       deliveryId: string;
     }) => retryDelivery(webhookId, deliveryId),
-    onSuccess: () =>
+    onSuccess: () => {
       qc.invalidateQueries({
-        queryKey: ["webhook-deliveries", selectedWebhook?.id],
-      }),
+        queryKey: ['webhook-deliveries', selectedWebhook?.id],
+      });
+      toast('Webhook redelivery triggered.', 'success');
+    },
+    onError: (err: Error) =>
+      toast(err.message || 'Webhook redelivery failed.', 'error'),
+  });
+
+  const testConnectionMutation = useMutation({
+    mutationFn: testWebhookConnection,
   });
 
   function resetForm() {
     setShowForm(false);
-    setFormUrl("");
+    setFormUrl('');
     setFormEvents([]);
     setFormError(null);
     setEditingId(null);
@@ -154,7 +253,7 @@ export default function WebhooksPage() {
 
   function openCreate() {
     setEditingId(null);
-    setFormUrl("");
+    setFormUrl('');
     setFormEvents([]);
     setFormError(null);
     setShowForm(true);
@@ -168,17 +267,19 @@ export default function WebhooksPage() {
     setShowForm(true);
   }
 
-  function handleFilterChange(type: "status" | "event", value: string) {
+  function updateDeliveryFilters(next: DeliveryLogFilters) {
+    // Keep deep-linkable `?status=` / `?event=` params in sync so filtered
+    // views remain shareable.
     const url = new URL(window.location.href);
-    url.searchParams.set(type, value);
-    window.history.pushState({}, "", url);
-    if (type === "status") setStatusFilter(value);
-    if (type === "event") setEventFilter(value);
+    url.searchParams.set('status', next.statusCategory);
+    url.searchParams.set('event', next.eventTopic);
+    window.history.pushState({}, '', url);
+    setDeliveryFilters(next);
   }
 
   function toggleEvent(event: string) {
     setFormEvents((prev) =>
-      prev.includes(event) ? prev.filter((e) => e !== event) : [...prev, event],
+      prev.includes(event) ? prev.filter((e) => e !== event) : [...prev, event]
     );
   }
 
@@ -186,11 +287,11 @@ export default function WebhooksPage() {
     e.preventDefault();
     setFormError(null);
     if (!formUrl) {
-      setFormError("URL is required.");
+      setFormError('URL is required.');
       return;
     }
     if (formEvents.length === 0) {
-      setFormError("Select at least one event.");
+      setFormError('Select at least one event.');
       return;
     }
 
@@ -229,7 +330,7 @@ export default function WebhooksPage() {
           className="space-y-4 rounded-xl border bg-white p-5 shadow-sm"
         >
           <h2 className="text-base font-semibold text-gray-700">
-            {editingId ? "Edit webhook" : "New webhook"}
+            {editingId ? 'Edit webhook' : 'New webhook'}
           </h2>
 
           {draftRestoreShown && (
@@ -255,14 +356,38 @@ export default function WebhooksPage() {
             <label className="block text-sm font-medium text-gray-700">
               Payload URL
             </label>
-            <input
-              type="url"
-              required
-              value={formUrl}
-              onChange={(e) => setFormUrl(e.target.value)}
-              placeholder="https://example.com/webhook"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-            />
+            <div className="flex items-center gap-2">
+              <input
+                type="url"
+                required
+                value={formUrl}
+                onChange={(e) => setFormUrl(e.target.value)}
+                placeholder="https://example.com/webhook"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+              <button
+                type="button"
+                onClick={() => testConnectionMutation.mutate(formUrl)}
+                disabled={!formUrl || testConnectionMutation.isPending}
+                className="shrink-0 rounded-lg border px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-40"
+              >
+                {testConnectionMutation.isPending
+                  ? 'Testing…'
+                  : 'Test Connection'}
+              </button>
+            </div>
+            {testConnectionMutation.data && (
+              <p className="text-xs text-green-600">
+                HTTP {testConnectionMutation.data.statusCode} &middot;{' '}
+                {testConnectionMutation.data.latencyMs}ms
+              </p>
+            )}
+            {testConnectionMutation.isError && (
+              <p className="text-xs text-red-600">
+                {(testConnectionMutation.error as Error).message ||
+                  'Connection test failed.'}
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -291,13 +416,33 @@ export default function WebhooksPage() {
             </p>
           )}
 
+          <div className="relative group">
+            <span className="text-xs text-blue-600 cursor-pointer underline">
+              View Event Payload Schema
+            </span>
+            <div className="hidden group-hover:block absolute left-0 bottom-6 bg-slate-900 text-white text-xs rounded p-3 w-64 shadow-lg z-50">
+              <p className="font-bold border-b pb-1 mb-1">Payload Fields:</p>
+              <p>
+                <strong>id:</strong> string (UUID)
+              </p>
+              <p>
+                <strong>event:</strong> string (event name)
+              </p>
+              <p>
+                <strong>timestamp:</strong> number (epoch millis)
+              </p>
+              <p>
+                <strong>data:</strong> object (event content)
+              </p>
+            </div>
+          </div>
           <div className="flex gap-2">
             <button
               type="submit"
               disabled={isSaving}
               className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-40"
             >
-              {isSaving ? "Saving…" : "Save"}
+              {isSaving ? 'Saving…' : 'Save'}
             </button>
             <button
               type="button"
@@ -327,11 +472,11 @@ export default function WebhooksPage() {
                     {wh.url}
                   </p>
                   <p className="mt-0.5 text-xs text-gray-400">
-                    {wh.events.join(", ")} &middot;{" "}
+                    {wh.events.join(', ')} &middot;{' '}
                     <span
-                      className={wh.active ? "text-green-600" : "text-gray-400"}
+                      className={wh.active ? 'text-green-600' : 'text-gray-400'}
                     >
-                      {wh.active ? "Active" : "Inactive"}
+                      {wh.active ? 'Active' : 'Inactive'}
                     </span>
                   </p>
                 </div>
@@ -339,20 +484,30 @@ export default function WebhooksPage() {
                   <button
                     onClick={() =>
                       setSelectedWebhook(
-                        selectedWebhook?.id === wh.id ? null : wh,
+                        selectedWebhook?.id === wh.id ? null : wh
                       )
                     }
                     className="rounded border px-2 py-1 text-xs text-gray-600 hover:bg-gray-50"
                   >
                     {selectedWebhook?.id === wh.id
-                      ? "Hide deliveries"
-                      : "Deliveries"}
+                      ? 'Hide deliveries'
+                      : 'Deliveries'}
                   </button>
                   <button
                     onClick={() => openEdit(wh)}
                     className="rounded border px-2 py-1 text-xs text-gray-600 hover:bg-gray-50"
                   >
                     Edit
+                  </button>
+                  <button
+                    onClick={() =>
+                      setRotatingWebhookId(
+                        rotatingWebhookId === wh.id ? null : wh.id
+                      )
+                    }
+                    className="rounded border border-amber-200 px-2 py-1 text-xs text-amber-700 hover:bg-amber-50"
+                  >
+                    Rotate Secret
                   </button>
                   <button
                     onClick={() => deleteMutation.mutate(wh.id)}
@@ -364,40 +519,36 @@ export default function WebhooksPage() {
                 </div>
               </div>
 
+              {rotatingWebhookId === wh.id && (
+                <RotateSecretModal
+                  webhook={wh}
+                  isRotating={
+                    rotateMutation.isPending &&
+                    rotateMutation.variables?.webhookId === wh.id
+                  }
+                  onRotate={(graceHours) =>
+                    rotateMutation.mutate({ webhookId: wh.id, graceHours })
+                  }
+                  onClose={() => setRotatingWebhookId(null)}
+                />
+              )}
+
               {selectedWebhook?.id === wh.id && (
                 <div className="mt-4 border-t pt-4">
-                  <div className="mb-2 flex items-center justify-between">
+                  <div className="mb-3">
+                    <WebhookDeliveryChart deliveries={filteredDeliveries} />
+                  </div>
+                  <div className="mb-2 space-y-2">
                     <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
                       Delivery history
                     </h3>
-                    <div className="flex gap-2">
-                      <select
-                        value={statusFilter}
-                        onChange={(e) =>
-                          handleFilterChange("status", e.target.value)
-                        }
-                        className="rounded-md border-gray-300 py-1 text-xs focus:border-blue-500 focus:ring-blue-500"
-                      >
-                        <option value="all">All Statuses</option>
-                        <option value="success">Success (2xx)</option>
-                        <option value="client_error">Client Error (4xx)</option>
-                        <option value="server_error">Server Error (5xx)</option>
-                      </select>
-                      <select
-                        value={eventFilter}
-                        onChange={(e) =>
-                          handleFilterChange("event", e.target.value)
-                        }
-                        className="rounded-md border-gray-300 py-1 text-xs focus:border-blue-500 focus:ring-blue-500"
-                      >
-                        <option value="all">All Events</option>
-                        {AVAILABLE_EVENTS.map((ev) => (
-                          <option key={ev} value={ev}>
-                            {ev}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                    <DeliverySearchFilter
+                      filters={deliveryFilters}
+                      onChange={updateDeliveryFilters}
+                      events={AVAILABLE_EVENTS}
+                      totalCount={deliveries.length}
+                      resultCount={filteredDeliveries.length}
+                    />
                   </div>
                   {deliveriesLoading ? (
                     <p className="text-xs text-gray-400">Loading…</p>
@@ -408,7 +559,9 @@ export default function WebhooksPage() {
                   ) : (
                     <div
                       className="rounded-lg"
-                      style={{ height: Math.min(filteredDeliveries.length, 15) * 44 }}
+                      style={{
+                        height: Math.min(filteredDeliveries.length, 15) * 44,
+                      }}
                     >
                       <FixedSizeList
                         height={Math.min(filteredDeliveries.length, 15) * 44}
@@ -427,11 +580,11 @@ export default function WebhooksPage() {
                               <div className="flex items-center gap-3">
                                 <span
                                   className={
-                                    d.status === "success"
-                                      ? "text-green-600"
-                                      : d.status === "failed"
-                                        ? "text-red-600"
-                                        : "text-yellow-600"
+                                    d.status === 'success'
+                                      ? 'text-green-600'
+                                      : d.status === 'failed'
+                                        ? 'text-red-600'
+                                        : 'text-yellow-600'
                                   }
                                 >
                                   {d.status}
@@ -447,7 +600,19 @@ export default function WebhooksPage() {
                                 <span className="text-gray-400">
                                   {new Date(d.created_at).toLocaleString()}
                                 </span>
-                                {d.status === "failed" && (
+                                <button
+                                  onClick={() =>
+                                    setInspectedDelivery(
+                                      inspectedDelivery?.id === d.id ? null : d
+                                    )
+                                  }
+                                  className="rounded border border-gray-200 px-2 py-0.5 text-gray-600 hover:bg-white"
+                                >
+                                  {inspectedDelivery?.id === d.id
+                                    ? 'Hide Payload'
+                                    : 'View Payload'}
+                                </button>
+                                {d.status === 'failed' && (
                                   <button
                                     onClick={() =>
                                       retryMutation.mutate({
@@ -466,6 +631,27 @@ export default function WebhooksPage() {
                           );
                         }}
                       </FixedSizeList>
+                    </div>
+                  )}
+
+                  {inspectedDelivery && (
+                    <div className="mt-3 space-y-3">
+                      <JsonPayloadViewer
+                        title="Request payload"
+                        payload={
+                          inspectedDelivery.request_body ?? {
+                            note: 'No request body recorded for this delivery.',
+                          }
+                        }
+                      />
+                      <JsonPayloadViewer
+                        title="Response body"
+                        payload={
+                          inspectedDelivery.response_body ?? {
+                            note: 'No response body recorded for this delivery.',
+                          }
+                        }
+                      />
                     </div>
                   )}
                 </div>

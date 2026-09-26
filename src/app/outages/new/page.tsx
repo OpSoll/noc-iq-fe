@@ -1,80 +1,79 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { createOutage } from "@/services/outages";
-import { saveDraft, clearDraft, loadDraft } from "@/lib/drafts";
-import type { OutageCreate, Severity, OutageStatus } from "@/types/outages";
+import { TextArea } from '@/components/ui/TextArea';
+import { useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { createOutage } from '@/services/outages';
+import {
+  SITE_ID_ERROR,
+  SITE_ID_PATTERN,
+  validateSiteId,
+} from '@/lib/siteIdValidation';
+import { clearDraft, loadDraft, useAutoSaveDraft } from '@/lib/drafts';
+import { useRaceConditionGuard } from '@/hooks/useRaceConditionGuard';
+import type { OutageCreate, Severity, OutageStatus } from '@/types/outages';
 
-const DRAFT_KEY = "outage-new";
+const DRAFT_KEY = 'outage-new';
 
 function generateId() {
   return `OUT-${Date.now()}`;
 }
 
 const INITIAL_FORM = {
-  site_name: "",
-  site_id: "",
-  severity: "medium" as Severity,
-  status: "open" as OutageStatus,
+  site_name: '',
+  site_id: '',
+  severity: 'medium' as Severity,
+  status: 'open' as OutageStatus,
   detected_at: new Date().toISOString().slice(0, 16),
-  description: "",
-  affected_services: "",
-  affected_subscribers: "",
-  assigned_to: "",
+  description: '',
+  affected_services: '',
+  affected_subscribers: '',
+  assigned_to: '',
 };
 
 export default function NewOutagePage() {
   const router = useRouter();
-  const [hasDraft] = useState(() => !!loadDraft(DRAFT_KEY));
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [draftRestoreShown, setDraftRestoreShown] = useState(hasDraft);
-
-  const [form, setForm] = useState(INITIAL_FORM);
-
-  useEffect(() => {
-    if (hasDraft) {
-      const timer = setInterval(
-        () => saveDraft(DRAFT_KEY, form as unknown as Record<string, string>),
-        3000,
-      );
-      return () => clearInterval(timer);
-    }
-  }, [hasDraft, form]);
-
-  function restoreDraft() {
+  const [form, setForm] = useState(() => {
     const draft = loadDraft(DRAFT_KEY);
-    if (draft) {
-      const merged = { ...INITIAL_FORM };
-      for (const k of Object.keys(INITIAL_FORM)) {
-        if (draft.values[k] !== undefined) {
-          (merged as Record<string, string>)[k] = draft.values[k];
-        }
-      }
-      setForm(merged);
-    }
-    setDraftRestoreShown(false);
-  }
+    if (!draft) return INITIAL_FORM;
 
-  function dismissDraft() {
+    return {
+      ...INITIAL_FORM,
+      ...draft.values,
+    };
+  });
+  const [isDirty, setIsDirty] = useState(false);
+  const [draftRestored] = useState(() => !!loadDraft(DRAFT_KEY));
+  const [error, setError] = useState<string | null>(null);
+  const { execute, isPending } = useRaceConditionGuard();
+  const submissionLock = useRef(false);
+
+  useAutoSaveDraft(DRAFT_KEY, form, isDirty);
+  function discardDraft() {
     clearDraft(DRAFT_KEY);
-    setDraftRestoreShown(false);
+    setForm(INITIAL_FORM);
+    setIsDirty(false);
   }
 
   function set(field: string, value: string) {
+    setIsDirty(true);
     setForm((f) => ({ ...f, [field]: value }));
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (submissionLock.current) return;
     if (!form.site_name.trim() || !form.description.trim()) {
-      setError("Site name and description are required.");
+      setError('Site name and description are required.');
+      return;
+    }
+    if (validateSiteId(form.site_id)) {
+      setError(SITE_ID_ERROR);
       return;
     }
 
-    setSubmitting(true);
     setError(null);
+    submissionLock.current = true;
 
     const payload: OutageCreate = {
       id: generateId(),
@@ -86,7 +85,7 @@ export default function NewOutagePage() {
       description: form.description.trim(),
       affected_services: form.affected_services
         ? form.affected_services
-            .split(",")
+            .split(',')
             .map((s) => s.trim())
             .filter(Boolean)
         : [],
@@ -97,12 +96,15 @@ export default function NewOutagePage() {
     };
 
     try {
-      const outage = await createOutage(payload);
-      clearDraft(DRAFT_KEY);
-      router.push(`/outages/${outage.id}`);
+      await execute(async () => {
+        const outage = await createOutage(payload);
+        clearDraft(DRAFT_KEY);
+        router.push(`/outages/${outage.id}`);
+      });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create outage.");
-      setSubmitting(false);
+      setError(err instanceof Error ? err.message : 'Failed to create outage.');
+    } finally {
+      submissionLock.current = false;
     }
   }
 
@@ -110,7 +112,7 @@ export default function NewOutagePage() {
     <div className="mx-auto max-w-2xl px-4 py-8">
       <div className="mb-6 flex items-center gap-4">
         <button
-          onClick={() => router.push("/outages")}
+          onClick={() => router.push('/outages')}
           className="text-sm text-slate-500 hover:text-slate-800"
         >
           ← Back to outages
@@ -118,18 +120,12 @@ export default function NewOutagePage() {
         <h1 className="text-2xl font-semibold text-slate-900">Create Outage</h1>
       </div>
 
-      {draftRestoreShown && (
-        <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-          <span>You have an unsaved draft. </span>
+      {draftRestored && (
+        <div className="mb-4 flex items-center justify-between rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          <span>Draft restored</span>
           <button
-            onClick={restoreDraft}
-            className="font-medium underline hover:text-amber-900"
-          >
-            Restore
-          </button>
-          <span> | </span>
-          <button
-            onClick={dismissDraft}
+            type="button"
+            onClick={discardDraft}
             className="font-medium underline hover:text-amber-900"
           >
             Discard
@@ -155,7 +151,7 @@ export default function NewOutagePage() {
             <input
               className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
               value={form.site_name}
-              onChange={(e) => set("site_name", e.target.value)}
+              onChange={(e) => set('site_name', e.target.value)}
               placeholder="e.g. Lagos Node 1"
               required
             />
@@ -167,8 +163,10 @@ export default function NewOutagePage() {
             <input
               className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
               value={form.site_id}
-              onChange={(e) => set("site_id", e.target.value)}
+              onChange={(e) => set('site_id', e.target.value)}
               placeholder="Optional"
+              pattern={SITE_ID_PATTERN.source}
+              title={SITE_ID_ERROR}
             />
           </div>
         </div>
@@ -181,14 +179,14 @@ export default function NewOutagePage() {
             <select
               className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
               value={form.severity}
-              onChange={(e) => set("severity", e.target.value)}
+              onChange={(e) => set('severity', e.target.value)}
             >
-              {(["critical", "high", "medium", "low"] as Severity[]).map(
+              {(['critical', 'high', 'medium', 'low'] as Severity[]).map(
                 (s) => (
                   <option key={s} value={s}>
                     {s}
                   </option>
-                ),
+                )
               )}
             </select>
           </div>
@@ -199,7 +197,7 @@ export default function NewOutagePage() {
             <select
               className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
               value={form.status}
-              onChange={(e) => set("status", e.target.value)}
+              onChange={(e) => set('status', e.target.value)}
             >
               <option value="open">open</option>
               <option value="resolved">resolved</option>
@@ -215,19 +213,24 @@ export default function NewOutagePage() {
             type="datetime-local"
             className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
             value={form.detected_at}
-            onChange={(e) => set("detected_at", e.target.value)}
+            onChange={(e) => set('detected_at', e.target.value)}
           />
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">
+          <label
+            htmlFor="outage-description"
+            className="mb-1 block text-sm font-medium text-slate-700"
+          >
             Description <span className="text-red-500">*</span>
           </label>
-          <textarea
+          <TextArea
+            id="outage-description"
+            maxLength={500}
             className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
             rows={3}
             value={form.description}
-            onChange={(e) => set("description", e.target.value)}
+            onChange={(e) => set('description', e.target.value)}
             placeholder="Describe the outage…"
             required
           />
@@ -240,7 +243,7 @@ export default function NewOutagePage() {
           <input
             className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
             value={form.affected_services}
-            onChange={(e) => set("affected_services", e.target.value)}
+            onChange={(e) => set('affected_services', e.target.value)}
             placeholder="Comma-separated, e.g. DNS, VoIP"
           />
         </div>
@@ -255,7 +258,7 @@ export default function NewOutagePage() {
               min={0}
               className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
               value={form.affected_subscribers}
-              onChange={(e) => set("affected_subscribers", e.target.value)}
+              onChange={(e) => set('affected_subscribers', e.target.value)}
               placeholder="Optional"
             />
           </div>
@@ -266,7 +269,7 @@ export default function NewOutagePage() {
             <input
               className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
               value={form.assigned_to}
-              onChange={(e) => set("assigned_to", e.target.value)}
+              onChange={(e) => set('assigned_to', e.target.value)}
               placeholder="Optional"
             />
           </div>
@@ -275,17 +278,23 @@ export default function NewOutagePage() {
         <div className="flex justify-end gap-3 pt-2">
           <button
             type="button"
-            onClick={() => router.push("/outages")}
+            onClick={() => router.push('/outages')}
             className="rounded-md border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
           >
             Cancel
           </button>
           <button
             type="submit"
-            disabled={submitting}
+            disabled={isPending}
             className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60"
           >
-            {submitting ? "Creating…" : "Create Outage"}
+            {isPending && (
+              <span
+                aria-hidden="true"
+                className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent align-[-2px]"
+              />
+            )}
+            {isPending ? 'Creating…' : 'Create Outage'}
           </button>
         </div>
       </form>

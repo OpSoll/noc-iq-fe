@@ -1,1 +1,1 @@
-export { RedactedViewer } from "./RedactedViewer";
+export { RedactedViewer } from './RedactedViewer';

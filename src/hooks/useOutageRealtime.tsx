@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import { useEffect, useRef, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useEffect, useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 
 // Closes #351: real-time outage status updates via Server-Sent Events
 // Closes #356: ARIA live region announcements for async state changes
 
-export function useOutageRealtimeStream(streamUrl = "/api/v1/stream/outages") {
+export function useOutageRealtimeStream(streamUrl = '/api/v1/stream/outages') {
   const queryClient = useQueryClient();
   const sourceRef = useRef<EventSource | null>(null);
 
@@ -14,13 +14,13 @@ export function useOutageRealtimeStream(streamUrl = "/api/v1/stream/outages") {
     const source = new EventSource(streamUrl, { withCredentials: true });
     sourceRef.current = source;
 
-    source.addEventListener("outage.status_changed", (event) => {
+    source.addEventListener('outage.status_changed', (event) => {
       const payload = JSON.parse((event as MessageEvent).data) as {
         id: string;
         status: string;
       };
-      queryClient.invalidateQueries({ queryKey: ["outages", payload.id] });
-      queryClient.invalidateQueries({ queryKey: ["outages", "list"] });
+      queryClient.invalidateQueries({ queryKey: ['outages', payload.id] });
+      queryClient.invalidateQueries({ queryKey: ['outages', 'list'] });
       announce(`Outage ${payload.id} status changed to ${payload.status}`);
     });
 
@@ -38,7 +38,7 @@ export function announce(message: string) {
 }
 
 export function LiveRegion() {
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState('');
 
   useEffect(() => {
     notify = setMessage;

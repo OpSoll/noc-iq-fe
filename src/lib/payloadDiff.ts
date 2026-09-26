@@ -12,7 +12,10 @@ export type PayloadDiff = {
   changed: boolean;
 };
 
-export function diffPayloads(before: Record<string, unknown>, after: Record<string, unknown>): PayloadDiff[] {
+export function diffPayloads(
+  before: Record<string, unknown>,
+  after: Record<string, unknown>
+): PayloadDiff[] {
   const allKeys = new Set([...Object.keys(before), ...Object.keys(after)]);
   const diffs: PayloadDiff[] = [];
   for (const key of allKeys) {
@@ -25,7 +28,10 @@ export function diffPayloads(before: Record<string, unknown>, after: Record<stri
   return diffs;
 }
 
-export function buildVersionTimeline(versions: PayloadVersion[]): { versions: PayloadVersion[]; changes: PayloadDiff[][] } {
+export function buildVersionTimeline(versions: PayloadVersion[]): {
+  versions: PayloadVersion[];
+  changes: PayloadDiff[][];
+} {
   const changes: PayloadDiff[][] = [];
   for (let i = 1; i < versions.length; i++) {
     changes.push(diffPayloads(versions[i - 1].payload, versions[i].payload));
@@ -34,5 +40,9 @@ export function buildVersionTimeline(versions: PayloadVersion[]): { versions: Pa
 }
 
 export function renderPayloadDiff(diffs: PayloadDiff[]): string {
-  return diffs.map((d) => `${d.field}: ${JSON.stringify(d.from)} → ${JSON.stringify(d.to)}`).join("\n");
+  return diffs
+    .map(
+      (d) => `${d.field}: ${JSON.stringify(d.from)} → ${JSON.stringify(d.to)}`
+    )
+    .join('\n');
 }

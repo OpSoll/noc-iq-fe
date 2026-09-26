@@ -2,10 +2,7 @@
 
 'use client';
 
-import {
-  useMemo,
-  useState,
-} from 'react';
+import { useMemo, useState } from 'react';
 
 import {
   SEVERITY_COLORS,
@@ -13,9 +10,7 @@ import {
   TIMELINE_ZOOM_WINDOWS,
 } from './timeline.constants';
 
-import {
-  useTimelineLayout,
-} from './useTimelineLayout';
+import { useTimelineLayout } from './useTimelineLayout';
 
 import type {
   OutageSeverity,
@@ -28,17 +23,11 @@ interface OutageTimelineProps {
   outages: OutageTimelineItem[];
   viewWindow: TimelineViewWindow;
   zoomLevel?: TimelineZoomLevel;
-  onOutageClick?: (
-    outage: OutageTimelineItem,
-  ) => void;
+  onOutageClick?: (outage: OutageTimelineItem) => void;
 }
 
-const formatDuration = (
-  durationMs: number,
-): string => {
-  const minutes = Math.floor(
-    durationMs / (1000 * 60),
-  );
+const formatDuration = (durationMs: number): string => {
+  const minutes = Math.floor(durationMs / (1000 * 60));
 
   if (minutes < 60) {
     return `${minutes}m`;
@@ -57,13 +46,10 @@ const formatDuration = (
 };
 
 const formatDate = (date: Date): string => {
-  return new Intl.DateTimeFormat(
-    undefined,
-    {
-      dateStyle: 'medium',
-      timeStyle: 'short',
-    },
-  ).format(date);
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(date);
 };
 
 export function OutageTimeline({
@@ -72,49 +58,32 @@ export function OutageTimeline({
   zoomLevel = '24h',
   onOutageClick,
 }: OutageTimelineProps) {
-  const [hoveredOutage, setHoveredOutage] =
-    useState<string | null>(null);
+  const [hoveredOutage, setHoveredOutage] = useState<string | null>(null);
 
-  const filteredOutages = useMemo(
-    () => outages,
-    [outages],
-  );
+  const filteredOutages = useMemo(() => outages, [outages]);
 
-  const {
-    bars,
-    contentWidth,
-    contentHeight,
-    getXPosition,
-  } = useTimelineLayout(
+  const { bars, contentWidth, contentHeight, getXPosition } = useTimelineLayout(
     filteredOutages,
     viewWindow,
     {
       width: 1200,
-    },
+    }
   );
 
-  const timelineDuration =
-    TIMELINE_ZOOM_WINDOWS[zoomLevel];
+  const timelineDuration = TIMELINE_ZOOM_WINDOWS[zoomLevel];
 
   const tickCount = 8;
 
-  const ticks = Array.from(
-    { length: tickCount + 1 },
-    (_, index) => {
-      const progress = index / tickCount;
+  const ticks = Array.from({ length: tickCount + 1 }, (_, index) => {
+    const progress = index / tickCount;
 
-      const timestamp =
-        viewWindow.start.getTime() +
-        progress * timelineDuration;
+    const timestamp = viewWindow.start.getTime() + progress * timelineDuration;
 
-      return {
-        x: getXPosition(
-          new Date(timestamp),
-        ),
-        date: new Date(timestamp),
-      };
-    },
-  );
+    return {
+      x: getXPosition(new Date(timestamp)),
+      date: new Date(timestamp),
+    };
+  });
 
   return (
     <div className="w-full overflow-hidden rounded-lg border border-border bg-background">
@@ -181,12 +150,9 @@ export function OutageTimeline({
 
               {/* Outage Rows */}
               {bars.map((bar) => {
-                const severity =
-                  bar.outage.severity as OutageSeverity;
+                const severity = bar.outage.severity as OutageSeverity;
 
-                const isHovered =
-                  hoveredOutage ===
-                  bar.outage.id;
+                const isHovered = hoveredOutage === bar.outage.id;
 
                 return (
                   <div
@@ -216,41 +182,19 @@ export function OutageTimeline({
                         top: 10,
                         width: bar.width,
                         height: bar.height,
-                        backgroundColor:
-                          SEVERITY_COLORS[
-                            severity
-                          ],
-                        opacity: isHovered
-                          ? 1
-                          : 0.85,
+                        backgroundColor: SEVERITY_COLORS[severity],
+                        opacity: isHovered ? 1 : 0.85,
                       }}
-                      onMouseEnter={() =>
-                        setHoveredOutage(
-                          bar.outage.id,
-                        )
-                      }
-                      onMouseLeave={() =>
-                        setHoveredOutage(null)
-                      }
-                      onFocus={() =>
-                        setHoveredOutage(
-                          bar.outage.id,
-                        )
-                      }
-                      onBlur={() =>
-                        setHoveredOutage(null)
-                      }
-                      onClick={() =>
-                        onOutageClick?.(
-                          bar.outage,
-                        )
-                      }
+                      onMouseEnter={() => setHoveredOutage(bar.outage.id)}
+                      onMouseLeave={() => setHoveredOutage(null)}
+                      onFocus={() => setHoveredOutage(bar.outage.id)}
+                      onBlur={() => setHoveredOutage(null)}
+                      onClick={() => onOutageClick?.(bar.outage)}
                       aria-label={`${bar.outage.service} outage`}
                     >
                       <span className="sr-only">
                         {bar.outage.service} outage,
-                        {bar.outage.severity},
-                        {bar.outage.status}
+                        {bar.outage.severity},{bar.outage.status}
                       </span>
 
                       {isHovered && (
@@ -271,9 +215,7 @@ export function OutageTimeline({
                               <span className="text-muted-foreground">
                                 Duration:
                               </span>{' '}
-                              {formatDuration(
-                                bar.durationMs,
-                              )}
+                              {formatDuration(bar.durationMs)}
                             </div>
 
                             <div>
@@ -287,9 +229,7 @@ export function OutageTimeline({
                               <span className="text-muted-foreground">
                                 Started:
                               </span>{' '}
-                              {formatDate(
-                                bar.start,
-                              )}
+                              {formatDate(bar.start)}
                             </div>
                           </div>
                         </div>

@@ -1,0 +1,5 @@
+# Generated build and test output
+.next/
+out/
+coverage/
+*.tsbuildinfo

@@ -1,23 +1,11 @@
 // src/components/outages/timeline.types.ts
 
-export type TimelineZoomLevel =
-  | '1h'
-  | '6h'
-  | '24h'
-  | '7d'
-  | '30d';
+export type TimelineZoomLevel = '1h' | '6h' | '24h' | '7d' | '30d';
 
-export type OutageSeverity =
-  | 'low'
-  | 'medium'
-  | 'high'
-  | 'critical';
+export type OutageSeverity = 'low' | 'medium' | 'high' | 'critical';
 
 export type OutageStatus =
-  | 'investigating'
-  | 'identified'
-  | 'monitoring'
-  | 'resolved';
+  'investigating' | 'identified' | 'monitoring' | 'resolved';
 
 export interface OutageTimelineItem {
   id: string;

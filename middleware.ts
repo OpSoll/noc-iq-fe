@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 export function middleware(request: NextRequest) {
-  const nonce = Buffer.from(
-    crypto.randomUUID(),
-  ).toString('base64');
+  const nonce = Buffer.from(crypto.randomUUID()).toString('base64');
 
   const csp = [
     "default-src 'self'",
@@ -20,19 +18,11 @@ export function middleware(request: NextRequest) {
     'upgrade-insecure-requests',
   ].join('; ');
 
-  const requestHeaders = new Headers(
-    request.headers,
-  );
+  const requestHeaders = new Headers(request.headers);
 
-  requestHeaders.set(
-    'x-nonce',
-    nonce,
-  );
+  requestHeaders.set('x-nonce', nonce);
 
-  requestHeaders.set(
-    'Content-Security-Policy',
-    csp,
-  );
+  requestHeaders.set('Content-Security-Policy', csp);
 
   const response = NextResponse.next({
     request: {
@@ -40,24 +30,15 @@ export function middleware(request: NextRequest) {
     },
   });
 
-  response.headers.set(
-    'Content-Security-Policy',
-    csp,
-  );
+  response.headers.set('Content-Security-Policy', csp);
 
-  response.headers.set(
-    'X-Frame-Options',
-    'DENY',
-  );
+  response.headers.set('X-Frame-Options', 'DENY');
 
-  response.headers.set(
-    'X-Content-Type-Options',
-    'nosniff',
-  );
+  response.headers.set('X-Content-Type-Options', 'nosniff');
 
   response.headers.set(
     'Strict-Transport-Security',
-    'max-age=31536000; includeSubDomains',
+    'max-age=31536000; includeSubDomains'
   );
 
   return response;

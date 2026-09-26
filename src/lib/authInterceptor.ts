@@ -30,10 +30,7 @@ const isAuthEndpoint = (url?: string): boolean => {
   );
 };
 
-const processQueue = (
-  error: unknown,
-  token: string | null = null,
-): void => {
+const processQueue = (error: unknown, token: string | null = null): void => {
   pendingQueue.forEach(({ resolve, reject }) => {
     if (error) {
       reject(error);
@@ -53,7 +50,7 @@ const refreshAccessToken = async (): Promise<string> => {
       // The refresh token is stored in an httpOnly cookie.
       // It must therefore be sent automatically by the browser.
       withCredentials: true,
-    },
+    }
   );
 
   const { accessToken } = response.data;
@@ -79,7 +76,7 @@ export const setupAuthInterceptor = (
   axiosInstance: AxiosInstance,
   getAccessToken: () => string | null,
   setAccessToken: (token: string) => void,
-  signOut: () => void,
+  signOut: () => void
 ): (() => void) => {
   const requestInterceptor = axiosInstance.interceptors.request.use(
     (config: InternalAxiosRequestConfig) => {
@@ -90,7 +87,7 @@ export const setupAuthInterceptor = (
       }
 
       return config;
-    },
+    }
   );
 
   const responseInterceptor = axiosInstance.interceptors.response.use(
@@ -98,8 +95,7 @@ export const setupAuthInterceptor = (
 
     async (error: AxiosError) => {
       const originalRequest = error.config as
-        | RetryableRequestConfig
-        | undefined;
+        RetryableRequestConfig | undefined;
 
       if (!originalRequest) {
         return Promise.reject(error);
@@ -140,14 +136,12 @@ export const setupAuthInterceptor = (
       }
 
       try {
-        const newAccessToken = await new Promise<string>(
-          (resolve, reject) => {
-            pendingQueue.push({
-              resolve,
-              reject,
-            });
-          },
-        );
+        const newAccessToken = await new Promise<string>((resolve, reject) => {
+          pendingQueue.push({
+            resolve,
+            reject,
+          });
+        });
 
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
 
@@ -155,7 +149,7 @@ export const setupAuthInterceptor = (
       } catch (refreshError) {
         return Promise.reject(refreshError);
       }
-    },
+    }
   );
 
   return () => {

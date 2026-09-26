@@ -1,44 +1,44 @@
-import React from "react";
-import type { KPIConfidence } from "@/services/analytics";
+import React from 'react';
+import type { KPIConfidence } from '@/services/analytics';
 
 interface KPICardProps {
   title: string;
   value: string | number;
   subtitle?: string;
-  highlight?: "green" | "red" | "blue" | "yellow";
+  highlight?: 'green' | 'red' | 'blue' | 'yellow';
   confidence?: KPIConfidence;
   onClick?: () => void;
   actionLabel?: string;
 }
 
 const highlightMap: Record<string, string> = {
-  green: "border-green-500 bg-green-50",
-  red: "border-red-500 bg-red-50",
-  blue: "border-blue-500 bg-blue-50",
-  yellow: "border-yellow-500 bg-yellow-50",
+  green: 'border-green-500 bg-green-50',
+  red: 'border-red-500 bg-red-50',
+  blue: 'border-blue-500 bg-blue-50',
+  yellow: 'border-yellow-500 bg-yellow-50',
 };
 
 const valueColorMap: Record<string, string> = {
-  green: "text-green-700",
-  red: "text-red-700",
-  blue: "text-blue-700",
-  yellow: "text-yellow-700",
+  green: 'text-green-700',
+  red: 'text-red-700',
+  blue: 'text-blue-700',
+  yellow: 'text-yellow-700',
 };
 
 const KPICard: React.FC<KPICardProps> = ({
   title,
   value,
   subtitle,
-  highlight = "blue",
+  highlight = 'blue',
   confidence,
   onClick,
   actionLabel,
 }) => {
-  const interactive = typeof onClick === "function";
+  const interactive = typeof onClick === 'function';
 
   return (
     <div
-      className={`rounded-xl border-l-4 shadow-sm ${highlightMap[highlight]} ${interactive ? "transition-transform hover:-translate-y-0.5" : ""}`}
+      className={`rounded-xl border-l-4 shadow-sm ${highlightMap[highlight]} ${interactive ? 'transition-transform hover:-translate-y-0.5' : ''}`}
     >
       {interactive ? (
         <button
@@ -53,7 +53,7 @@ const KPICard: React.FC<KPICardProps> = ({
               <div className="flex flex-col items-end gap-0.5">
                 <span
                   className={`text-xs font-medium ${
-                    confidence.isSparse ? "text-amber-500" : "text-gray-400"
+                    confidence.isSparse ? 'text-amber-500' : 'text-gray-400'
                   }`}
                   title={confidence.warning}
                 >
@@ -81,7 +81,7 @@ const KPICard: React.FC<KPICardProps> = ({
               <div className="flex flex-col items-end gap-0.5">
                 <span
                   className={`text-xs font-medium ${
-                    confidence.isSparse ? "text-amber-500" : "text-gray-400"
+                    confidence.isSparse ? 'text-amber-500' : 'text-gray-400'
                   }`}
                   title={confidence.warning}
                 >

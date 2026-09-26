@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { RotateCcw } from "lucide-react";
+import { useState } from 'react';
+import { RotateCcw } from 'lucide-react';
 
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
+} from '@/components/ui/tooltip';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,9 +18,9 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from '@/components/ui/alert-dialog';
 
-import { useWebhookReplay } from "@/hooks/useWebhookReplay";
+import { useWebhookReplay } from '@/hooks/useWebhookReplay';
 
 interface ReplayButtonProps {
   deliveryId: string;
@@ -37,23 +37,16 @@ export function ReplayButton({
   isInFlight,
   isSubscriptionPaused,
 }: ReplayButtonProps) {
-  const [isConfirmOpen, setIsConfirmOpen] =
-    useState(false);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
-  const {
-    mutate,
-    isPending,
-  } = useWebhookReplay();
+  const { mutate, isPending } = useWebhookReplay();
 
-  const isDisabled =
-    isInFlight ||
-    isSubscriptionPaused ||
-    isPending;
+  const isDisabled = isInFlight || isSubscriptionPaused || isPending;
 
   const disabledReason = isInFlight
-    ? "Replay is unavailable while delivery is in-flight."
+    ? 'Replay is unavailable while delivery is in-flight.'
     : isSubscriptionPaused
-      ? "Replay is unavailable because the subscription is paused."
+      ? 'Replay is unavailable because the subscription is paused.'
       : undefined;
 
   const handleReplay = () => {
@@ -82,42 +75,30 @@ export function ReplayButton({
             <span>{button}</span>
           </TooltipTrigger>
 
-          <TooltipContent>
-            {disabledReason}
-          </TooltipContent>
+          <TooltipContent>{disabledReason}</TooltipContent>
         </Tooltip>
       ) : (
         button
       )}
 
-      <AlertDialog
-        open={isConfirmOpen}
-        onOpenChange={setIsConfirmOpen}
-      >
+      <AlertDialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>
-              Replay webhook delivery?
-            </AlertDialogTitle>
+            <AlertDialogTitle>Replay webhook delivery?</AlertDialogTitle>
 
             <AlertDialogDescription>
               This will redeliver the webhook to:
               <br />
               <strong>{targetUrl}</strong>
               <br />
-              Payload size:{" "}
-              <strong>{payloadSize} bytes</strong>
+              Payload size: <strong>{payloadSize} bytes</strong>
             </AlertDialogDescription>
           </AlertDialogHeader>
 
           <AlertDialogFooter>
-            <AlertDialogCancel>
-              Cancel
-            </AlertDialogCancel>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
 
-            <AlertDialogAction
-              onClick={handleReplay}
-            >
+            <AlertDialogAction onClick={handleReplay}>
               Replay Delivery
             </AlertDialogAction>
           </AlertDialogFooter>

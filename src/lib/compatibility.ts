@@ -3,9 +3,9 @@
  * Key: frontend major.minor prefix (e.g. "0.1") — value: array of compatible apiVersions.
  */
 export const COMPATIBILITY_MATRIX: Record<string, string[]> = {
-  "0.1": ["v1", "v1.1"],
-  "0.2": ["v1.1", "v2"],
-  "1.0": ["v2", "v2.1"],
+  '0.1': ['v1', 'v1.1'],
+  '0.2': ['v1.1', 'v2'],
+  '1.0': ['v2', 'v2.1'],
 };
 
 export interface CompatibilityResult {
@@ -22,7 +22,7 @@ export function checkCompatibility(
   feVersion: string,
   beVersion: string
 ): CompatibilityResult {
-  const prefix = feVersion.split(".").slice(0, 2).join(".");
+  const prefix = feVersion.split('.').slice(0, 2).join('.');
   const supported = COMPATIBILITY_MATRIX[prefix];
 
   if (!supported) {
@@ -35,7 +35,7 @@ export function checkCompatibility(
   if (!supported.includes(beVersion)) {
     return {
       compatible: false,
-      details: `Frontend ${feVersion} supports backend API versions [${supported.join(", ")}], but got "${beVersion}".`,
+      details: `Frontend ${feVersion} supports backend API versions [${supported.join(', ')}], but got "${beVersion}".`,
     };
   }
 

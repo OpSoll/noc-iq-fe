@@ -1,6 +1,6 @@
-import type { AxiosError as IAxiosError } from "axios";
+import type { AxiosError as IAxiosError } from 'axios';
 
-import { api } from "@/lib/api";
+import { api } from '@/lib/api';
 import type {
   Outage,
   OutageCreate,
@@ -8,7 +8,7 @@ import type {
   PaginatedOutages,
   ResolveOutagePayload,
   ResolveOutageResponse,
-} from "@/types/outages";
+} from '@/types/outages';
 
 interface GetOutagesParams {
   page?: number;
@@ -17,7 +17,7 @@ interface GetOutagesParams {
   status?: string;
   search?: string;
   sort_field?: string;
-  sort_order?: "asc" | "desc";
+  sort_order?: 'asc' | 'desc';
 }
 
 interface ApiErrorResponse {
@@ -25,18 +25,14 @@ interface ApiErrorResponse {
   errors?: Record<string, string[]>;
 }
 
-const OUTAGES_ENDPOINT = "/outages";
+const OUTAGES_ENDPOINT = '/outages';
 
 function handleApiError(error: unknown, fallbackMessage: string): never {
   if ((error as IAxiosError).isAxiosError) {
     const axErr = error as IAxiosError<ApiErrorResponse>;
     const apiError = axErr.response?.data;
 
-    throw new Error(
-      apiError?.message ||
-        axErr.message ||
-        fallbackMessage,
-    );
+    throw new Error(apiError?.message || axErr.message || fallbackMessage);
   }
 
   if (error instanceof Error) {
@@ -49,16 +45,15 @@ function handleApiError(error: unknown, fallbackMessage: string): never {
 /**
  * Fetch all outages (non-paginated shortcut)
  */
-export async function listOutages(
-  options?: { signal?: AbortSignal },
-): Promise<Outage[]> {
+export async function listOutages(options?: {
+  signal?: AbortSignal;
+}): Promise<Outage[]> {
   try {
-    const res = await api.get<PaginatedOutages>(OUTAGES_ENDPOINT, {
-    });
+    const res = await api.get<PaginatedOutages>(OUTAGES_ENDPOINT, {});
 
     return res.data.items;
   } catch (error) {
-    handleApiError(error, "Failed to fetch outages.");
+    handleApiError(error, 'Failed to fetch outages.');
   }
 }
 
@@ -67,7 +62,7 @@ export async function listOutages(
  */
 export async function getOutages(
   params: GetOutagesParams = {},
-  options?: { signal?: AbortSignal },
+  options?: { signal?: AbortSignal }
 ): Promise<PaginatedOutages> {
   try {
     const res = await api.get<PaginatedOutages>(OUTAGES_ENDPOINT, {
@@ -76,7 +71,7 @@ export async function getOutages(
 
     return res.data;
   } catch (error) {
-    handleApiError(error, "Failed to fetch outages.");
+    handleApiError(error, 'Failed to fetch outages.');
   }
 }
 
@@ -85,37 +80,31 @@ export async function getOutages(
  */
 export async function getOutage(
   id: string,
-  options?: { signal?: AbortSignal },
+  options?: { signal?: AbortSignal }
 ): Promise<Outage> {
   try {
     if (!id) {
-      throw new Error("Outage ID is required.");
+      throw new Error('Outage ID is required.');
     }
 
-    const res = await api.get<Outage>(`${OUTAGES_ENDPOINT}/${id}`, {
-    });
+    const res = await api.get<Outage>(`${OUTAGES_ENDPOINT}/${id}`, {});
 
     return res.data;
   } catch (error) {
-    handleApiError(error, "Failed to fetch outage.");
+    handleApiError(error, 'Failed to fetch outage.');
   }
 }
 
 /**
  * Create a new outage
  */
-export async function createOutage(
-  payload: OutageCreate,
-): Promise<Outage> {
+export async function createOutage(payload: OutageCreate): Promise<Outage> {
   try {
-    const res = await api.post<Outage>(
-      OUTAGES_ENDPOINT,
-      payload,
-    );
+    const res = await api.post<Outage>(OUTAGES_ENDPOINT, payload);
 
     return res.data;
   } catch (error) {
-    handleApiError(error, "Failed to create outage.");
+    handleApiError(error, 'Failed to create outage.');
   }
 }
 
@@ -124,42 +113,37 @@ export async function createOutage(
  */
 export async function updateOutage(
   id: string,
-  payload: OutageUpdate,
+  payload: OutageUpdate
 ): Promise<Outage> {
   try {
     if (!id) {
-      throw new Error("Outage ID is required.");
+      throw new Error('Outage ID is required.');
     }
 
-    const res = await api.put<Outage>(
-      `${OUTAGES_ENDPOINT}/${id}`,
-      payload,
-    );
+    const res = await api.put<Outage>(`${OUTAGES_ENDPOINT}/${id}`, payload);
 
     return res.data;
   } catch (error) {
-    handleApiError(error, "Failed to update outage.");
+    handleApiError(error, 'Failed to update outage.');
   }
 }
 
 /**
  * Delete an outage
  */
-export async function deleteOutage(
-  id: string,
-): Promise<{ message: string }> {
+export async function deleteOutage(id: string): Promise<{ message: string }> {
   try {
     if (!id) {
-      throw new Error("Outage ID is required.");
+      throw new Error('Outage ID is required.');
     }
 
     const res = await api.delete<{ message: string }>(
-      `${OUTAGES_ENDPOINT}/${id}`,
+      `${OUTAGES_ENDPOINT}/${id}`
     );
 
     return res.data;
   } catch (error) {
-    handleApiError(error, "Failed to delete outage.");
+    handleApiError(error, 'Failed to delete outage.');
   }
 }
 
@@ -168,21 +152,21 @@ export async function deleteOutage(
  */
 export async function resolveOutage(
   id: string,
-  payload: ResolveOutagePayload,
+  payload: ResolveOutagePayload
 ): Promise<ResolveOutageResponse> {
   try {
     if (!id) {
-      throw new Error("Outage ID is required.");
+      throw new Error('Outage ID is required.');
     }
 
     const res = await api.post<ResolveOutageResponse>(
       `${OUTAGES_ENDPOINT}/${id}/resolve`,
-      payload,
+      payload
     );
 
     return res.data;
   } catch (error) {
-    handleApiError(error, "Failed to resolve outage.");
+    handleApiError(error, 'Failed to resolve outage.');
   }
 }
 
@@ -200,21 +184,21 @@ interface BatchOperationResponse {
  * Acknowledge multiple outages in batch.
  */
 export async function batchAcknowledgeOutages(
-  ids: string[],
+  ids: string[]
 ): Promise<BatchOperationResponse> {
   try {
     if (!ids.length) {
-      throw new Error("At least one outage ID is required.");
+      throw new Error('At least one outage ID is required.');
     }
 
     const res = await api.post<BatchOperationResponse>(
       `${OUTAGES_ENDPOINT}/batch/acknowledge`,
-      { ids },
+      { ids }
     );
 
     return res.data;
   } catch (error) {
-    handleApiError(error, "Failed to acknowledge outages.");
+    handleApiError(error, 'Failed to acknowledge outages.');
   }
 }
 
@@ -223,21 +207,21 @@ export async function batchAcknowledgeOutages(
  */
 export async function batchResolveOutages(
   ids: string[],
-  payload?: { mttr_minutes?: number },
+  payload?: { mttr_minutes?: number }
 ): Promise<BatchOperationResponse> {
   try {
     if (!ids.length) {
-      throw new Error("At least one outage ID is required.");
+      throw new Error('At least one outage ID is required.');
     }
 
     const res = await api.post<BatchOperationResponse>(
       `${OUTAGES_ENDPOINT}/batch/resolve`,
-      { ids, ...payload },
+      { ids, ...payload }
     );
 
     return res.data;
   } catch (error) {
-    handleApiError(error, "Failed to resolve outages.");
+    handleApiError(error, 'Failed to resolve outages.');
   }
 }
 
@@ -245,20 +229,20 @@ export async function batchResolveOutages(
  * Recalculate SLA for multiple outages in batch.
  */
 export async function batchRecalculateSLA(
-  ids: string[],
+  ids: string[]
 ): Promise<BatchOperationResponse> {
   try {
     if (!ids.length) {
-      throw new Error("At least one outage ID is required.");
+      throw new Error('At least one outage ID is required.');
     }
 
     const res = await api.post<BatchOperationResponse>(
       `${OUTAGES_ENDPOINT}/batch/recalculate-sla`,
-      { ids },
+      { ids }
     );
 
     return res.data;
   } catch (error) {
-    handleApiError(error, "Failed to recalculate SLA.");
+    handleApiError(error, 'Failed to recalculate SLA.');
   }
 }

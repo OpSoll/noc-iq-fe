@@ -1,19 +1,25 @@
-"use client";
-import { useEffect, useState } from "react";
+'use client';
+import { useEffect, useState } from 'react';
 // Closes #373: outage severity badge system with WCAG-compliant colors
 // Closes #374: keyboard shortcut guide overlay
 
 const SEVERITY_STYLE = {
-  critical: { className: "bg-red-700 text-white", icon: "▲" },
-  high: { className: "bg-orange-600 text-white", icon: "◆" },
-  medium: { className: "bg-amber-500 text-black", icon: "●" },
-  low: { className: "bg-slate-500 text-white", icon: "○" },
+  critical: { className: 'bg-red-700 text-white', icon: '▲' },
+  high: { className: 'bg-orange-600 text-white', icon: '◆' },
+  medium: { className: 'bg-amber-500 text-black', icon: '●' },
+  low: { className: 'bg-slate-500 text-white', icon: '○' },
 } as const;
 
-export function SeverityBadge({ severity }: { severity: keyof typeof SEVERITY_STYLE }) {
+export function SeverityBadge({
+  severity,
+}: {
+  severity: keyof typeof SEVERITY_STYLE;
+}) {
   const s = SEVERITY_STYLE[severity];
   return (
-    <span className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs ${s.className}`}>
+    <span
+      className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs ${s.className}`}
+    >
       <span aria-hidden>{s.icon}</span>
       {severity}
     </span>
@@ -21,10 +27,10 @@ export function SeverityBadge({ severity }: { severity: keyof typeof SEVERITY_ST
 }
 
 const SHORTCUTS = [
-  { keys: "j / k", action: "Move to next / previous outage" },
-  { keys: "enter", action: "Open detail panel" },
-  { keys: "r", action: "Trigger SLA recalculation" },
-  { keys: "?", action: "Toggle this guide" },
+  { keys: 'j / k', action: 'Move to next / previous outage' },
+  { keys: 'enter', action: 'Open detail panel' },
+  { keys: 'r', action: 'Trigger SLA recalculation' },
+  { keys: '?', action: 'Toggle this guide' },
 ];
 
 export function KeyboardShortcutGuide() {
@@ -32,15 +38,19 @@ export function KeyboardShortcutGuide() {
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === "?") setOpen((prev) => !prev);
+      if (e.key === '?') setOpen((prev) => !prev);
     };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
   }, []);
 
   if (!open) return null;
   return (
-    <div role="dialog" aria-label="Keyboard shortcuts" className="fixed inset-0 flex items-center justify-center bg-black/50">
+    <div
+      role="dialog"
+      aria-label="Keyboard shortcuts"
+      className="fixed inset-0 flex items-center justify-center bg-black/50"
+    >
       <div className="rounded-lg bg-background p-4 text-sm">
         <h2 className="mb-2 font-semibold">Keyboard Shortcuts</h2>
         <ul className="space-y-1">

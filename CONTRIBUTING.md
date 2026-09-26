@@ -30,17 +30,20 @@ There are many ways to contribute to NOCIQ:
 ### Prerequisites
 
 **For Frontend (noc-iq-fe):**
+
 - Node.js 18.x or higher
 - npm or yarn
 - Git
 - Freighter wallet (for Stellar features)
 
 **For Backend (noc-iq-be):**
+
 - Python 3.9 or higher
 - pip and virtualenv
 - Git
 
 **For Smart Contracts (noc-iq-contracts):**
+
 - Rust and Cargo
 - Soroban CLI
 - Stellar CLI
@@ -64,6 +67,7 @@ There are many ways to contribute to NOCIQ:
 ### Setup Development Environment
 
 **Frontend:**
+
 ```bash
 cd noc-iq-fe
 npm install
@@ -73,6 +77,7 @@ npm run dev
 ```
 
 **Backend:**
+
 ```bash
 cd noc-iq-be
 python -m venv venv
@@ -84,6 +89,7 @@ uvicorn main:app --reload
 ```
 
 **Smart Contracts:**
+
 ```bash
 cd noc-iq-contracts
 # Install Soroban CLI if you haven't
@@ -109,6 +115,7 @@ git checkout -b docs/stellar-guide
 ```
 
 **Branch naming convention:**
+
 - `feature/description` - New features
 - `fix/description` - Bug fixes
 - `docs/description` - Documentation
@@ -126,6 +133,7 @@ git checkout -b docs/stellar-guide
 ### 3. Test Your Changes
 
 **Frontend:**
+
 ```bash
 npm run test
 npm run lint

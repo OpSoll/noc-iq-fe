@@ -1,5 +1,5 @@
-import { api } from "@/lib/api";
-import { DashboardMetrics } from "../types/dashboard";
+import { api } from '@/lib/api';
+import { DashboardMetrics } from '../types/dashboard';
 
 interface DashboardKPIResponse {
   total_outages: number;
@@ -24,16 +24,23 @@ export interface DashboardFilters {
   site?: string;
 }
 
-export const fetchDashboardMetrics = async (filters: DashboardFilters = {}): Promise<DashboardMetrics> => {
-  const params = Object.fromEntries(Object.entries(filters).filter(([, v]) => v));
+export const fetchDashboardMetrics = async (
+  filters: DashboardFilters = {}
+): Promise<DashboardMetrics> => {
+  const params = Object.fromEntries(
+    Object.entries(filters).filter(([, v]) => v)
+  );
   const [kpiResponse, trendResponse] = await Promise.all([
-    api.get<DashboardKPIResponse>("/sla/analytics/dashboard", { params }),
-    api.get<DashboardTrendResponse[]>("/sla/analytics/trends", { params }),
+    api.get<DashboardKPIResponse>('/sla/analytics/dashboard', { params }),
+    api.get<DashboardTrendResponse[]>('/sla/analytics/trends', { params }),
   ]);
 
   const kpis = kpiResponse.data;
   const trends = trendResponse.data;
-  const compliantOutages = Math.max(0, kpis.total_outages - kpis.total_violations);
+  const compliantOutages = Math.max(
+    0,
+    kpis.total_outages - kpis.total_violations
+  );
   const slaCompliancePercentage =
     kpis.total_outages === 0
       ? 0
@@ -54,7 +61,8 @@ export const fetchDashboardMetrics = async (filters: DashboardFilters = {}): Pro
       compliance_percentage:
         point.total_outages === 0
           ? 0
-          : ((point.total_outages - point.violations) / point.total_outages) * 100,
+          : ((point.total_outages - point.violations) / point.total_outages) *
+            100,
       penalties: point.penalties,
       rewards: point.rewards,
     })),

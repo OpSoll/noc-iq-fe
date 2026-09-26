@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import React from "react";
-import { AlertCircle } from "lucide-react";
-import { useNetworkStatus } from "@/contexts/NetworkStatusContext";
-import { Button } from "@/components/ui/button";
+import React from 'react';
+import { AlertCircle } from 'lucide-react';
+import { useNetworkStatus } from '@/contexts/NetworkStatusContext';
+import { Button } from '@/components/ui/button';
 
 export function OfflineBanner() {
   const { isOnline, triggerRetry } = useNetworkStatus();

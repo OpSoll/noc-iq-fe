@@ -1,22 +1,22 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { useRef, useState, useCallback, useId } from "react";
+import Link from 'next/link';
+import { useRef, useState, useCallback, useId } from 'react';
 
-import { bulkImportOutages } from "@/services/bulkImportService";
+import { bulkImportOutages } from '@/services/bulkImportService';
 import type {
   BulkImportResult,
   ImportValidationError,
-} from "@/types/bulkImport";
+} from '@/types/bulkImport';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
-const ACCEPTED_TYPES = ["text/csv", "application/json"] as const;
-const ACCEPTED_EXTENSIONS = [".csv", ".json"] as const;
+const ACCEPTED_TYPES = ['text/csv', 'application/json'] as const;
+const ACCEPTED_EXTENSIONS = ['.csv', '.json'] as const;
 const MAX_PREVIEW_ROWS = 100;
 const MAX_FILE_SIZE_MB = 5;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 
-const REQUIRED_FIELDS = ["service_id", "start_time", "end_time"] as const;
+const REQUIRED_FIELDS = ['service_id', 'start_time', 'end_time'] as const;
 
 type AcceptedExtension = (typeof ACCEPTED_EXTENSIONS)[number];
 type AcceptedMimeType = (typeof ACCEPTED_TYPES)[number];
@@ -36,12 +36,7 @@ interface FileValidationResult {
 }
 
 type UploadStatus =
-  | "idle"
-  | "validating"
-  | "uploading"
-  | "success"
-  | "error"
-  | "cancelled";
+  'idle' | 'validating' | 'uploading' | 'success' | 'error' | 'cancelled';
 
 // ─── CSV Parsing ─────────────────────────────────────────────────────────────
 interface ParsedCSV {
@@ -63,7 +58,7 @@ function parseCSV(text: string): ParsedCSV {
   // Robust CSV parsing: handles quoted fields containing commas
   const parseLine = (line: string): string[] => {
     const result: string[] = [];
-    let current = "";
+    let current = '';
     let inQuotes = false;
 
     for (let i = 0; i < line.length; i++) {
@@ -77,9 +72,9 @@ function parseCSV(text: string): ParsedCSV {
         } else {
           inQuotes = !inQuotes;
         }
-      } else if (char === "," && !inQuotes) {
+      } else if (char === ',' && !inQuotes) {
         result.push(current.trim());
-        current = "";
+        current = '';
       } else {
         current += char;
       }
@@ -88,7 +83,7 @@ function parseCSV(text: string): ParsedCSV {
     return result;
   };
 
-  const headers = parseLine(lines[0]).map((h) => h.replace(/^"|"$/g, ""));
+  const headers = parseLine(lines[0]).map((h) => h.replace(/^"|"$/g, ''));
   const allRows = lines.slice(1).map(parseLine);
 
   return {
@@ -106,15 +101,15 @@ function isValidDate(dateString: string): boolean {
 
 function validateCSV(
   headers: string[],
-  rows: string[][],
+  rows: string[][]
 ): ImportValidationError[] {
   const errors: ImportValidationError[] = [];
 
   const missing = REQUIRED_FIELDS.filter((f) => !headers.includes(f));
   if (missing.length > 0) {
     errors.push({
-      message: `Missing required columns: ${missing.join(", ")}`,
-      field: missing.join(", "),
+      message: `Missing required columns: ${missing.join(', ')}`,
+      field: missing.join(', '),
     });
   }
 
@@ -130,13 +125,13 @@ function validateCSV(
     REQUIRED_FIELDS.forEach((field) => {
       const colIndex = headers.indexOf(field);
       if (colIndex !== -1) {
-        if (!row[colIndex] || row[colIndex].trim() === "") {
+        if (!row[colIndex] || row[colIndex].trim() === '') {
           errors.push({
             row: i + 2,
             field,
             message: `Required field "${field}" is empty`,
           });
-        } else if (field === "start_time" || field === "end_time") {
+        } else if (field === 'start_time' || field === 'end_time') {
           if (!isValidDate(row[colIndex])) {
             errors.push({
               row: i + 2,
@@ -149,8 +144,8 @@ function validateCSV(
     });
 
     // Check if end_time is after start_time
-    const startTimeIndex = headers.indexOf("start_time");
-    const endTimeIndex = headers.indexOf("end_time");
+    const startTimeIndex = headers.indexOf('start_time');
+    const endTimeIndex = headers.indexOf('end_time');
     if (
       startTimeIndex !== -1 &&
       endTimeIndex !== -1 &&
@@ -164,8 +159,8 @@ function validateCSV(
       if (startTime >= endTime) {
         errors.push({
           row: i + 2,
-          field: "end_time",
-          message: "End time must be after start time",
+          field: 'end_time',
+          message: 'End time must be after start time',
         });
       }
     }
@@ -187,25 +182,25 @@ function validateJSON(text: string): {
     const message =
       e instanceof SyntaxError
         ? `Invalid JSON: ${e.message}`
-        : "Invalid JSON: could not parse file.";
+        : 'Invalid JSON: could not parse file.';
     errors.push({ message });
     return { errors };
   }
 
   if (!Array.isArray(parsed)) {
-    errors.push({ message: "JSON must be an array of outage records." });
+    errors.push({ message: 'JSON must be an array of outage records.' });
     return { errors };
   }
 
   if (parsed.length === 0) {
-    errors.push({ message: "JSON array is empty." });
+    errors.push({ message: 'JSON array is empty.' });
     return { errors };
   }
 
   const records = parsed as Record<string, unknown>[];
 
   records.slice(0, MAX_PREVIEW_ROWS).forEach((item, i) => {
-    if (item === null || typeof item !== "object") {
+    if (item === null || typeof item !== 'object') {
       errors.push({
         row: i + 1,
         message: `Item ${i + 1} is not a valid object`,
@@ -214,7 +209,7 @@ function validateJSON(text: string): {
     }
 
     REQUIRED_FIELDS.forEach((field) => {
-      if (item[field] == null || item[field] === "") {
+      if (item[field] == null || item[field] === '') {
         errors.push({
           row: i + 1,
           field,
@@ -231,16 +226,16 @@ function validateJSON(text: string): {
 async function buildPreview(file: File): Promise<PreviewState> {
   const text = await file.text();
   const ext = file.name
-    .slice(file.name.lastIndexOf("."))
+    .slice(file.name.lastIndexOf('.'))
     .toLowerCase() as AcceptedExtension;
 
-  if (ext === ".csv" || file.type === "text/csv") {
+  if (ext === '.csv' || file.type === 'text/csv') {
     const { headers, rows, totalRows } = parseCSV(text);
     const errors = validateCSV(headers, rows);
     const warnings: ImportValidationError[] = [];
 
     if (totalRows === 0 && errors.length === 0) {
-      warnings.push({ message: "File has a header row but no data rows." });
+      warnings.push({ message: 'File has a header row but no data rows.' });
     } else if (totalRows > MAX_PREVIEW_ROWS) {
       warnings.push({
         message: `Showing ${MAX_PREVIEW_ROWS} of ${totalRows} total rows.`,
@@ -260,7 +255,7 @@ async function buildPreview(file: File): Promise<PreviewState> {
   const headers = parsed.length > 0 ? Object.keys(parsed[0]) : [];
   const rows = parsed
     .slice(0, MAX_PREVIEW_ROWS)
-    .map((r) => headers.map((h) => String(r[h] ?? "")));
+    .map((r) => headers.map((h) => String(r[h] ?? '')));
 
   const warnings: ImportValidationError[] = [];
   if (parsed.length > MAX_PREVIEW_ROWS) {
@@ -280,15 +275,15 @@ function Alert({
   children,
   onDismiss,
 }: {
-  type: "error" | "warning" | "success";
+  type: 'error' | 'warning' | 'success';
   title?: string;
   children: React.ReactNode;
   onDismiss?: () => void;
 }) {
   const styles = {
-    error: "border-red-200 bg-red-50 text-red-700",
-    warning: "border-yellow-200 bg-yellow-50 text-yellow-700",
-    success: "border-green-200 bg-green-50 text-green-700",
+    error: 'border-red-200 bg-red-50 text-red-700',
+    warning: 'border-yellow-200 bg-yellow-50 text-yellow-700',
+    success: 'border-green-200 bg-green-50 text-green-700',
   };
 
   const icon = {
@@ -348,7 +343,7 @@ function Alert({
         {icon[type]}
         <div className="flex-1">
           {title && <p className="text-sm font-semibold">{title}</p>}
-          <div className={title ? "mt-0.5" : ""}>{children}</div>
+          <div className={title ? 'mt-0.5' : ''}>{children}</div>
         </div>
         {onDismiss && (
           <button
@@ -428,7 +423,7 @@ function ValidationTable({
           {rows.map((row, i) => {
             const hasRowError = errors.some((e) => e.row === i + 2);
             return (
-              <tr key={`row-${i}`} className={hasRowError ? "bg-red-50" : ""}>
+              <tr key={`row-${i}`} className={hasRowError ? 'bg-red-50' : ''}>
                 <td className="px-4 py-2 text-gray-500">{i + 2}</td>
                 {headers.map((h, j) => {
                   const cellError = getCellError(i, h);
@@ -436,7 +431,7 @@ function ValidationTable({
                     <td
                       key={`${h}-${j}`}
                       className={`px-4 py-2 ${
-                        cellError ? "relative bg-red-100" : "text-gray-700"
+                        cellError ? 'relative bg-red-100' : 'text-gray-700'
                       }`}
                       title={cellError}
                     >
@@ -465,7 +460,7 @@ export default function BulkImportView() {
   const [file, setFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
   const [preview, setPreview] = useState<PreviewState | null>(null);
-  const [status, setStatus] = useState<UploadStatus>("idle");
+  const [status, setStatus] = useState<UploadStatus>('idle');
   const [progress, setProgress] = useState(0);
   const [result, setResult] = useState<BulkImportResult | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -478,7 +473,7 @@ export default function BulkImportView() {
   // ─── File Validation ───────────────────────────────────────────────────────
   const validateFile = useCallback((nextFile: File): FileValidationResult => {
     const extension = nextFile.name
-      .slice(nextFile.name.lastIndexOf("."))
+      .slice(nextFile.name.lastIndexOf('.'))
       .toLowerCase() as AcceptedExtension;
     const isAcceptedType =
       ACCEPTED_EXTENSIONS.includes(extension) ||
@@ -487,7 +482,7 @@ export default function BulkImportView() {
     if (!isAcceptedType) {
       return {
         valid: false,
-        error: `Invalid file type. Accepted formats: ${ACCEPTED_EXTENSIONS.join(", ")}`,
+        error: `Invalid file type. Accepted formats: ${ACCEPTED_EXTENSIONS.join(', ')}`,
       };
     }
 
@@ -499,7 +494,7 @@ export default function BulkImportView() {
     }
 
     if (nextFile.size === 0) {
-      return { valid: false, error: "File is empty." };
+      return { valid: false, error: 'File is empty.' };
     }
 
     return { valid: true };
@@ -510,7 +505,7 @@ export default function BulkImportView() {
     async (nextFile: File) => {
       const validation = validateFile(nextFile);
       if (!validation.valid) {
-        setFileError(validation.error ?? "Invalid file");
+        setFileError(validation.error ?? 'Invalid file');
         setFile(null);
         setPreview(null);
         return;
@@ -520,18 +515,18 @@ export default function BulkImportView() {
       setFile(nextFile);
       setResult(null);
       setSubmitError(null);
-      setStatus("validating");
+      setStatus('validating');
 
       try {
         const p = await buildPreview(nextFile);
         setPreview(p);
-        setStatus(p.errors.length > 0 ? "error" : "idle");
+        setStatus(p.errors.length > 0 ? 'error' : 'idle');
       } catch (err) {
-        setFileError("Failed to read file. Please check the file format.");
-        setStatus("error");
+        setFileError('Failed to read file. Please check the file format.');
+        setStatus('error');
       }
     },
-    [validateFile],
+    [validateFile]
   );
 
   const handleInputChange = useCallback(
@@ -539,9 +534,9 @@ export default function BulkImportView() {
       const nextFile = event.target.files?.[0];
       if (nextFile) void handleFile(nextFile);
       // Reset input so same file can be selected again if needed
-      event.target.value = "";
+      event.target.value = '';
     },
-    [handleFile],
+    [handleFile]
   );
 
   // ─── Drag & Drop ───────────────────────────────────────────────────────────
@@ -551,7 +546,7 @@ export default function BulkImportView() {
       event.stopPropagation();
       setDragging(true);
     },
-    [],
+    []
   );
 
   const handleDragLeave = useCallback(
@@ -566,7 +561,7 @@ export default function BulkImportView() {
         setDragging(false);
       }
     },
-    [],
+    []
   );
 
   const handleDrop = useCallback(
@@ -577,14 +572,14 @@ export default function BulkImportView() {
 
       const files = event.dataTransfer.files;
       if (files.length > 1) {
-        setFileError("Please upload only one file at a time.");
+        setFileError('Please upload only one file at a time.');
         return;
       }
 
       const nextFile = files?.[0];
       if (nextFile) void handleFile(nextFile);
     },
-    [handleFile],
+    [handleFile]
   );
 
   // ─── Submit ────────────────────────────────────────────────────────────────
@@ -593,7 +588,7 @@ export default function BulkImportView() {
 
     const controller = new AbortController();
     abortRef.current = controller;
-    setStatus("uploading");
+    setStatus('uploading');
     setProgress(0);
     setSubmitError(null);
     setResult(null);
@@ -607,25 +602,25 @@ export default function BulkImportView() {
       setResult(response);
       setFile(null);
       setPreview(null);
-      setStatus("success");
+      setStatus('success');
 
-      if (inputRef.current) inputRef.current.value = "";
+      if (inputRef.current) inputRef.current.value = '';
     } catch (err: unknown) {
       if (
-        (err as { name?: string }).name === "CanceledError" ||
-        (err as { name?: string }).name === "AbortError"
+        (err as { name?: string }).name === 'CanceledError' ||
+        (err as { name?: string }).name === 'AbortError'
       ) {
-        setStatus("cancelled");
+        setStatus('cancelled');
       } else if (err instanceof Error) {
-        setSubmitError(err.message || "Upload failed. Please try again.");
-        setStatus("error");
+        setSubmitError(err.message || 'Upload failed. Please try again.');
+        setStatus('error');
       } else {
-        setSubmitError("Upload failed. Please try again.");
-        setStatus("error");
+        setSubmitError('Upload failed. Please try again.');
+        setStatus('error');
       }
     } finally {
       abortRef.current = null;
-      if (status !== "cancelled") {
+      if (status !== 'cancelled') {
         setProgress(0);
       }
     }
@@ -633,7 +628,7 @@ export default function BulkImportView() {
 
   const handleCancel = useCallback(() => {
     abortRef.current?.abort();
-    setStatus("cancelled");
+    setStatus('cancelled');
     setProgress(0);
   }, []);
 
@@ -643,13 +638,13 @@ export default function BulkImportView() {
     setPreview(null);
     setResult(null);
     setSubmitError(null);
-    setStatus("idle");
+    setStatus('idle');
     setProgress(0);
-    if (inputRef.current) inputRef.current.value = "";
+    if (inputRef.current) inputRef.current.value = '';
   }, []);
 
   const hasBlockingErrors = (preview?.errors.length ?? 0) > 0;
-  const isProcessing = status === "uploading" || status === "validating";
+  const isProcessing = status === 'uploading' || status === 'validating';
 
   return (
     <div className="mx-auto max-w-2xl space-y-6 p-6">
@@ -667,10 +662,10 @@ export default function BulkImportView() {
           </Link>
         </div>
         <p className="text-sm text-gray-500">
-          Upload a{" "}
-          <code className="rounded bg-gray-100 px-1 py-0.5 text-xs">.csv</code>{" "}
-          or{" "}
-          <code className="rounded bg-gray-100 px-1 py-0.5 text-xs">.json</code>{" "}
+          Upload a{' '}
+          <code className="rounded bg-gray-100 px-1 py-0.5 text-xs">.csv</code>{' '}
+          or{' '}
+          <code className="rounded bg-gray-100 px-1 py-0.5 text-xs">.json</code>{' '}
           file to create outages in one pass.
         </p>
       </div>
@@ -683,7 +678,7 @@ export default function BulkImportView() {
         onDrop={handleDrop}
         onClick={() => inputRef.current?.click()}
         onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
+          if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
             inputRef.current?.click();
           }
@@ -693,9 +688,9 @@ export default function BulkImportView() {
         aria-label="File upload dropzone. Click or press Enter to browse files."
         className={`flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-10 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
           dragging
-            ? "border-blue-500 bg-blue-100"
-            : "border-gray-300 bg-gray-50 hover:border-blue-300 hover:bg-blue-50"
-        } ${isProcessing ? "opacity-50 cursor-not-allowed pointer-events-none" : ""}`}
+            ? 'border-blue-500 bg-blue-100'
+            : 'border-gray-300 bg-gray-50 hover:border-blue-300 hover:bg-blue-50'
+        } ${isProcessing ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}`}
       >
         <svg
           className="mb-3 h-10 w-10 text-gray-400"
@@ -712,18 +707,18 @@ export default function BulkImportView() {
           />
         </svg>
         <p className="text-sm font-medium text-gray-600">
-          Drag and drop or{" "}
+          Drag and drop or{' '}
           <span className="text-blue-600 underline">browse</span>
         </p>
         <p className="mt-1 text-xs text-gray-400">
-          Accepted formats: {ACCEPTED_EXTENSIONS.join(", ")} (max{" "}
+          Accepted formats: {ACCEPTED_EXTENSIONS.join(', ')} (max{' '}
           {MAX_FILE_SIZE_MB}MB)
         </p>
         <input
           ref={inputRef}
           id={fileInputId}
           type="file"
-          accept={ACCEPTED_EXTENSIONS.join(",")}
+          accept={ACCEPTED_EXTENSIONS.join(',')}
           className="hidden"
           onChange={handleInputChange}
           aria-label="Choose file"
@@ -793,13 +788,13 @@ export default function BulkImportView() {
               <div className="flex items-center justify-between">
                 <p className="font-semibold">
                   {preview.errors.length} validation error
-                  {preview.errors.length > 1 ? "s" : ""} found
+                  {preview.errors.length > 1 ? 's' : ''} found
                 </p>
                 <button
                   onClick={() => setShowValidationTable(!showValidationTable)}
                   className="text-xs font-medium text-blue-600 hover:underline"
                 >
-                  {showValidationTable ? "Show as list" : "Show in table"}
+                  {showValidationTable ? 'Show as list' : 'Show in table'}
                 </button>
               </div>
               <div className="mt-2">
@@ -847,7 +842,7 @@ export default function BulkImportView() {
                 <p className="text-xs text-gray-400">
                   {preview.totalRows > MAX_PREVIEW_ROWS
                     ? `Showing ${preview.rows.length} of ${preview.totalRows} rows`
-                    : `${preview.rows.length} row${preview.rows.length > 1 ? "s" : ""}`}
+                    : `${preview.rows.length} row${preview.rows.length > 1 ? 's' : ''}`}
                 </p>
               </div>
               <div className="overflow-x-auto">
@@ -859,22 +854,22 @@ export default function BulkImportView() {
                           key={h}
                           className={`px-3 py-2 text-left font-semibold text-gray-600 ${
                             REQUIRED_FIELDS.includes(
-                              h as (typeof REQUIRED_FIELDS)[number],
+                              h as (typeof REQUIRED_FIELDS)[number]
                             )
-                              ? "text-blue-700"
-                              : ""
+                              ? 'text-blue-700'
+                              : ''
                           }`}
                           title={
                             REQUIRED_FIELDS.includes(
-                              h as (typeof REQUIRED_FIELDS)[number],
+                              h as (typeof REQUIRED_FIELDS)[number]
                             )
-                              ? "Required field"
+                              ? 'Required field'
                               : undefined
                           }
                         >
                           {h}
                           {REQUIRED_FIELDS.includes(
-                            h as (typeof REQUIRED_FIELDS)[number],
+                            h as (typeof REQUIRED_FIELDS)[number]
                           ) && <span className="ml-0.5 text-blue-500">*</span>}
                         </th>
                       ))}
@@ -907,7 +902,7 @@ export default function BulkImportView() {
 
       {/* Actions */}
       <div className="space-y-2">
-        {status === "uploading" ? (
+        {status === 'uploading' ? (
           <>
             <div
               className="w-full rounded-full bg-gray-200 h-2 overflow-hidden"
@@ -939,7 +934,7 @@ export default function BulkImportView() {
             disabled={!file || hasBlockingErrors || isProcessing}
             className="w-full rounded-lg bg-blue-600 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-blue-600"
           >
-            {status === "validating" ? "Validating..." : "Upload File"}
+            {status === 'validating' ? 'Validating...' : 'Upload File'}
           </button>
         )}
       </div>
@@ -1001,28 +996,28 @@ export default function BulkImportView() {
               <div className="mb-2 flex items-center justify-between">
                 <p className="text-sm font-semibold text-red-600">
                   {result.errors.length} validation error
-                  {result.errors.length > 1 ? "s" : ""}
+                  {result.errors.length > 1 ? 's' : ''}
                 </p>
                 <button
                   onClick={() => {
                     const rows = [
-                      ["row", "field", "message"],
+                      ['row', 'field', 'message'],
                       ...result.errors.map((e) => [
-                        e.row != null ? String(e.row) : "",
-                        e.field ?? "",
+                        e.row != null ? String(e.row) : '',
+                        e.field ?? '',
                         e.message,
                       ]),
                     ];
                     const csv = rows
                       .map((r) =>
-                        r.map((c) => `"${c.replace(/"/g, '""')}"`).join(","),
+                        r.map((c) => `"${c.replace(/"/g, '""')}"`).join(',')
                       )
-                      .join("\n");
+                      .join('\n');
                     const blob = new Blob([csv], {
-                      type: "text/csv;charset=utf-8;",
+                      type: 'text/csv;charset=utf-8;',
                     });
                     const url = URL.createObjectURL(blob);
-                    const a = document.createElement("a");
+                    const a = document.createElement('a');
                     a.href = url;
                     a.download = `import-errors-${new Date().toISOString().slice(0, 10)}.csv`;
                     document.body.appendChild(a);

@@ -1,6 +1,9 @@
-import { describe, it, expect } from "vitest";
-import { renderHook } from "@testing-library/react";
-import { useDashboardLoading, type QueryResult } from "@/hooks/useDashboardLoading";
+import { describe, it, expect } from 'vitest';
+import { renderHook } from '@testing-library/react';
+import {
+  useDashboardLoading,
+  type QueryResult,
+} from '@/hooks/useDashboardLoading';
 
 function makeQuery(overrides: Partial<QueryResult> = {}): QueryResult {
   return {
@@ -11,8 +14,8 @@ function makeQuery(overrides: Partial<QueryResult> = {}): QueryResult {
   };
 }
 
-describe("useDashboardLoading", () => {
-  it("returns fully loaded with empty array", () => {
+describe('useDashboardLoading', () => {
+  it('returns fully loaded with empty array', () => {
     const { result } = renderHook(() => useDashboardLoading([]));
     expect(result.current.isFullyLoaded).toBe(true);
     expect(result.current.progress).toBe(1);
@@ -20,7 +23,7 @@ describe("useDashboardLoading", () => {
     expect(result.current.failedSections).toBe(0);
   });
 
-  it("returns fully loaded when all queries succeed", () => {
+  it('returns fully loaded when all queries succeed', () => {
     const queries = [
       makeQuery({ isSuccess: true }),
       makeQuery({ isSuccess: true }),
@@ -33,7 +36,7 @@ describe("useDashboardLoading", () => {
     expect(result.current.progress).toBe(1);
   });
 
-  it("reports partial failure without masking successes", () => {
+  it('reports partial failure without masking successes', () => {
     const queries = [
       makeQuery({ isSuccess: true }),
       makeQuery({ isError: true, isSuccess: false }),
@@ -46,7 +49,7 @@ describe("useDashboardLoading", () => {
     expect(result.current.progress).toBeCloseTo(1);
   });
 
-  it("shows incomplete progress while loading", () => {
+  it('shows incomplete progress while loading', () => {
     const queries = [
       makeQuery({ isSuccess: true }),
       makeQuery({ isLoading: true, isSuccess: false }),
@@ -58,7 +61,7 @@ describe("useDashboardLoading", () => {
     expect(result.current.failedSections).toBe(0);
   });
 
-  it("calculates progress with mix of states", () => {
+  it('calculates progress with mix of states', () => {
     const queries = [
       makeQuery({ isSuccess: true }),
       makeQuery({ isLoading: true, isSuccess: false }),

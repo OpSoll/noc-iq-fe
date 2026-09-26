@@ -4,35 +4,35 @@
 
 ## Overall Health
 
-| Metric | Value |
-|--------|-------|
-| Test suite | ⚠️ No data |
-| Tests total | N/A |
-| Tests passed | N/A |
-| Tests failed | N/A |
-| Lint errors | N/A |
-| Lint warnings | N/A |
+| Metric        | Value      |
+| ------------- | ---------- |
+| Test suite    | ⚠️ No data |
+| Tests total   | N/A        |
+| Tests passed  | N/A        |
+| Tests failed  | N/A        |
+| Lint errors   | N/A        |
+| Lint warnings | N/A        |
 
 ## Route Domain Scorecard
 
-| Domain | Routes | Risk | Test Coverage |
-|--------|--------|------|---------------|
-| Auth | /login, /register, /(auth)/logic | 🔴 Critical | 🟢 Has tests |
-| Outages | /outages, /outages/[id], /outages/new | 🟠 High | 🟢 Has tests |
-| Payments | /payments | 🔴 Critical | 🟢 Has tests |
-| Bulk Import | /bulk-import, /bulk-import/history | 🟡 Medium | 🟢 Has tests |
-| Config | /config | 🟠 High | 🟢 Has tests |
-| Settings | /setting | 🟡 Medium | 🟢 Has tests |
+| Domain      | Routes                                | Risk        | Test Coverage |
+| ----------- | ------------------------------------- | ----------- | ------------- |
+| Auth        | /login, /register, /(auth)/logic      | 🔴 Critical | 🟢 Has tests  |
+| Outages     | /outages, /outages/[id], /outages/new | 🟠 High     | 🟢 Has tests  |
+| Payments    | /payments                             | 🔴 Critical | 🟢 Has tests  |
+| Bulk Import | /bulk-import, /bulk-import/history    | 🟡 Medium   | 🟢 Has tests  |
+| Config      | /config                               | 🟠 High     | 🟢 Has tests  |
+| Settings    | /setting                              | 🟡 Medium   | 🟢 Has tests  |
 
 ## Signal Definitions
 
-| Signal | Meaning |
-|--------|---------|
-| 🟢 Has tests | At least one test file exists for the domain |
-| 🔴 No tests | No test coverage — high regression risk |
-| 🔴 Critical | Financial or auth impact; failures affect users immediately |
-| 🟠 High | Core operational surface; failures degrade NOC workflow |
-| 🟡 Medium | Supporting feature; failures are non-blocking |
+| Signal       | Meaning                                                     |
+| ------------ | ----------------------------------------------------------- |
+| 🟢 Has tests | At least one test file exists for the domain                |
+| 🔴 No tests  | No test coverage — high regression risk                     |
+| 🔴 Critical  | Financial or auth impact; failures affect users immediately |
+| 🟠 High      | Core operational surface; failures degrade NOC workflow     |
+| 🟡 Medium    | Supporting feature; failures are non-blocking               |
 
 ## Trend Export
 
