@@ -22,6 +22,7 @@ import {
   DropZone,
   validateImportFile,
 } from './DropZone';
+import { ValidationPreview } from './ValidationPreview';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const MAX_PREVIEW_ROWS = 100;
@@ -442,70 +443,6 @@ function ValidationList({ errors }: { errors: ImportValidationError[] }) {
   );
 }
 
-function ValidationTable({
-  headers,
-  rows,
-  errors,
-}: {
-  headers: string[];
-  rows: string[][];
-  errors: ImportValidationError[];
-}) {
-  const getCellError = (rowIndex: number, field: string) => {
-    return errors.find((e) => e.row === rowIndex + 2 && e.field === field)
-      ?.message;
-  };
-
-  return (
-    <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
-      <table className="min-w-full divide-y divide-gray-200 text-sm">
-        <thead className="bg-gray-50">
-          <tr>
-            <th className="px-4 py-2 text-left font-semibold text-gray-600">
-              Row
-            </th>
-            {headers.map((h) => (
-              <th
-                key={h}
-                className="px-4 py-2 text-left font-semibold text-gray-600"
-              >
-                {h}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-200">
-          {rows.map((row, i) => {
-            const hasRowError = errors.some((e) => e.row === i + 2);
-            return (
-              <tr key={`row-${i}`} className={hasRowError ? 'bg-red-50' : ''}>
-                <td className="px-4 py-2 text-gray-500">{i + 2}</td>
-                {headers.map((h, j) => {
-                  const cellError = getCellError(i, h);
-                  return (
-                    <td
-                      key={`${h}-${j}`}
-                      className={`px-4 py-2 ${
-                        cellError ? 'relative bg-red-100' : 'text-gray-700'
-                      }`}
-                      title={cellError}
-                    >
-                      {cellError && (
-                        <div className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-red-500" />
-                      )}
-                      {row[j]}
-                    </td>
-                  );
-                })}
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
 // ─── Main Component ──────────────────────────────────────────────────────────
 export default function BulkImportView() {
   const abortRef = useRef<AbortController | null>(null);
@@ -519,7 +456,6 @@ export default function BulkImportView() {
   const [progress, setProgress] = useState(0);
   const [result, setResult] = useState<BulkImportResult | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [showValidationTable, setShowValidationTable] = useState(false);
 
   // ─── Derived State ─────────────────────────────────────────────────────────
   const preview = useMemo(
@@ -549,7 +485,6 @@ export default function BulkImportView() {
     setResult(null);
     setSubmitError(null);
     setStatus('idle');
-    setShowValidationTable(false);
     setMappingConfirmed(false);
     setMapping({});
 
@@ -769,38 +704,14 @@ export default function BulkImportView() {
           {/* Errors */}
           {preview.errors.length > 0 && (
             <Alert type="error">
-              <div className="flex items-center justify-between">
-                <p className="font-semibold">
-                  {preview.errors.length} validation error
-                  {preview.errors.length > 1 ? 's' : ''} found
-                </p>
-                <button
-                  onClick={() => setShowValidationTable(!showValidationTable)}
-                  className="text-xs font-medium text-blue-600 hover:underline"
-                >
-                  {showValidationTable ? 'Show as list' : 'Show in table'}
-                </button>
-              </div>
-              <div className="mt-2">
-                {showValidationTable ? (
-                  <p className="text-xs text-gray-600">
-                    Invalid rows and cells are highlighted below. Hover over a
-                    cell for details.
-                  </p>
-                ) : (
-                  <ValidationList errors={preview.errors} />
-                )}
+              <p className="font-semibold">
+                {preview.errors.length} validation error
+                {preview.errors.length > 1 ? 's' : ''} found
+              </p>
+              <div className="mt-2 max-h-48 overflow-y-auto">
+                <ValidationList errors={preview.errors} />
               </div>
             </Alert>
-          )}
-
-          {/* Table */}
-          {showValidationTable && (
-            <ValidationTable
-              headers={preview.headers}
-              rows={preview.rows}
-              errors={preview.errors}
-            />
           )}
 
           {/* Warnings */}
@@ -816,70 +727,15 @@ export default function BulkImportView() {
             </Alert>
           )}
 
-          {/* Preview Table */}
+          {/* Preview */}
           {preview.headers.length > 0 && preview.rows.length > 0 && (
-            <div className="overflow-hidden rounded-lg border bg-white shadow-sm">
-              <div className="border-b px-4 py-2 flex items-center justify-between bg-gray-50">
-                <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                  Preview
-                </p>
-                <p className="text-xs text-gray-400">
-                  {preview.totalRows > MAX_PREVIEW_ROWS
-                    ? `Showing ${preview.rows.length} of ${preview.totalRows} rows`
-                    : `${preview.rows.length} row${preview.rows.length > 1 ? 's' : ''}`}
-                </p>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      {preview.headers.map((h) => (
-                        <th
-                          key={h}
-                          className={`px-3 py-2 text-left font-semibold text-gray-600 ${
-                            REQUIRED_FIELDS.includes(
-                              h as (typeof REQUIRED_FIELDS)[number]
-                            )
-                              ? 'text-blue-700'
-                              : ''
-                          }`}
-                          title={
-                            REQUIRED_FIELDS.includes(
-                              h as (typeof REQUIRED_FIELDS)[number]
-                            )
-                              ? 'Required field'
-                              : undefined
-                          }
-                        >
-                          {h}
-                          {REQUIRED_FIELDS.includes(
-                            h as (typeof REQUIRED_FIELDS)[number]
-                          ) && <span className="ml-0.5 text-blue-500">*</span>}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {preview.rows.map((row, i) => (
-                      <tr
-                        key={i}
-                        className="border-t hover:bg-gray-50 transition-colors"
-                      >
-                        {row.map((cell, j) => (
-                          <td
-                            key={j}
-                            className="px-3 py-2 text-gray-700 max-w-[200px] truncate"
-                            title={cell}
-                          >
-                            {cell}
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            <ValidationPreview
+              headers={preview.headers}
+              records={preview.rows}
+              errors={preview.errors}
+              totalRows={preview.totalRows}
+              requiredFields={REQUIRED_FIELDS}
+            />
           )}
         </div>
       )}
