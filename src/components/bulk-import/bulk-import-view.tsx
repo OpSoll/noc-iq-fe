@@ -9,6 +9,17 @@ import type {
   ImportValidationError,
 } from '@/types/bulkImport';
 
+import {
+  detectDuplicateRows,
+  DuplicateDetector,
+} from './DuplicateDetector';
+import {
+  ImportProgress,
+  type ImportProgressState,
+} from './ImportProgress';
+import { SampleDownload } from './SampleDownload';
+import { ValidationPreview } from './ValidationPreview';
+
 // ─── Constants ───────────────────────────────────────────────────────────────
 const ACCEPTED_TYPES = ['text/csv', 'application/json'] as const;
 const ACCEPTED_EXTENSIONS = ['.csv', '.json'] as const;
@@ -466,6 +477,13 @@ export default function BulkImportView() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
   const [showValidationTable, setShowValidationTable] = useState(false);
+  const [excludeDuplicates, setExcludeDuplicates] = useState(true);
+  const [importProgress, setImportProgress] = useState<ImportProgressState>({
+    phase: 'idle',
+    percent: 0,
+    processed: 0,
+    total: 0,
+  });
 
   const id = useId();
   const fileInputId = `file-input-${id}`;
@@ -582,24 +600,77 @@ export default function BulkImportView() {
     [handleFile]
   );
 
+
+  /** Rebuild a CSV File excluding duplicate rows when the option is enabled (#631). */
+  const buildUploadFile = useCallback((): File | null => {
+    if (!file || !preview) return file;
+    if (!excludeDuplicates) return file;
+    const detection = detectDuplicateRows(preview.headers, preview.rows);
+    if (detection.duplicateCount === 0) return file;
+
+    const escape = (cell: string) => {
+      if (/[",\n\r]/.test(cell)) return `"${cell.replace(/"/g, '""')}"`;
+      return cell;
+    };
+    const kept = preview.rows.filter((_, i) => !detection.excludedRowIndexes.has(i));
+    const lines = [
+      preview.headers.join(','),
+      ...kept.map((r) => r.map(escape).join(',')),
+    ];
+    const blob = new Blob([lines.join('\n') + '\n'], {
+      type: 'text/csv;charset=utf-8;',
+    });
+    return new File([blob], file.name, { type: file.type || 'text/csv' });
+  }, [file, preview, excludeDuplicates]);
+
   // ─── Submit ────────────────────────────────────────────────────────────────
   const handleSubmit = useCallback(async () => {
     if (!file || (preview && preview.errors.length > 0)) return;
 
+    const totalRows = preview?.totalRows ?? 0;
     const controller = new AbortController();
     abortRef.current = controller;
     setStatus('uploading');
     setProgress(0);
     setSubmitError(null);
     setResult(null);
+    setImportProgress({
+      phase: 'uploading',
+      percent: 0,
+      processed: 0,
+      total: totalRows,
+    });
 
     try {
-      const response = await bulkImportOutages(file, {
+      const uploadFile = buildUploadFile() ?? file;
+      const response = await bulkImportOutages(uploadFile, {
         signal: controller.signal,
-        onProgress: setProgress,
+        onProgress: (pct) => {
+          setProgress(pct);
+          const processed =
+            totalRows > 0 ? Math.round((pct / 100) * totalRows) : 0;
+          setImportProgress({
+            phase: pct >= 100 ? 'processing' : 'uploading',
+            percent: pct,
+            processed,
+            total: totalRows,
+          });
+        },
       });
 
       setResult(response);
+      setImportProgress({
+        phase: response.errors.length > 0 ? 'error' : 'success',
+        percent: 100,
+        processed: totalRows,
+        total: totalRows,
+        summary: {
+          total: totalRows,
+          imported: response.imported,
+          failed: response.errors.length,
+          skipped: response.skipped,
+        },
+      });
       setFile(null);
       setPreview(null);
       setStatus('success');
@@ -611,12 +682,15 @@ export default function BulkImportView() {
         (err as { name?: string }).name === 'AbortError'
       ) {
         setStatus('cancelled');
+        setImportProgress((s) => ({ ...s, phase: 'cancelled' }));
       } else if (err instanceof Error) {
         setSubmitError(err.message || 'Upload failed. Please try again.');
         setStatus('error');
+        setImportProgress((s) => ({ ...s, phase: 'error' }));
       } else {
         setSubmitError('Upload failed. Please try again.');
         setStatus('error');
+        setImportProgress((s) => ({ ...s, phase: 'error' }));
       }
     } finally {
       abortRef.current = null;
@@ -624,12 +698,13 @@ export default function BulkImportView() {
         setProgress(0);
       }
     }
-  }, [file, preview, status]);
+  }, [file, preview, status, buildUploadFile]);
 
   const handleCancel = useCallback(() => {
     abortRef.current?.abort();
     setStatus('cancelled');
     setProgress(0);
+    setImportProgress((s) => ({ ...s, phase: 'cancelled' }));
   }, []);
 
   const handleReset = useCallback(() => {
@@ -640,6 +715,8 @@ export default function BulkImportView() {
     setSubmitError(null);
     setStatus('idle');
     setProgress(0);
+    setExcludeDuplicates(true);
+    setImportProgress({ phase: 'idle', percent: 0, processed: 0, total: 0 });
     if (inputRef.current) inputRef.current.value = '';
   }, []);
 
@@ -668,6 +745,9 @@ export default function BulkImportView() {
           <code className="rounded bg-gray-100 px-1 py-0.5 text-xs">.json</code>{' '}
           file to create outages in one pass.
         </p>
+        <div className="pt-1">
+          <SampleDownload />
+        </div>
       </div>
 
       {/* Drop Zone */}
@@ -810,13 +890,42 @@ export default function BulkImportView() {
             </Alert>
           )}
 
-          {/* Table */}
-          {showValidationTable && (
-            <ValidationTable
-              headers={preview.headers}
-              rows={preview.rows}
-              errors={preview.errors}
-            />
+          {/* Table + inline edit (issue #628) + duplicate detection (issue #631) */}
+          {preview.rows.length > 0 && (
+            <div className="space-y-3">
+              <DuplicateDetector
+                headers={preview.headers}
+                rows={preview.rows}
+                excludeDuplicates={excludeDuplicates}
+                onExcludeDuplicatesChange={setExcludeDuplicates}
+              />
+              {(showValidationTable || preview.errors.length > 0) && (
+                <ValidationPreview
+                  headers={preview.headers}
+                  rows={preview.rows}
+                  errors={preview.errors}
+                  excludedRowIndexes={
+                    excludeDuplicates
+                      ? detectDuplicateRows(preview.headers, preview.rows)
+                          .excludedRowIndexes
+                      : undefined
+                  }
+                  onRowsChange={(rows) =>
+                    setPreview((prev) => (prev ? { ...prev, rows } : prev))
+                  }
+                  onErrorsChange={(errors) =>
+                    setPreview((prev) =>
+                      prev
+                        ? {
+                            ...prev,
+                            errors,
+                          }
+                        : prev
+                    )
+                  }
+                />
+              )}
+            </div>
           )}
 
           {/* Warnings */}
