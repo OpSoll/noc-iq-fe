@@ -19,7 +19,7 @@ import type {
 
 interface BatchConfirmDialogProps {
   open: boolean;
-  operation: BatchOperation | null;
+  operation: ConfirmableOperation | null;
   selectedCount: number;
   progress: BatchProgress | null;
   hasUnresolved: boolean;
@@ -31,8 +31,14 @@ interface BatchConfirmDialogProps {
 /*                              Operation Labels                              */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * Batch operations plus the single-row `soft-delete` confirmation used by the
+ * outage table row action menu.
+ */
+export type ConfirmableOperation = BatchOperation | 'soft-delete';
+
 const OPERATION_LABELS: Record<
-  BatchOperation,
+  ConfirmableOperation,
   { title: string; description: string; warning: string }
 > = {
   acknowledge: {
@@ -55,6 +61,13 @@ const OPERATION_LABELS: Record<
       'Recompute SLA metrics for all selected outages. This may change penalty/reward amounts based on the latest data.',
     warning:
       'SLA recalculation may affect financial amounts. Double-check the results after completion.',
+  },
+  'soft-delete': {
+    title: 'Soft Delete Outage',
+    description:
+      'Remove this outage from the active list. Historical SLA and payment records are retained.',
+    warning:
+      'Soft deleted outages leave every current view immediately. This action cannot be undone from the table.',
   },
 };
 
