@@ -33,6 +33,7 @@ const testQueryClient = new QueryClient({
 vi.mock('next/navigation', () => ({
   useParams: () => ({ id: 'outage-1' }),
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }),
+  useSearchParams: () => ({ get: () => null, toString: () => '' }),
 }));
 
 const mockUseOutagesTableState = vi.fn();

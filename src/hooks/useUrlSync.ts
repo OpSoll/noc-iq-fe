@@ -18,15 +18,18 @@ export function useUrlSync<T extends Record<string, string>>(defaults: T) {
     (updates: Partial<T>) => {
       const params = new URLSearchParams(searchParams.toString());
       for (const [key, value] of Object.entries(updates)) {
-        if (value === null || value === defaults[key as keyof T]) {
+        if (
+          value === undefined ||
+          value === '' ||
+          value === defaults[key as keyof T]
+        ) {
           params.delete(key);
         } else {
           params.set(key, String(value));
         }
       }
-      const newUrl = params.toString()
-        ? `?${params.toString()}`
-        : window.location.pathname;
+      const query = params.toString();
+      const newUrl = `${window.location.pathname}${query ? `?${query}` : ''}${window.location.hash}`;
       window.history.replaceState(null, '', newUrl);
     },
     [searchParams, defaults]
