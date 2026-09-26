@@ -5,7 +5,8 @@
  *
  * A TanStack Table–powered table for the outages list that exposes explicit
  * aria-sort attributes on every sortable <th> element so screen readers can
- * announce column sort direction (ascending / descending / none).
+ * announce column sort direction (ascending / descending / none). Column
+ * visibility is operator controlled through the persistent ColumnToggle.
  *
  * Closes #710 – Accessibility: Add ARIA sort attributes to data table header elements
  */
@@ -14,11 +15,14 @@ import { useMemo, useState } from 'react';
 import {
   type ColumnDef,
   type SortingState,
+  type VisibilityState,
   flexRender,
   getCoreRowModel,
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
+import { ColumnToggle } from '@/components/tables/ColumnToggle';
+import type { ColumnOption } from '@/components/tables/ColumnToggle';
 import type { Severity, OutageStatus } from '@/types/outages';
 
 // ─── Domain types ─────────────────────────────────────────────────────────────
@@ -127,6 +131,14 @@ function SortIndicator({ direction }: { direction: 'asc' | 'desc' | false }) {
 
 // ─── Column definitions ───────────────────────────────────────────────────────
 
+/** Columns the operator can show or hide, in table order. */
+export const OUTAGES_TABLE_COLUMNS: ColumnOption[] = [
+  { id: 'title', label: 'Title' },
+  { id: 'severity', label: 'Severity' },
+  { id: 'status', label: 'Status' },
+  { id: 'createdAt', label: 'Created' },
+];
+
 function buildColumns(): ColumnDef<OutageRow>[] {
   return [
     {
@@ -202,6 +214,7 @@ export function OutagesTable({
   const [internalSorting, setInternalSorting] = useState<SortingState>([
     { id: 'createdAt', desc: true },
   ]);
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
 
   const isControlled = externalSorting !== undefined;
   const sorting = isControlled ? externalSorting : internalSorting;
@@ -222,8 +235,9 @@ export function OutagesTable({
   const table = useReactTable({
     data,
     columns,
-    state: { sorting },
+    state: { sorting, columnVisibility },
     onSortingChange: handleSortingChange,
+    onColumnVisibilityChange: setColumnVisibility,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
   });
@@ -231,80 +245,106 @@ export function OutagesTable({
   const headerGroups = table.getHeaderGroups();
   const rows = table.getRowModel().rows;
 
+  // Only the columns the operator kept are offered in the toggle, and a
+  // visibility set from storage can only ever contain these ids.
+  const visibleIds = OUTAGES_TABLE_COLUMNS.filter((column) =>
+    table.getColumn(column.id)?.getIsVisible()
+  ).map((column) => column.id);
+
   return (
-    <div className="overflow-x-auto rounded-lg border border-slate-200">
-      <table className="w-full text-sm" aria-label={caption}>
-        {/* Visible caption for assistive technology */}
-        <caption className="sr-only">{caption}</caption>
+    <div className="space-y-3">
+      <div className="flex items-center justify-end">
+        <ColumnToggle
+          columns={OUTAGES_TABLE_COLUMNS}
+          visible={visibleIds}
+          onChange={(next) => {
+            const hidden = OUTAGES_TABLE_COLUMNS.filter(
+              (column) => !next.includes(column.id)
+            ).map((column) => column.id);
+            setColumnVisibility(
+              Object.fromEntries(hidden.map((id) => [id, false]))
+            );
+          }}
+        />
+      </div>
 
-        <thead className="bg-slate-50">
-          {headerGroups.map((hg) => (
-            <tr key={hg.id}>
-              {hg.headers.map((h) => {
-                const canSort = h.column.getCanSort();
-                const isSorted = h.column.getIsSorted();
+      <div className="overflow-x-auto rounded-lg border border-slate-200">
+        <table className="w-full text-sm" aria-label={caption}>
+          {/* Visible caption for assistive technology */}
+          <caption className="sr-only">{caption}</caption>
 
-                return (
-                  // aria-sort is set on the <th> element as required by
-                  // ARIA 1.2 §6.6.24 and WCAG 2.1 SC 4.1.2.
-                  // The value updates on every toggle so AT can announce the
-                  // new direction without re-reading the whole header.
-                  <th
-                    key={h.id}
-                    scope="col"
-                    aria-sort={toAriaSortValue(isSorted)}
-                    aria-label={
-                      canSort
-                        ? `Sort by ${typeof h.column.columnDef.header === 'string' ? h.column.columnDef.header : h.id}, currently ${toAriaSortValue(isSorted)}`
-                        : undefined
-                    }
-                    className={`px-4 py-3 text-left text-xs font-semibold text-slate-700 whitespace-nowrap ${
-                      canSort ? 'group' : ''
-                    }`}
-                  >
-                    {canSort ? (
-                      <button
-                        type="button"
-                        onClick={h.column.getToggleSortingHandler()}
-                        className="flex items-center gap-1.5 select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 rounded"
-                        aria-label={`Sort by ${typeof h.column.columnDef.header === 'string' ? h.column.columnDef.header : h.id}, currently ${toAriaSortValue(isSorted)}`}
-                      >
-                        {flexRender(h.column.columnDef.header, h.getContext())}
-                        <SortIndicator direction={isSorted} />
-                      </button>
-                    ) : (
-                      flexRender(h.column.columnDef.header, h.getContext())
-                    )}
-                  </th>
-                );
-              })}
-            </tr>
-          ))}
-        </thead>
+          <thead className="bg-slate-50">
+            {headerGroups.map((hg) => (
+              <tr key={hg.id}>
+                {hg.headers.map((h) => {
+                  const canSort = h.column.getCanSort();
+                  const isSorted = h.column.getIsSorted();
 
-        <tbody className="divide-y divide-slate-100 bg-white">
-          {rows.length === 0 ? (
-            <tr>
-              <td
-                colSpan={columns.length}
-                className="h-32 text-center text-sm text-slate-500"
-              >
-                No outages to display.
-              </td>
-            </tr>
-          ) : (
-            rows.map((row) => (
-              <tr key={row.id} className="transition-colors hover:bg-slate-50">
-                {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id} className="px-4 py-3">
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
+                  return (
+                    // aria-sort is set on the <th> element as required by
+                    // ARIA 1.2 §6.6.24 and WCAG 2.1 SC 4.1.2.
+                    // The value updates on every toggle so AT can announce the
+                    // new direction without re-reading the whole header.
+                    <th
+                      key={h.id}
+                      scope="col"
+                      aria-sort={toAriaSortValue(isSorted)}
+                      aria-label={
+                        canSort
+                          ? `Sort by ${typeof h.column.columnDef.header === 'string' ? h.column.columnDef.header : h.id}, currently ${toAriaSortValue(isSorted)}`
+                          : undefined
+                      }
+                      className={`px-4 py-3 text-left text-xs font-semibold text-slate-700 whitespace-nowrap ${
+                        canSort ? 'group' : ''
+                      }`}
+                    >
+                      {canSort ? (
+                        <button
+                          type="button"
+                          onClick={h.column.getToggleSortingHandler()}
+                          className="flex items-center gap-1.5 select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 rounded"
+                          aria-label={`Sort by ${typeof h.column.columnDef.header === 'string' ? h.column.columnDef.header : h.id}, currently ${toAriaSortValue(isSorted)}`}
+                        >
+                          {flexRender(h.column.columnDef.header, h.getContext())}
+                          <SortIndicator direction={isSorted} />
+                        </button>
+                      ) : (
+                        flexRender(h.column.columnDef.header, h.getContext())
+                      )}
+                    </th>
+                  );
+                })}
               </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+            ))}
+          </thead>
+
+          <tbody className="divide-y divide-slate-100 bg-white">
+            {rows.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={visibleIds.length}
+                  className="h-32 text-center text-sm text-slate-500"
+                >
+                  No outages to display.
+                </td>
+              </tr>
+            ) : (
+              rows.map((row) => (
+                <tr
+                  key={row.id}
+                  className="transition-colors hover:bg-slate-50"
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <td key={cell.id} className="px-4 py-3">
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

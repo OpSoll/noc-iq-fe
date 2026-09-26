@@ -1,8 +1,9 @@
-import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { beforeEach, describe, it, expect } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { OutagesTable, toAriaSortValue } from './OutagesTable';
 import type { OutageRow } from './OutagesTable';
+import { DEFAULT_COLUMN_STORAGE_KEY } from './ColumnToggle';
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 
@@ -29,6 +30,12 @@ const ROWS: OutageRow[] = [
     createdAt: '2024-01-03T12:00:00Z',
   },
 ];
+
+// The column toggle persists to localStorage, which jsdom keeps for the whole
+// file — clearing it keeps every test independent of the previous one.
+beforeEach(() => {
+  window.localStorage.clear();
+});
 
 // ─── toAriaSortValue unit tests ───────────────────────────────────────────────
 
@@ -165,5 +172,40 @@ describe('OutagesTable', () => {
     expect(handleSort).toHaveBeenCalledOnce();
     const nextSorting = handleSort.mock.calls[0][0];
     expect(nextSorting[0]).toMatchObject({ id: 'title', desc: false });
+  });
+});
+
+// ─── Column visibility ────────────────────────────────────────────────────────
+
+describe('OutagesTable column visibility', () => {
+  it('shows every column by default', () => {
+    render(<OutagesTable data={ROWS} sorting={[]} />);
+
+    expect(screen.getAllByRole('columnheader')).toHaveLength(4);
+    expect(screen.getByRole('button', { name: /columns/i })).toHaveTextContent(
+      '4/4'
+    );
+  });
+
+  it('hides a column and remembers the choice', async () => {
+    const user = userEvent.setup();
+    render(<OutagesTable data={ROWS} sorting={[]} />);
+
+    await user.click(screen.getByRole('button', { name: /columns/i }));
+
+    const severity = screen.getByRole('menuitemcheckbox', {
+      name: 'Severity',
+    });
+    await user.click(severity);
+
+    expect(
+      screen.queryByRole('columnheader', { name: /sort by severity/i })
+    ).toBeNull();
+    expect(screen.getAllByRole('columnheader')).toHaveLength(3);
+
+    await waitFor(() => {
+      const stored = window.localStorage.getItem(DEFAULT_COLUMN_STORAGE_KEY);
+      expect(stored).not.toContain('"severity"');
+    });
   });
 });
