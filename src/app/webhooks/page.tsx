@@ -94,20 +94,6 @@ export default function WebhooksPage() {
   });
 
   const filteredDeliveries = useMemo(() => {
-        <div className="flex gap-2 mb-4">
-          {["all", "success", "retrying", "failed"].map(s => (
-            <button
-              key={s}
-              type="button"
-              onClick={() => setStatusFilter(s)}
-              className={`px-3 py-1 rounded-full text-xs font-medium border capitalize ${
-                statusFilter === s ? "bg-slate-800 text-white" : "bg-white text-slate-600"
-              }`}
-            >
-              {s}
-            </button>
-          ))}
-        </div>
     return deliveries.filter((d) => {
       const code = d.response_code ?? -1;
       const statusMatch =
