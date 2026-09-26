@@ -23,10 +23,10 @@ Outages are the core operational surface. The route must support list views, det
 
 ## Alternatives Considered
 
-| Option | Reason rejected |
-|--------|----------------|
-| Server-side data fetching (RSC) | Outage state changes frequently; client-side polling is more appropriate |
-| SWR | React Query already in use across the app; no reason to add a second cache library |
+| Option                          | Reason rejected                                                                    |
+| ------------------------------- | ---------------------------------------------------------------------------------- |
+| Server-side data fetching (RSC) | Outage state changes frequently; client-side polling is more appropriate           |
+| SWR                             | React Query already in use across the app; no reason to add a second cache library |
 
 ## References
 

@@ -20,12 +20,12 @@ Until the backend exposes an OpenAPI spec, the process is:
 
 ### High-risk shared models
 
-| Type | File | Backend endpoint |
-|------|------|-----------------|
-| `Payment` | `src/types/payment.ts` | `GET /payments/:id` |
-| `Outage` | `src/types/outages.ts` | `GET /outages/:id` |
-| `SLAResult` | `src/types/outages.ts` | embedded in outage resolve response |
-| `OutageResolutionPayment` | `src/types/outages.ts` | `POST /outages/:id/resolve` |
+| Type                      | File                   | Backend endpoint                    |
+| ------------------------- | ---------------------- | ----------------------------------- |
+| `Payment`                 | `src/types/payment.ts` | `GET /payments/:id`                 |
+| `Outage`                  | `src/types/outages.ts` | `GET /outages/:id`                  |
+| `SLAResult`               | `src/types/outages.ts` | embedded in outage resolve response |
+| `OutageResolutionPayment` | `src/types/outages.ts` | `POST /outages/:id/resolve`         |
 
 ### Future: OpenAPI codegen
 

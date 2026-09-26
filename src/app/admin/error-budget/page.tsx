@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useState, useMemo } from "react";
+import { useState, useMemo } from 'react';
 
 type ErrorBudgetDataPoint = {
   date: string;
@@ -13,7 +13,7 @@ type ThresholdConfig = {
   windowDays: number;
 };
 
-const STORAGE_KEY = "noc_error_budget_config";
+const STORAGE_KEY = 'noc_error_budget_config';
 
 const DEFAULT_CONFIG: ThresholdConfig = {
   percent: 99.5,
@@ -21,7 +21,7 @@ const DEFAULT_CONFIG: ThresholdConfig = {
 };
 
 function loadConfig(): ThresholdConfig {
-  if (typeof window === "undefined") return DEFAULT_CONFIG;
+  if (typeof window === 'undefined') return DEFAULT_CONFIG;
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) return { ...DEFAULT_CONFIG, ...JSON.parse(raw) };
@@ -30,7 +30,7 @@ function loadConfig(): ThresholdConfig {
 }
 
 function saveConfig(config: ThresholdConfig): void {
-  if (typeof window === "undefined") return;
+  if (typeof window === 'undefined') return;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
 }
 
@@ -53,7 +53,7 @@ function generateMockData(days: number): ErrorBudgetDataPoint[] {
 
 function exportBudgetReport(
   data: ErrorBudgetDataPoint[],
-  config: ThresholdConfig,
+  config: ThresholdConfig
 ) {
   const totalReqs = data.reduce((sum, d) => sum + d.totalRequests, 0);
   const totalErrs = data.reduce((sum, d) => sum + d.errors, 0);
@@ -68,17 +68,17 @@ function exportBudgetReport(
       total_errors: totalErrs,
       current_sla: +sla.toFixed(4),
       budget_remaining_pp: +Math.max(0, sla - (100 - config.percent)).toFixed(
-        4,
+        4
       ),
     },
     daily_data: data,
   };
 
   const blob = new Blob([JSON.stringify(report, null, 2)], {
-    type: "application/json",
+    type: 'application/json',
   });
   const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
+  const a = document.createElement('a');
   a.href = url;
   a.download = `error-budget-report-${new Date().toISOString().slice(0, 10)}.json`;
   a.click();
@@ -91,7 +91,7 @@ export default function ErrorBudgetPage() {
 
   const data = useMemo(
     () => generateMockData(config.windowDays),
-    [config.windowDays],
+    [config.windowDays]
   );
 
   const totalReqs = data.reduce((sum, d) => sum + d.totalRequests, 0);
@@ -102,7 +102,7 @@ export default function ErrorBudgetPage() {
   const breaches = data.filter(
     (d) =>
       d.totalRequests > 0 &&
-      ((d.totalRequests - d.errors) / d.totalRequests) * 100 < config.percent,
+      ((d.totalRequests - d.errors) / d.totalRequests) * 100 < config.percent
   ).length;
 
   function updateThreshold(percent: number) {
@@ -191,7 +191,7 @@ export default function ErrorBudgetPage() {
         <div className="rounded-xl border bg-white p-5 shadow-sm">
           <p className="text-xs text-slate-500">Current SLA</p>
           <p
-            className={`mt-1 text-3xl font-bold ${currentSla >= config.percent ? "text-green-600" : "text-red-600"}`}
+            className={`mt-1 text-3xl font-bold ${currentSla >= config.percent ? 'text-green-600' : 'text-red-600'}`}
           >
             {currentSla.toFixed(2)}%
           </p>
@@ -200,7 +200,7 @@ export default function ErrorBudgetPage() {
         <div className="rounded-xl border bg-white p-5 shadow-sm">
           <p className="text-xs text-slate-500">Budget Remaining</p>
           <p
-            className={`mt-1 text-3xl font-bold ${budgetRemaining > 0 ? "text-green-600" : "text-red-600"}`}
+            className={`mt-1 text-3xl font-bold ${budgetRemaining > 0 ? 'text-green-600' : 'text-red-600'}`}
           >
             {budgetRemaining.toFixed(2)}pp
           </p>
@@ -220,7 +220,7 @@ export default function ErrorBudgetPage() {
         <div className="rounded-xl border bg-white p-5 shadow-sm">
           <p className="text-xs text-slate-500">Threshold Breaches</p>
           <p
-            className={`mt-1 text-3xl font-bold ${breaches === 0 ? "text-green-600" : "text-red-600"}`}
+            className={`mt-1 text-3xl font-bold ${breaches === 0 ? 'text-green-600' : 'text-red-600'}`}
           >
             {breaches}
           </p>
@@ -262,15 +262,15 @@ export default function ErrorBudgetPage() {
                       {d.errors}
                     </td>
                     <td
-                      className={`px-3 py-2 text-right font-medium ${passed ? "text-green-600" : "text-red-600"}`}
+                      className={`px-3 py-2 text-right font-medium ${passed ? 'text-green-600' : 'text-red-600'}`}
                     >
                       {sla.toFixed(2)}%
                     </td>
                     <td className="px-3 py-2 text-right">
                       <span
-                        className={`rounded px-2 py-0.5 text-xs font-medium ${passed ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
+                        className={`rounded px-2 py-0.5 text-xs font-medium ${passed ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
                       >
-                        {passed ? "OK" : "BREACH"}
+                        {passed ? 'OK' : 'BREACH'}
                       </span>
                     </td>
                   </tr>

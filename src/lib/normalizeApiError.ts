@@ -5,7 +5,7 @@ export type NormalizedError = {
 };
 
 function isObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
+  return typeof value === 'object' && value !== null;
 }
 
 export function normalizeApiError(error: unknown): NormalizedError {
@@ -16,7 +16,7 @@ export function normalizeApiError(error: unknown): NormalizedError {
 
   const correlationId =
     (isObject(responseHeaders)
-      ? responseHeaders["x-correlation-id"]
+      ? responseHeaders['x-correlation-id']
       : undefined) ||
     (isObject(responseData) ? responseData.correlationId : undefined) ||
     (isObject(responseData) ? responseData.requestId : undefined);
@@ -24,16 +24,16 @@ export function normalizeApiError(error: unknown): NormalizedError {
   const message =
     (isObject(responseData) ? responseData.message : undefined) ||
     (isObject(error) ? error.message : undefined) ||
-    "Something went wrong";
+    'Something went wrong';
 
   return {
-    message: typeof message === "string" ? message : "Something went wrong",
+    message: typeof message === 'string' ? message : 'Something went wrong',
     status: isObject(response)
-      ? typeof response.status === "number"
+      ? typeof response.status === 'number'
         ? response.status
         : undefined
       : undefined,
     correlationId:
-      typeof correlationId === "string" ? correlationId : undefined,
+      typeof correlationId === 'string' ? correlationId : undefined,
   };
 }

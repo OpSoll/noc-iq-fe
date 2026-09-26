@@ -1,19 +1,22 @@
-"use client";
+'use client';
 
 // Closes #452: SLA penalty and reward aggregate financial widget
 
-import { useMemo, memo } from "react";
+import { useMemo, memo } from 'react';
 
-import { aggregateMonthlyNet, computeFinancialTotals } from "@/lib/financialSummary";
-import type { MonthlyNetPoint } from "@/lib/financialSummary";
-import type { DashboardMetrics } from "@/types/dashboard";
+import {
+  aggregateMonthlyNet,
+  computeFinancialTotals,
+} from '@/lib/financialSummary';
+import type { MonthlyNetPoint } from '@/lib/financialSummary';
+import type { DashboardMetrics } from '@/types/dashboard';
 
 interface FinancialSummaryWidgetProps {
   metrics: DashboardMetrics;
 }
 
 const formatAmount = (value: number) =>
-  `${value < 0 ? "-" : ""}$${Math.abs(value).toLocaleString()}`;
+  `${value < 0 ? '-' : ''}$${Math.abs(value).toLocaleString()}`;
 
 /** Minimal inline sparkline — no charting library, matches the rest of the dashboard's custom charts. */
 function NetBalanceSparkline({ points }: { points: MonthlyNetPoint[] }) {
@@ -34,7 +37,7 @@ function NetBalanceSparkline({ points }: { points: MonthlyNetPoint[] }) {
     const y = height - ((p.net - min) / range) * height;
     return { x, y, ...p };
   });
-  const polylinePoints = coords.map((c) => `${c.x},${c.y}`).join(" ");
+  const polylinePoints = coords.map((c) => `${c.x},${c.y}`).join(' ');
   const zeroY = height - ((0 - min) / range) * height;
 
   return (
@@ -46,15 +49,27 @@ function NetBalanceSparkline({ points }: { points: MonthlyNetPoint[] }) {
         role="img"
         aria-label="Monthly net settlement balance sparkline"
       >
-        <line x1={0} y1={zeroY} x2={width} y2={zeroY} stroke="#e2e8f0" strokeWidth={1} />
-        <polyline points={polylinePoints} fill="none" stroke="#3b82f6" strokeWidth={2} />
+        <line
+          x1={0}
+          y1={zeroY}
+          x2={width}
+          y2={zeroY}
+          stroke="#e2e8f0"
+          strokeWidth={1}
+        />
+        <polyline
+          points={polylinePoints}
+          fill="none"
+          stroke="#3b82f6"
+          strokeWidth={2}
+        />
         {coords.map((c) => (
           <circle
             key={c.monthKey}
             cx={c.x}
             cy={c.y}
             r={2.5}
-            fill={c.net >= 0 ? "#16a34a" : "#dc2626"}
+            fill={c.net >= 0 ? '#16a34a' : '#dc2626'}
           >
             <title>
               {c.label}: {formatAmount(c.net)}
@@ -72,7 +87,10 @@ function NetBalanceSparkline({ points }: { points: MonthlyNetPoint[] }) {
 
 function FinancialSummaryWidget({ metrics }: FinancialSummaryWidgetProps) {
   const totals = useMemo(() => computeFinancialTotals(metrics), [metrics]);
-  const monthly = useMemo(() => aggregateMonthlyNet(metrics.trends), [metrics.trends]);
+  const monthly = useMemo(
+    () => aggregateMonthlyNet(metrics.trends),
+    [metrics.trends]
+  );
 
   return (
     <div className="rounded-xl bg-white p-5 shadow-sm">
@@ -97,27 +115,27 @@ function FinancialSummaryWidget({ metrics }: FinancialSummaryWidgetProps) {
         <div
           className={`rounded-lg border p-3 ${
             totals.netSettlement >= 0
-              ? "border-blue-100 bg-blue-50"
-              : "border-amber-200 bg-amber-50"
+              ? 'border-blue-100 bg-blue-50'
+              : 'border-amber-200 bg-amber-50'
           }`}
         >
           <p
             className={`text-xs font-medium ${
-              totals.netSettlement >= 0 ? "text-blue-600" : "text-amber-600"
+              totals.netSettlement >= 0 ? 'text-blue-600' : 'text-amber-600'
             }`}
           >
             Net Settlement Balance
           </p>
           <p
             className={`mt-1 text-xl font-bold ${
-              totals.netSettlement >= 0 ? "text-blue-700" : "text-amber-700"
+              totals.netSettlement >= 0 ? 'text-blue-700' : 'text-amber-700'
             }`}
           >
             {formatAmount(totals.netSettlement)}
           </p>
           <p
             className={`text-[11px] ${
-              totals.netSettlement >= 0 ? "text-blue-500" : "text-amber-600"
+              totals.netSettlement >= 0 ? 'text-blue-500' : 'text-amber-600'
             }`}
           >
             Rewards minus penalties

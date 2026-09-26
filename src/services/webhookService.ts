@@ -1,23 +1,28 @@
-import { api } from "@/lib/api";
+import { api } from '@/lib/api';
 import type {
   Webhook,
   WebhookDelivery,
   CreateWebhookPayload,
   UpdateWebhookPayload,
   RotateSecretPayload,
-} from "@/types/webhook";
+} from '@/types/webhook';
 
 export const fetchWebhooks = async (): Promise<Webhook[]> => {
-  const res = await api.get<Webhook[]>("/webhooks");
+  const res = await api.get<Webhook[]>('/webhooks');
   return res.data;
 };
 
-export const createWebhook = async (payload: CreateWebhookPayload): Promise<Webhook> => {
-  const res = await api.post<Webhook>("/webhooks", payload);
+export const createWebhook = async (
+  payload: CreateWebhookPayload
+): Promise<Webhook> => {
+  const res = await api.post<Webhook>('/webhooks', payload);
   return res.data;
 };
 
-export const updateWebhook = async (id: string, payload: UpdateWebhookPayload): Promise<Webhook> => {
+export const updateWebhook = async (
+  id: string,
+  payload: UpdateWebhookPayload
+): Promise<Webhook> => {
   const res = await api.patch<Webhook>(`/webhooks/${id}`, payload);
   return res.data;
 };
@@ -26,12 +31,19 @@ export const deleteWebhook = async (id: string): Promise<void> => {
   await api.delete(`/webhooks/${id}`);
 };
 
-export const fetchWebhookDeliveries = async (webhookId: string): Promise<WebhookDelivery[]> => {
-  const res = await api.get<WebhookDelivery[]>(`/webhooks/${webhookId}/deliveries`);
+export const fetchWebhookDeliveries = async (
+  webhookId: string
+): Promise<WebhookDelivery[]> => {
+  const res = await api.get<WebhookDelivery[]>(
+    `/webhooks/${webhookId}/deliveries`
+  );
   return res.data;
 };
 
-export const retryDelivery = async (webhookId: string, deliveryId: string): Promise<void> => {
+export const retryDelivery = async (
+  webhookId: string,
+  deliveryId: string
+): Promise<void> => {
   await api.post(`/webhooks/${webhookId}/deliveries/${deliveryId}/retry`);
 };
 
@@ -45,11 +57,11 @@ export interface WebhookPingResult {
  * round-trip latency, so a URL can be verified before the webhook is saved.
  */
 export const testWebhookConnection = async (
-  url: string,
+  url: string
 ): Promise<WebhookPingResult> => {
   const res = await api.post<{ status_code: number; latency_ms: number }>(
-    "/webhooks/test",
-    { url },
+    '/webhooks/test',
+    { url }
   );
   return { statusCode: res.data.status_code, latencyMs: res.data.latency_ms };
 };
@@ -62,11 +74,11 @@ export const testWebhookConnection = async (
  */
 export const rotateWebhookSecret = async (
   webhookId: string,
-  payload: RotateSecretPayload,
+  payload: RotateSecretPayload
 ): Promise<Webhook> => {
   const res = await api.post<Webhook>(
     `/webhooks/${webhookId}/rotate-secret`,
-    payload,
+    payload
   );
   return res.data;
 };

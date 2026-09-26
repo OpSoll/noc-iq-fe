@@ -1,27 +1,28 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { createOutage } from "@/services/outages";
-import { saveDraft, clearDraft, loadDraft } from "@/lib/drafts";
-import type { OutageCreate, Severity, OutageStatus } from "@/types/outages";
+import { TextArea } from '@/components/ui/TextArea';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { createOutage } from '@/services/outages';
+import { saveDraft, clearDraft, loadDraft } from '@/lib/drafts';
+import type { OutageCreate, Severity, OutageStatus } from '@/types/outages';
 
-const DRAFT_KEY = "outage-new";
+const DRAFT_KEY = 'outage-new';
 
 function generateId() {
   return `OUT-${Date.now()}`;
 }
 
 const INITIAL_FORM = {
-  site_name: "",
-  site_id: "",
-  severity: "medium" as Severity,
-  status: "open" as OutageStatus,
+  site_name: '',
+  site_id: '',
+  severity: 'medium' as Severity,
+  status: 'open' as OutageStatus,
   detected_at: new Date().toISOString().slice(0, 16),
-  description: "",
-  affected_services: "",
-  affected_subscribers: "",
-  assigned_to: "",
+  description: '',
+  affected_services: '',
+  affected_subscribers: '',
+  assigned_to: '',
 };
 
 export default function NewOutagePage() {
@@ -37,7 +38,7 @@ export default function NewOutagePage() {
     if (hasDraft) {
       const timer = setInterval(
         () => saveDraft(DRAFT_KEY, form as unknown as Record<string, string>),
-        3000,
+        3000
       );
       return () => clearInterval(timer);
     }
@@ -69,7 +70,7 @@ export default function NewOutagePage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.site_name.trim() || !form.description.trim()) {
-      setError("Site name and description are required.");
+      setError('Site name and description are required.');
       return;
     }
 
@@ -86,7 +87,7 @@ export default function NewOutagePage() {
       description: form.description.trim(),
       affected_services: form.affected_services
         ? form.affected_services
-            .split(",")
+            .split(',')
             .map((s) => s.trim())
             .filter(Boolean)
         : [],
@@ -101,7 +102,7 @@ export default function NewOutagePage() {
       clearDraft(DRAFT_KEY);
       router.push(`/outages/${outage.id}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create outage.");
+      setError(err instanceof Error ? err.message : 'Failed to create outage.');
       setSubmitting(false);
     }
   }
@@ -110,7 +111,7 @@ export default function NewOutagePage() {
     <div className="mx-auto max-w-2xl px-4 py-8">
       <div className="mb-6 flex items-center gap-4">
         <button
-          onClick={() => router.push("/outages")}
+          onClick={() => router.push('/outages')}
           className="text-sm text-slate-500 hover:text-slate-800"
         >
           ← Back to outages
@@ -155,7 +156,7 @@ export default function NewOutagePage() {
             <input
               className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
               value={form.site_name}
-              onChange={(e) => set("site_name", e.target.value)}
+              onChange={(e) => set('site_name', e.target.value)}
               placeholder="e.g. Lagos Node 1"
               required
             />
@@ -167,7 +168,7 @@ export default function NewOutagePage() {
             <input
               className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
               value={form.site_id}
-              onChange={(e) => set("site_id", e.target.value)}
+              onChange={(e) => set('site_id', e.target.value)}
               placeholder="Optional"
             />
           </div>
@@ -181,14 +182,14 @@ export default function NewOutagePage() {
             <select
               className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
               value={form.severity}
-              onChange={(e) => set("severity", e.target.value)}
+              onChange={(e) => set('severity', e.target.value)}
             >
-              {(["critical", "high", "medium", "low"] as Severity[]).map(
+              {(['critical', 'high', 'medium', 'low'] as Severity[]).map(
                 (s) => (
                   <option key={s} value={s}>
                     {s}
                   </option>
-                ),
+                )
               )}
             </select>
           </div>
@@ -199,7 +200,7 @@ export default function NewOutagePage() {
             <select
               className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
               value={form.status}
-              onChange={(e) => set("status", e.target.value)}
+              onChange={(e) => set('status', e.target.value)}
             >
               <option value="open">open</option>
               <option value="resolved">resolved</option>
@@ -215,19 +216,24 @@ export default function NewOutagePage() {
             type="datetime-local"
             className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
             value={form.detected_at}
-            onChange={(e) => set("detected_at", e.target.value)}
+            onChange={(e) => set('detected_at', e.target.value)}
           />
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">
+          <label
+            htmlFor="outage-description"
+            className="mb-1 block text-sm font-medium text-slate-700"
+          >
             Description <span className="text-red-500">*</span>
           </label>
-          <textarea
+          <TextArea
+            id="outage-description"
+            maxLength={500}
             className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
             rows={3}
             value={form.description}
-            onChange={(e) => set("description", e.target.value)}
+            onChange={(e) => set('description', e.target.value)}
             placeholder="Describe the outage…"
             required
           />
@@ -240,7 +246,7 @@ export default function NewOutagePage() {
           <input
             className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
             value={form.affected_services}
-            onChange={(e) => set("affected_services", e.target.value)}
+            onChange={(e) => set('affected_services', e.target.value)}
             placeholder="Comma-separated, e.g. DNS, VoIP"
           />
         </div>
@@ -255,7 +261,7 @@ export default function NewOutagePage() {
               min={0}
               className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
               value={form.affected_subscribers}
-              onChange={(e) => set("affected_subscribers", e.target.value)}
+              onChange={(e) => set('affected_subscribers', e.target.value)}
               placeholder="Optional"
             />
           </div>
@@ -266,7 +272,7 @@ export default function NewOutagePage() {
             <input
               className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
               value={form.assigned_to}
-              onChange={(e) => set("assigned_to", e.target.value)}
+              onChange={(e) => set('assigned_to', e.target.value)}
               placeholder="Optional"
             />
           </div>
@@ -275,7 +281,7 @@ export default function NewOutagePage() {
         <div className="flex justify-end gap-3 pt-2">
           <button
             type="button"
-            onClick={() => router.push("/outages")}
+            onClick={() => router.push('/outages')}
             className="rounded-md border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
           >
             Cancel
@@ -285,7 +291,7 @@ export default function NewOutagePage() {
             disabled={submitting}
             className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60"
           >
-            {submitting ? "Creating…" : "Create Outage"}
+            {submitting ? 'Creating…' : 'Create Outage'}
           </button>
         </div>
       </form>

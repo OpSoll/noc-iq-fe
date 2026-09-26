@@ -1,25 +1,28 @@
-"use client";
+export type PasswordStrengthLevel = 'Weak' | 'Medium' | 'Strong';
 
+export function getPasswordStrength(score: number): PasswordStrengthLevel {
+  return score === 5 ? 'Strong' : score >= 3 ? 'Medium' : 'Weak';
+}
 
-
-const usePasswordValidation = (password: string) => {
-  const length = password.length >= 8;
-  const uppercase = /[A-Z]/.test(password);
-  const number = /[0-9]/.test(password);
-  const specialChar = /[!@#$%^&*]/.test(password);
-
+export function validatePassword(password: string) {
   const validation_result = {
-    length,
-    uppercase,
-    number,
-    specialChar,
+    length: password.length >= 12,
+    uppercase: /[A-Z]/.test(password),
+    lowercase: /[a-z]/.test(password),
+    number: /[0-9]/.test(password),
+    specialChar: /[\p{P}\p{S}]/u.test(password),
   };
+  const password_strength =
+    Object.values(validation_result).filter(Boolean).length;
+  const strength = getPasswordStrength(password_strength);
+  return {
+    password_strength,
+    validation_result,
+    strength,
+    isStrong: strength === 'Strong',
+  };
+}
 
-  const password_strength = [length, uppercase, number, specialChar].filter(
-    Boolean,
-  ).length;
-
-  return { password_strength, validation_result };
-};
-
+// Preserve the existing hook API for form consumers.
+const usePasswordValidation = validatePassword;
 export default usePasswordValidation;

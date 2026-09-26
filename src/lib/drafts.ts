@@ -1,4 +1,4 @@
-const DRAFT_PREFIX = "noc_draft_";
+const DRAFT_PREFIX = 'noc_draft_';
 const DEFAULT_TTL_MS = 24 * 60 * 60 * 1000;
 
 export interface DraftData {
@@ -7,8 +7,12 @@ export interface DraftData {
   expiresAt: number;
 }
 
-export function saveDraft(key: string, values: Record<string, string>, ttl = DEFAULT_TTL_MS): void {
-  if (typeof window === "undefined") return;
+export function saveDraft(
+  key: string,
+  values: Record<string, string>,
+  ttl = DEFAULT_TTL_MS
+): void {
+  if (typeof window === 'undefined') return;
   const now = Date.now();
   const draft: DraftData = { values, savedAt: now, expiresAt: now + ttl };
   try {
@@ -19,7 +23,7 @@ export function saveDraft(key: string, values: Record<string, string>, ttl = DEF
 }
 
 export function loadDraft(key: string): DraftData | null {
-  if (typeof window === "undefined") return null;
+  if (typeof window === 'undefined') return null;
   try {
     const raw = sessionStorage.getItem(DRAFT_PREFIX + key);
     if (!raw) return null;
@@ -35,15 +39,16 @@ export function loadDraft(key: string): DraftData | null {
 }
 
 export function clearDraft(key: string): void {
-  if (typeof window === "undefined") return;
+  if (typeof window === 'undefined') return;
   sessionStorage.removeItem(DRAFT_PREFIX + key);
 }
 
 export function useDraftRestore<T extends Record<string, string>>(
   draftKey: string,
-  initialState: T,
+  initialState: T
 ): { restored: boolean; values: T } {
-  if (typeof window === "undefined") return { restored: false, values: initialState };
+  if (typeof window === 'undefined')
+    return { restored: false, values: initialState };
   const draft = loadDraft(draftKey);
   if (draft) {
     const merged = { ...initialState };

@@ -1,5 +1,5 @@
-"use client";
-import { useState, useRef, useEffect } from "react";
+'use client';
+import { useState, useRef, useEffect } from 'react';
 import {
   type ColumnDef,
   type VisibilityState,
@@ -9,7 +9,7 @@ import {
   getCoreRowModel,
   getSortedRowModel,
   useReactTable,
-} from "@tanstack/react-table";
+} from '@tanstack/react-table';
 import {
   Table,
   TableBody,
@@ -17,10 +17,10 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from '@/components/ui/table';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
-export type TableDensity = "default" | "compact" | "comfortable";
+export type TableDensity = 'default' | 'compact' | 'comfortable';
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -45,47 +45,73 @@ interface DataTableProps<TData, TValue> {
 }
 
 // ─── Density Configuration ───────────────────────────────────────────────────
-const DENSITY_CONFIG: Record<TableDensity, { padding: string; textSize: string; height: string }> = {
-  compact: { padding: "py-1 px-2", textSize: "text-xs", height: "h-7" },
-  default: { padding: "py-2 px-4", textSize: "text-sm", height: "h-9" },
-  comfortable: { padding: "py-3 px-6", textSize: "text-sm", height: "h-11" },
+const DENSITY_CONFIG: Record<
+  TableDensity,
+  { padding: string; textSize: string; height: string }
+> = {
+  compact: { padding: 'py-1 px-2', textSize: 'text-xs', height: 'h-7' },
+  default: { padding: 'py-2 px-4', textSize: 'text-sm', height: 'h-9' },
+  comfortable: { padding: 'py-3 px-6', textSize: 'text-sm', height: 'h-11' },
 };
 
-const DENSITY_OPTIONS: TableDensity[] = ["compact", "default", "comfortable"];
+const DENSITY_OPTIONS: TableDensity[] = ['compact', 'default', 'comfortable'];
 
 // ─── Sort Icon Component ─────────────────────────────────────────────────────
-function SortIcon({ direction }: { direction: "asc" | "desc" | false }) {
+function SortIcon({ direction }: { direction: 'asc' | 'desc' | false }) {
   if (!direction) {
     return (
-      <svg className="h-3 w-3 text-slate-300 opacity-0 group-hover:opacity-50 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+      <svg
+        className="h-3 w-3 text-slate-300 opacity-0 group-hover:opacity-50 transition-opacity"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
+        />
       </svg>
     );
   }
-  
+
   return (
-    <svg 
-      className={`h-3 w-3 transition-transform ${direction === "asc" ? "" : "rotate-180"}`} 
-      fill="none" 
-      viewBox="0 0 24 24" 
+    <svg
+      className={`h-3 w-3 transition-transform ${direction === 'asc' ? '' : 'rotate-180'}`}
+      fill="none"
+      viewBox="0 0 24 24"
       stroke="currentColor"
     >
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M5 15l7-7 7 7"
+      />
     </svg>
   );
 }
 
 // ─── Loading Skeleton ────────────────────────────────────────────────────────
-function TableSkeleton({ columns, density }: { columns: number; density: TableDensity }) {
+function TableSkeleton({
+  columns,
+  density,
+}: {
+  columns: number;
+  density: TableDensity;
+}) {
   const config = DENSITY_CONFIG[density];
-  
+
   return (
     <>
       {Array.from({ length: 5 }).map((_, rowIdx) => (
         <TableRow key={rowIdx} className="animate-pulse">
           {Array.from({ length: columns }).map((_, colIdx) => (
             <TableCell key={colIdx} className={config.padding}>
-              <div className={`bg-slate-200 rounded ${config.textSize} ${config.height} w-3/4`} />
+              <div
+                className={`bg-slate-200 rounded ${config.textSize} ${config.height} w-3/4`}
+              />
             </TableCell>
           ))}
         </TableRow>
@@ -95,13 +121,29 @@ function TableSkeleton({ columns, density }: { columns: number; density: TableDe
 }
 
 // ─── Empty State ─────────────────────────────────────────────────────────────
-function EmptyState({ colSpan, message }: { colSpan: number; message: string }) {
+function EmptyState({
+  colSpan,
+  message,
+}: {
+  colSpan: number;
+  message: string;
+}) {
   return (
     <TableRow>
       <TableCell colSpan={colSpan} className="h-48 text-center">
         <div className="flex flex-col items-center justify-center gap-2 text-slate-400">
-          <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          <svg
+            className="h-8 w-8"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+            />
           </svg>
           <p className="text-sm font-medium">{message}</p>
         </div>
@@ -111,16 +153,18 @@ function EmptyState({ colSpan, message }: { colSpan: number; message: string }) 
 }
 
 // ─── Toolbar Components ──────────────────────────────────────────────────────
-function DensityControl({ 
-  density, 
-  onChange 
-}: { 
-  density: TableDensity; 
-  onChange: (d: TableDensity) => void 
+function DensityControl({
+  density,
+  onChange,
+}: {
+  density: TableDensity;
+  onChange: (d: TableDensity) => void;
 }) {
   return (
     <div className="flex items-center gap-1.5">
-      <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">Density</span>
+      <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+        Density
+      </span>
       <div className="flex items-center rounded-lg border border-slate-200 overflow-hidden">
         {DENSITY_OPTIONS.map((d) => (
           <button
@@ -128,13 +172,13 @@ function DensityControl({
             onClick={() => onChange(d)}
             className={`px-3 py-1 text-xs font-medium capitalize transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset ${
               density === d
-                ? "bg-slate-800 text-white"
-                : "bg-white text-slate-600 hover:bg-slate-50"
+                ? 'bg-slate-800 text-white'
+                : 'bg-white text-slate-600 hover:bg-slate-50'
             }`}
             aria-pressed={density === d}
             title={`${d} density`}
           >
-            {d === "default" ? "Normal" : d}
+            {d === 'default' ? 'Normal' : d}
           </button>
         ))}
       </div>
@@ -142,14 +186,14 @@ function DensityControl({
   );
 }
 
-function ColumnVisibilityControl<TData>({ 
-  table 
-}: { 
-  table: ReturnType<typeof useReactTable<TData>> 
+function ColumnVisibilityControl<TData>({
+  table,
+}: {
+  table: ReturnType<typeof useReactTable<TData>>;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  
+
   // Close on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -157,8 +201,8 @@ function ColumnVisibilityControl<TData>({
         setOpen(false);
       }
     }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
   const allColumns = table.getAllLeafColumns();
@@ -170,18 +214,32 @@ function ColumnVisibilityControl<TData>({
         onClick={() => setOpen(!open)}
         className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
       >
-        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+        <svg
+          className="h-3.5 w-3.5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"
+          />
         </svg>
         Columns ({visibleCount}/{allColumns.length})
       </button>
-      
+
       {open && (
         <div className="absolute right-0 top-full z-50 mt-1 w-56 rounded-lg border border-slate-200 bg-white p-2 shadow-lg animate-in fade-in zoom-in-95 duration-100">
           <div className="mb-2 flex items-center justify-between border-b border-slate-100 pb-2">
-            <span className="text-xs font-medium text-slate-500">Toggle columns</span>
+            <span className="text-xs font-medium text-slate-500">
+              Toggle columns
+            </span>
             <button
-              onClick={() => allColumns.forEach((c) => c.toggleVisibility(true))}
+              onClick={() =>
+                allColumns.forEach((c) => c.toggleVisibility(true))
+              }
               className="text-xs text-blue-600 hover:underline"
             >
               Show all
@@ -190,12 +248,12 @@ function ColumnVisibilityControl<TData>({
           <div className="max-h-64 space-y-1 overflow-y-auto">
             {allColumns.map((col) => {
               const header = col.columnDef.header;
-              const label = typeof header === "string" ? header : col.id;
+              const label = typeof header === 'string' ? header : col.id;
               const isVisible = col.getIsVisible();
-              
+
               return (
-                <label 
-                  key={col.id} 
+                <label
+                  key={col.id}
                   className="flex items-center gap-2 rounded px-2 py-1.5 text-sm text-slate-700 hover:bg-slate-50 cursor-pointer transition-colors"
                 >
                   <input
@@ -221,7 +279,7 @@ export function DataTable<TData, TValue>({
   data,
   columnVisibility,
   onColumnVisibilityChange,
-  density = "default",
+  density = 'default',
   onDensityChange,
   sorting,
   onSortingChange,
@@ -230,7 +288,7 @@ export function DataTable<TData, TValue>({
   pageCount,
   rowCount,
   loading = false,
-  emptyMessage = "No data available",
+  emptyMessage = 'No data available',
   className,
   enableRowSelection = false,
   rowSelection,
@@ -253,22 +311,30 @@ export function DataTable<TData, TValue>({
     },
     onColumnVisibilityChange: (updater) => {
       if (!onColumnVisibilityChange) return;
-      const next = typeof updater === "function" ? updater(columnVisibility ?? {}) : updater;
+      const next =
+        typeof updater === 'function'
+          ? updater(columnVisibility ?? {})
+          : updater;
       onColumnVisibilityChange(next);
     },
     onSortingChange: (updater) => {
       if (!onSortingChange) return;
-      const next = typeof updater === "function" ? updater(sorting ?? []) : updater;
+      const next =
+        typeof updater === 'function' ? updater(sorting ?? []) : updater;
       onSortingChange(next);
     },
     onPaginationChange: (updater) => {
       if (!onPaginationChange) return;
-      const next = typeof updater === "function" ? updater(pagination ?? { pageIndex: 0, pageSize: 10 }) : updater;
+      const next =
+        typeof updater === 'function'
+          ? updater(pagination ?? { pageIndex: 0, pageSize: 10 })
+          : updater;
       onPaginationChange(next);
     },
     onRowSelectionChange: (updater) => {
       if (!onRowSelectionChange) return;
-      const next = typeof updater === "function" ? updater(rowSelection ?? {}) : updater;
+      const next =
+        typeof updater === 'function' ? updater(rowSelection ?? {}) : updater;
       onRowSelectionChange(next);
     },
     getRowId,
@@ -286,7 +352,7 @@ export function DataTable<TData, TValue>({
   const colSpan = visibleLeafColumns.length || 1;
 
   return (
-    <div className={`space-y-3 ${className ?? ""}`}>
+    <div className={`space-y-3 ${className ?? ''}`}>
       {/* Toolbar */}
       {hasToolbar && (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50/50 px-4 py-3">
@@ -311,16 +377,19 @@ export function DataTable<TData, TValue>({
                   {hg.headers.map((h) => {
                     const canSort = h.column.getCanSort();
                     const sortDir = h.column.getIsSorted();
-                    
+
                     return (
-                      <TableHead 
-                        key={h.id} 
+                      <TableHead
+                        key={h.id}
                         className={`${config.padding} ${config.textSize} font-semibold text-slate-700 whitespace-nowrap p-0 ${
-                          canSort ? "group" : ""
+                          canSort ? 'group' : ''
                         }`}
                         aria-sort={
-                          sortDir === "asc" ? "ascending" : 
-                          sortDir === "desc" ? "descending" : "none"
+                          sortDir === 'asc'
+                            ? 'ascending'
+                            : sortDir === 'desc'
+                              ? 'descending'
+                              : 'none'
                         }
                       >
                         {canSort ? (
@@ -328,9 +397,10 @@ export function DataTable<TData, TValue>({
                             type="button"
                             onClick={h.column.getToggleSortingHandler()}
                             onKeyDown={(e) => {
-                              if (e.key === "Enter" || e.key === " ") {
+                              if (e.key === 'Enter' || e.key === ' ') {
                                 e.preventDefault();
-                                const handler = h.column.getToggleSortingHandler();
+                                const handler =
+                                  h.column.getToggleSortingHandler();
                                 if (handler) {
                                   handler(e as unknown as React.MouseEvent);
                                 }
@@ -338,12 +408,18 @@ export function DataTable<TData, TValue>({
                             }}
                             className="flex w-full items-center gap-1.5 cursor-pointer select-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset rounded px-2"
                           >
-                            {flexRender(h.column.columnDef.header, h.getContext())}
+                            {flexRender(
+                              h.column.columnDef.header,
+                              h.getContext()
+                            )}
                             <SortIcon direction={sortDir} />
                           </button>
                         ) : (
                           <div className="flex items-center gap-1.5 px-2">
-                            {flexRender(h.column.columnDef.header, h.getContext())}
+                            {flexRender(
+                              h.column.columnDef.header,
+                              h.getContext()
+                            )}
                           </div>
                         )}
                       </TableHead>
@@ -359,17 +435,29 @@ export function DataTable<TData, TValue>({
                 <EmptyState colSpan={colSpan} message={emptyMessage} />
               ) : (
                 rows.map((row) => (
-                  <TableRow 
-                    key={row.id} 
+                  <TableRow
+                    key={row.id}
                     className={`transition-colors ${
-                      row.getIsSelected() ? "bg-blue-50 hover:bg-blue-50" : "hover:bg-slate-50"
-                    } ${enableRowSelection ? "cursor-pointer" : ""}`}
-                    onClick={enableRowSelection ? row.getToggleSelectedHandler() : undefined}
-                    data-state={row.getIsSelected() ? "selected" : undefined}
+                      row.getIsSelected()
+                        ? 'bg-blue-50 hover:bg-blue-50'
+                        : 'hover:bg-slate-50'
+                    } ${enableRowSelection ? 'cursor-pointer' : ''}`}
+                    onClick={
+                      enableRowSelection
+                        ? row.getToggleSelectedHandler()
+                        : undefined
+                    }
+                    data-state={row.getIsSelected() ? 'selected' : undefined}
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id} className={`${config.padding} ${config.textSize}`}>
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      <TableCell
+                        key={cell.id}
+                        className={`${config.padding} ${config.textSize}`}
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
                       </TableCell>
                     ))}
                   </TableRow>
@@ -384,13 +472,21 @@ export function DataTable<TData, TValue>({
       {onPaginationChange && pagination && !loading && rows.length > 0 && (
         <div className="flex items-center justify-between px-1">
           <div className="text-xs text-slate-500">
-            Showing <span className="font-medium">{pagination.pageIndex * pagination.pageSize + 1}</span> to{" "}
+            Showing{' '}
             <span className="font-medium">
-              {Math.min((pagination.pageIndex + 1) * pagination.pageSize, rowCount ?? data.length)}
-            </span> of{" "}
-            <span className="font-medium">{rowCount ?? data.length}</span> results
+              {pagination.pageIndex * pagination.pageSize + 1}
+            </span>{' '}
+            to{' '}
+            <span className="font-medium">
+              {Math.min(
+                (pagination.pageIndex + 1) * pagination.pageSize,
+                rowCount ?? data.length
+              )}
+            </span>{' '}
+            of <span className="font-medium">{rowCount ?? data.length}</span>{' '}
+            results
           </div>
-          
+
           <div className="flex items-center gap-1">
             <button
               onClick={() => table.setPageIndex(0)}
@@ -398,8 +494,18 @@ export function DataTable<TData, TValue>({
               className="rounded p-1 text-slate-600 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
               aria-label="First page"
             >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
+                />
               </svg>
             </button>
             <button
@@ -408,24 +514,45 @@ export function DataTable<TData, TValue>({
               className="rounded p-1 text-slate-600 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
               aria-label="Previous page"
             >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
               </svg>
             </button>
-            
+
             <span className="text-xs text-slate-600 px-2">
-              Page <span className="font-medium">{pagination.pageIndex + 1}</span> of{" "}
+              Page{' '}
+              <span className="font-medium">{pagination.pageIndex + 1}</span> of{' '}
               <span className="font-medium">{table.getPageCount()}</span>
             </span>
-            
+
             <button
               onClick={() => table.nextPage()}
               disabled={!table.getCanNextPage()}
               className="rounded p-1 text-slate-600 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
               aria-label="Next page"
             >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </button>
             <button
@@ -434,8 +561,18 @@ export function DataTable<TData, TValue>({
               className="rounded p-1 text-slate-600 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
               aria-label="Last page"
             >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 5l7 7-7 7M5 5l7 7-7 7"
+                />
               </svg>
             </button>
           </div>

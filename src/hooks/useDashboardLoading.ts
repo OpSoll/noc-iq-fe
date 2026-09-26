@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useMemo } from "react";
+import { useMemo } from 'react';
 
 export interface QueryResult {
   isLoading: boolean;
@@ -16,11 +16,18 @@ export interface DashboardLoadingState {
   progress: number;
 }
 
-export function useDashboardLoading(queries: QueryResult[]): DashboardLoadingState {
+export function useDashboardLoading(
+  queries: QueryResult[]
+): DashboardLoadingState {
   return useMemo(() => {
     const total = queries.length;
     if (total === 0) {
-      return { isFullyLoaded: true, loadedSections: 0, failedSections: 0, progress: 1 };
+      return {
+        isFullyLoaded: true,
+        loadedSections: 0,
+        failedSections: 0,
+        progress: 1,
+      };
     }
 
     const loaded = queries.filter((q) => q.isSuccess).length;

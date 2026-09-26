@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {
   createContext,
@@ -9,19 +9,11 @@ import {
   useRef,
   useState,
   type ReactNode,
-} from "react";
+} from 'react';
 
-import {
-  api,
-  clearTokens,
-  getAccessToken,
-  setTokens,
-} from "@/lib/api";
+import { api, clearTokens, getAccessToken, setTokens } from '@/lib/api';
 
-export type SessionState =
-  | "loading"
-  | "authenticated"
-  | "unauthenticated";
+export type SessionState = 'loading' | 'authenticated' | 'unauthenticated';
 
 export interface SessionUser {
   id: string;
@@ -48,40 +40,31 @@ interface SessionContextValue {
   refreshSession: () => Promise<void>;
 }
 
-const SessionContext =
-  createContext<SessionContextValue | null>(null);
+const SessionContext = createContext<SessionContextValue | null>(null);
 
-const CHANNEL_NAME = "noc_iq_session";
+const CHANNEL_NAME = 'noc_iq_session';
 
 type SessionMessage =
-  | { type: "logout" }
-  | { type: "authenticated"; user: SessionUser };
+  { type: 'logout' } | { type: 'authenticated'; user: SessionUser };
 
 function isBrowser() {
-  return typeof window !== "undefined";
+  return typeof window !== 'undefined';
 }
 
 function createBroadcastChannel() {
-  if (!isBrowser() || !("BroadcastChannel" in window)) {
+  if (!isBrowser() || !('BroadcastChannel' in window)) {
     return null;
   }
 
   return new BroadcastChannel(CHANNEL_NAME);
 }
 
-export function SessionProvider({
-  children,
-}: {
-  children: ReactNode;
-}) {
-  const [state, setState] =
-    useState<SessionState>("loading");
+export function SessionProvider({ children }: { children: ReactNode }) {
+  const [state, setState] = useState<SessionState>('loading');
 
-  const [user, setUser] =
-    useState<SessionUser | null>(null);
+  const [user, setUser] = useState<SessionUser | null>(null);
 
-  const channelRef =
-    useRef<BroadcastChannel | null>(null);
+  const channelRef = useRef<BroadcastChannel | null>(null);
 
   const mountedRef = useRef(true);
   const [showTimeoutModal, setShowTimeoutModal] = useState(false);
@@ -91,22 +74,31 @@ export function SessionProvider({
     if (activityTimeoutRef.current) {
       clearTimeout(activityTimeoutRef.current);
     }
-    if (state === "authenticated") {
-      activityTimeoutRef.current = setTimeout(() => {
-        setShowTimeoutModal(true);
-      }, 30 * 60 * 1000); // 30 minutes
+    if (state === 'authenticated') {
+      activityTimeoutRef.current = setTimeout(
+        () => {
+          setShowTimeoutModal(true);
+        },
+        30 * 60 * 1000
+      ); // 30 minutes
     }
   }, [state]);
 
   useEffect(() => {
-    if (state !== "authenticated") return;
-    const events = ["mousedown", "mousemove", "keypress", "scroll", "touchstart"];
+    if (state !== 'authenticated') return;
+    const events = [
+      'mousedown',
+      'mousemove',
+      'keypress',
+      'scroll',
+      'touchstart',
+    ];
     const handleEvent = () => resetActivityTimer();
-    events.forEach(e => window.addEventListener(e, handleEvent));
+    events.forEach((e) => window.addEventListener(e, handleEvent));
     resetActivityTimer();
     return () => {
       if (activityTimeoutRef.current) clearTimeout(activityTimeoutRef.current);
-      events.forEach(e => window.removeEventListener(e, handleEvent));
+      events.forEach((e) => window.removeEventListener(e, handleEvent));
     };
   }, [state, resetActivityTimer]);
 
@@ -116,18 +108,15 @@ export function SessionProvider({
    * -------------------------
    */
 
-  const setAuthenticated = useCallback(
-    (sessionUser: SessionUser) => {
-      setUser(sessionUser);
-      setState("authenticated");
-    },
-    []
-  );
+  const setAuthenticated = useCallback((sessionUser: SessionUser) => {
+    setUser(sessionUser);
+    setState('authenticated');
+  }, []);
 
   const clearSession = useCallback(() => {
     clearTokens();
     setUser(null);
-    setState("unauthenticated");
+    setState('unauthenticated');
   }, []);
 
   /**
@@ -143,17 +132,15 @@ export function SessionProvider({
 
     channelRef.current = channel;
 
-    channel.onmessage = (
-      event: MessageEvent<SessionMessage>
-    ) => {
+    channel.onmessage = (event: MessageEvent<SessionMessage>) => {
       const message = event.data;
 
       switch (message.type) {
-        case "logout":
+        case 'logout':
           clearSession();
           break;
 
-        case "authenticated":
+        case 'authenticated':
           setAuthenticated(message.user);
           break;
 
@@ -176,23 +163,18 @@ export function SessionProvider({
 
   const refreshSession = useCallback(async () => {
     try {
-      const response = await api.get<SessionUser>(
-        "/auth/me"
-      );
+      const response = await api.get<SessionUser>('/auth/me');
 
       if (!mountedRef.current) return;
 
       setAuthenticated(response.data);
 
       channelRef.current?.postMessage({
-        type: "authenticated",
+        type: 'authenticated',
         user: response.data,
       } satisfies SessionMessage);
     } catch (error) {
-      console.error(
-        "Failed to refresh session:",
-        error
-      );
+      console.error('Failed to refresh session:', error);
 
       if (!mountedRef.current) return;
 
@@ -214,22 +196,26 @@ export function SessionProvider({
 
   const detectConcurrentSession = useCallback(() => {
     if (!isBrowser()) return;
-    const knownSession = sessionStorage.getItem("noc_session_id");
+    const knownSession = sessionStorage.getItem('noc_session_id');
     const currentSession = btoa(Math.random().toString(36).slice(2, 10));
 
     if (knownSession && knownSession !== currentSession) {
       window.dispatchEvent(
-        new CustomEvent("session:conflict", {
+        new CustomEvent('session:conflict', {
           detail: {
-            type: "concurrent-session",
-            message: "Another session was detected. Your data may be stale.",
-            affectedActions: ["resolve-outage", "update-webhook", "update-config"],
-            severity: "warning" as const,
+            type: 'concurrent-session',
+            message: 'Another session was detected. Your data may be stale.',
+            affectedActions: [
+              'resolve-outage',
+              'update-webhook',
+              'update-config',
+            ],
+            severity: 'warning' as const,
           },
         })
       );
     }
-    sessionStorage.setItem("noc_session_id", currentSession);
+    sessionStorage.setItem('noc_session_id', currentSession);
   }, []);
 
   /**
@@ -250,33 +236,24 @@ export function SessionProvider({
         const token = getAccessToken();
 
         if (!token) {
-          setState("unauthenticated");
+          setState('unauthenticated');
           return;
         }
 
-        const response = await api.get<SessionUser>(
-          "/auth/me",
-          {
-            signal: controller.signal,
-          } as Parameters<typeof api.get>[1]
-        );
+        const response = await api.get<SessionUser>('/auth/me', {
+          signal: controller.signal,
+        } as Parameters<typeof api.get>[1]);
 
         if (!mountedRef.current) return;
 
         setAuthenticated(response.data);
         detectConcurrentSession();
       } catch (error: unknown) {
-        if (
-          (error as { name?: string }).name ===
-          "CanceledError"
-        ) {
+        if ((error as { name?: string }).name === 'CanceledError') {
           return;
         }
 
-        console.error(
-          "Session bootstrap failed:",
-          error
-        );
+        console.error('Session bootstrap failed:', error);
 
         if (!mountedRef.current) return;
 
@@ -298,7 +275,7 @@ export function SessionProvider({
         return;
       }
       api
-        .get<SessionUser>("/auth/me")
+        .get<SessionUser>('/auth/me')
         .then((res) => {
           if (!mountedRef.current) return;
           setAuthenticated(res.data);
@@ -309,29 +286,17 @@ export function SessionProvider({
         });
     }
 
-    window.addEventListener(
-      "auth:logout",
-      handleLogoutEvent
-    );
+    window.addEventListener('auth:logout', handleLogoutEvent);
 
-    window.addEventListener(
-      "auth:refresh-context",
-      handleRefreshContext
-    );
+    window.addEventListener('auth:refresh-context', handleRefreshContext);
 
     return () => {
       mountedRef.current = false;
 
       controller.abort();
 
-      window.removeEventListener(
-        "auth:logout",
-        handleLogoutEvent
-      );
-      window.removeEventListener(
-        "auth:refresh-context",
-        handleRefreshContext
-      );
+      window.removeEventListener('auth:logout', handleLogoutEvent);
+      window.removeEventListener('auth:refresh-context', handleRefreshContext);
     };
   }, [clearSession, setAuthenticated, detectConcurrentSession]);
 
@@ -342,17 +307,13 @@ export function SessionProvider({
    */
 
   const storeSession = useCallback(
-    (
-      accessToken: string,
-      refreshToken: string,
-      sessionUser: SessionUser
-    ) => {
+    (accessToken: string, refreshToken: string, sessionUser: SessionUser) => {
       setTokens(accessToken, refreshToken);
 
       setAuthenticated(sessionUser);
 
       channelRef.current?.postMessage({
-        type: "authenticated",
+        type: 'authenticated',
         user: sessionUser,
       } satisfies SessionMessage);
     },
@@ -367,17 +328,14 @@ export function SessionProvider({
 
   const logout = useCallback(async () => {
     try {
-      await api.post("/auth/logout");
+      await api.post('/auth/logout');
     } catch (error) {
-      console.error(
-        "Logout request failed:",
-        error
-      );
+      console.error('Logout request failed:', error);
     } finally {
       clearSession();
 
       channelRef.current?.postMessage({
-        type: "logout",
+        type: 'logout',
       } satisfies SessionMessage);
     }
   }, [clearSession]);
@@ -393,8 +351,7 @@ export function SessionProvider({
       state,
       user,
 
-      isAuthenticated:
-        state === "authenticated",
+      isAuthenticated: state === 'authenticated',
 
       logout,
 
@@ -402,13 +359,7 @@ export function SessionProvider({
 
       refreshSession,
     }),
-    [
-      state,
-      user,
-      logout,
-      storeSession,
-      refreshSession,
-    ]
+    [state, user, logout, storeSession, refreshSession]
   );
 
   return (
@@ -417,9 +368,12 @@ export function SessionProvider({
       {showTimeoutModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg border border-gray-200">
-            <h2 className="text-xl font-bold mb-4 text-gray-900">Session Timeout Warning</h2>
+            <h2 className="text-xl font-bold mb-4 text-gray-900">
+              Session Timeout Warning
+            </h2>
             <p className="text-gray-600 mb-6">
-              You have been inactive for 30 minutes. Your session will expire soon.
+              You have been inactive for 30 minutes. Your session will expire
+              soon.
             </p>
             <div className="flex justify-end gap-3">
               <button
@@ -458,9 +412,7 @@ export function useSession(): SessionContextValue {
   const context = useContext(SessionContext);
 
   if (!context) {
-    throw new Error(
-      "useSession must be used within SessionProvider"
-    );
+    throw new Error('useSession must be used within SessionProvider');
   }
 
   return context;

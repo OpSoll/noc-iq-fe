@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import { useMemo, useRef, useState, memo } from "react";
-import { TrendPoint } from "../../types/dashboard";
-import AnomalyOverlay from "@/components/charts/AnomalyOverlay";
-import type { AnomalySegment } from "@/services/analytics";
+import { useMemo, useRef, useState, memo } from 'react';
+import { TrendPoint } from '../../types/dashboard';
+import AnomalyOverlay from '@/components/charts/AnomalyOverlay';
+import type { AnomalySegment } from '@/services/analytics';
 import {
   DEFAULT_SLA_COMPLIANCE_TARGET,
   formatComplianceVariance,
   isAboveTarget,
-} from "@/lib/slaTarget";
+} from '@/lib/slaTarget';
 
 interface SLATrendChartProps {
   data: TrendPoint[];
@@ -34,13 +34,13 @@ function SLATrendChart({
   const itemRefs = useRef<Array<HTMLDivElement | null>>([]);
 
   const chartLabel = useMemo(() => {
-    const rangePart = dateRangeLabel ? ` for ${dateRangeLabel}` : "";
+    const rangePart = dateRangeLabel ? ` for ${dateRangeLabel}` : '';
     if (data.length === 0) {
       return `SLA compliance trend chart${rangePart}. No data points.`;
     }
     const latest = data[data.length - 1];
     return `SLA compliance trend chart${rangePart} with ${data.length} data point${
-      data.length === 1 ? "" : "s"
+      data.length === 1 ? '' : 's'
     }. Latest: ${clampPercentage(latest.compliance_percentage).toFixed(1)}% against a ${target}% target. Use the arrow keys to move between points.`;
   }, [data, dateRangeLabel, target]);
 
@@ -51,28 +51,31 @@ function SLATrendChart({
     itemRefs.current[clamped]?.focus();
   }
 
-  function handlePointKeyDown(e: React.KeyboardEvent<HTMLDivElement>, index: number) {
+  function handlePointKeyDown(
+    e: React.KeyboardEvent<HTMLDivElement>,
+    index: number
+  ) {
     switch (e.key) {
-      case "ArrowDown":
-      case "ArrowRight":
+      case 'ArrowDown':
+      case 'ArrowRight':
         e.preventDefault();
         focusIndex(index + 1);
         return;
-      case "ArrowUp":
-      case "ArrowLeft":
+      case 'ArrowUp':
+      case 'ArrowLeft':
         e.preventDefault();
         focusIndex(index - 1);
         return;
-      case "Home":
+      case 'Home':
         e.preventDefault();
         focusIndex(0);
         return;
-      case "End":
+      case 'End':
         e.preventDefault();
         focusIndex(data.length - 1);
         return;
-      case "Enter":
-      case " ":
+      case 'Enter':
+      case ' ':
         e.preventDefault();
         onPointClick?.(data[index]);
         return;
@@ -92,18 +95,23 @@ function SLATrendChart({
             onClick={() => setShowAnomalies((v) => !v)}
             className={`rounded-lg border px-2 py-1 text-xs font-medium transition-colors ${
               showAnomalies
-                ? "border-red-300 bg-red-50 text-red-700"
-                : "border-slate-200 text-slate-500 hover:bg-slate-50"
+                ? 'border-red-300 bg-red-50 text-red-700'
+                : 'border-slate-200 text-slate-500 hover:bg-slate-50'
             }`}
           >
-            {showAnomalies ? "Hide anomalies" : `Anomalies (${anomalies.length})`}
+            {showAnomalies
+              ? 'Hide anomalies'
+              : `Anomalies (${anomalies.length})`}
           </button>
         )}
       </div>
 
       {data.length > 0 && (
         <div className="mb-2 flex items-center gap-1.5 text-[11px] text-slate-500">
-          <span className="inline-block h-0 w-3 border-t-2 border-dashed border-slate-500" aria-hidden="true" />
+          <span
+            className="inline-block h-0 w-3 border-t-2 border-dashed border-slate-500"
+            aria-hidden="true"
+          />
           <span>Target {target}%</span>
         </div>
       )}
@@ -111,11 +119,7 @@ function SLATrendChart({
       {/* Accessible focus container: role="group" describes the chart as a
           whole; roving tabIndex below keeps Tab from stopping on every row
           while arrow keys move a single focus point between them. Closes #447. */}
-      <div
-        className="space-y-3"
-        role="group"
-        aria-label={chartLabel}
-      >
+      <div className="space-y-3" role="group" aria-label={chartLabel}>
         {data.length === 0 ? (
           <p className="text-sm text-gray-500">No trend data available.</p>
         ) : (
@@ -134,11 +138,11 @@ function SLATrendChart({
                   }}
                   className={`space-y-1 ${
                     onPointClick
-                      ? "cursor-pointer rounded-lg p-1 hover:bg-gray-50 transition-colors"
-                      : "rounded-lg p-1"
+                      ? 'cursor-pointer rounded-lg p-1 hover:bg-gray-50 transition-colors'
+                      : 'rounded-lg p-1'
                   } focus:outline-none focus:ring-2 focus:ring-blue-400`}
                   onClick={() => onPointClick?.(point)}
-                  role={onPointClick ? "button" : "img"}
+                  role={onPointClick ? 'button' : 'img'}
                   aria-label={pointLabel}
                   title={variance}
                   tabIndex={index === focusedIndex ? 0 : -1}
@@ -152,7 +156,7 @@ function SLATrendChart({
                   <div className="relative h-3 overflow-hidden rounded-full bg-gray-100">
                     <div
                       className={`h-full rounded-full transition-all ${
-                        above ? "bg-green-500" : "bg-red-500"
+                        above ? 'bg-green-500' : 'bg-red-500'
                       }`}
                       style={{ width: `${pct}%` }}
                     />

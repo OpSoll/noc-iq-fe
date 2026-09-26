@@ -1,4 +1,4 @@
-import type { Outage, Severity } from "@/types/outages";
+import type { Outage, Severity } from '@/types/outages';
 
 // Closes #451: real-time SLA breach countdown for open outages
 
@@ -6,7 +6,9 @@ export interface SeverityThresholds {
   threshold_minutes: number;
 }
 
-export type SeverityThresholdMap = Partial<Record<Severity, SeverityThresholds>>;
+export type SeverityThresholdMap = Partial<
+  Record<Severity, SeverityThresholds>
+>;
 
 export interface BreachCountdown {
   outageId: string;
@@ -30,10 +32,11 @@ export const BREACH_WARNING_MINUTES = 15;
 export function computeMinutesRemaining(
   detectedAt: string,
   thresholdMinutes: number,
-  now: Date = new Date(),
+  now: Date = new Date()
 ): number {
   const detectedTime = new Date(detectedAt).getTime();
-  if (Number.isNaN(detectedTime) || !Number.isFinite(thresholdMinutes)) return NaN;
+  if (Number.isNaN(detectedTime) || !Number.isFinite(thresholdMinutes))
+    return NaN;
 
   const elapsedMinutes = (now.getTime() - detectedTime) / 60_000;
   return thresholdMinutes - elapsedMinutes;
@@ -46,12 +49,12 @@ export function computeMinutesRemaining(
 export function buildBreachCountdowns(
   outages: Outage[],
   thresholds: SeverityThresholdMap,
-  now: Date = new Date(),
+  now: Date = new Date()
 ): BreachCountdown[] {
   const countdowns: BreachCountdown[] = [];
 
   for (const outage of outages) {
-    if (outage.status !== "open") continue;
+    if (outage.status !== 'open') continue;
 
     const config = thresholds[outage.severity];
     if (!config) continue;
@@ -59,7 +62,7 @@ export function buildBreachCountdowns(
     const minutesRemaining = computeMinutesRemaining(
       outage.detected_at,
       config.threshold_minutes,
-      now,
+      now
     );
     if (Number.isNaN(minutesRemaining)) continue;
 
@@ -71,7 +74,8 @@ export function buildBreachCountdowns(
       thresholdMinutes: config.threshold_minutes,
       minutesRemaining,
       isBreached: minutesRemaining <= 0,
-      isWarning: minutesRemaining > 0 && minutesRemaining < BREACH_WARNING_MINUTES,
+      isWarning:
+        minutesRemaining > 0 && minutesRemaining < BREACH_WARNING_MINUTES,
     });
   }
 
@@ -81,7 +85,7 @@ export function buildBreachCountdowns(
 
 /** Formats a minutes-remaining value as `MMm SSs` (or `Breached Xm ago`). */
 export function formatCountdown(minutesRemaining: number): string {
-  if (!Number.isFinite(minutesRemaining)) return "—";
+  if (!Number.isFinite(minutesRemaining)) return '—';
 
   if (minutesRemaining <= 0) {
     const overdueMinutes = Math.floor(Math.abs(minutesRemaining));
@@ -91,5 +95,5 @@ export function formatCountdown(minutesRemaining: number): string {
   const totalSeconds = Math.floor(minutesRemaining * 60);
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
-  return `${minutes}m ${seconds.toString().padStart(2, "0")}s`;
+  return `${minutes}m ${seconds.toString().padStart(2, '0')}s`;
 }

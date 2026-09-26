@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { api } from "@/lib/api";
-import { useToast } from "@/components/ui/toast";
-import usePasswordValidation from "@/hooks/usePasswordValidation";
-import PasswordStrength from "@/components/auth/PasswordStrength";
-import PasswordValidation from "@/components/auth/PasswordValidation";
+import { useState } from 'react';
+import { api } from '@/lib/api';
+import { useToast } from '@/components/ui/toast';
+import usePasswordValidation from '@/hooks/usePasswordValidation';
+import PasswordStrength from '@/components/auth/PasswordStrength';
+import PasswordValidation from '@/components/auth/PasswordValidation';
 
 type AuthUser = {
   id: string;
@@ -20,7 +20,7 @@ type AuthSessionResponse = {
 };
 
 function getErrorMessage(error: unknown) {
-  return error instanceof Error ? error.message : "Something went wrong";
+  return error instanceof Error ? error.message : 'Something went wrong';
 }
 
 interface AccountSessionFormCardProps {
@@ -40,60 +40,65 @@ export function AccountSessionFormCard({
 }: AccountSessionFormCardProps) {
   const toast = useToast();
   const [registerForm, setRegisterForm] = useState({
-    email: "operator@example.com",
-    password: "secure123",
-    full_name: "NOC Operator",
-    role: "engineer",
+    email: 'operator@example.com',
+    password: 'secure123',
+    full_name: 'NOC Operator',
+    role: 'engineer',
   });
   const [loginForm, setLoginForm] = useState({
-    email: "operator@example.com",
-    password: "secure123",
+    email: 'operator@example.com',
+    password: 'secure123',
   });
 
-  const { password_strength, validation_result } = usePasswordValidation(
-    registerForm.password,
-  );
-  const hasRegisterPasswordErrors = registerForm.password.length > 0 && !Object.values(validation_result).every(Boolean);
+  const { password_strength, validation_result, isStrong } =
+    usePasswordValidation(registerForm.password);
+  const hasRegisterPasswordErrors =
+    registerForm.password.length > 0 &&
+    !Object.values(validation_result).every(Boolean);
 
   async function handleRegister() {
+    if (!isStrong) {
+      toast('Password must meet all five requirements.', 'error');
+      return;
+    }
     try {
-      const response = await api.post<AuthUser>("/auth/register", registerForm);
+      const response = await api.post<AuthUser>('/auth/register', registerForm);
       setCurrentUser(response.data);
       onUserSelected(response.data.id);
-      toast("Account registered successfully.", "success");
+      toast('Account registered successfully.', 'success');
     } catch (issue) {
-      toast(getErrorMessage(issue), "error");
+      toast(getErrorMessage(issue), 'error');
     }
   }
 
   async function handleLogin() {
     try {
       const response = await api.post<AuthSessionResponse>(
-        "/auth/login",
-        loginForm,
+        '/auth/login',
+        loginForm
       );
       setSession(response.data);
       setCurrentUser(response.data.user);
       onUserSelected(response.data.user.id);
-      toast("Signed in successfully.", "success");
+      toast('Signed in successfully.', 'success');
     } catch (issue) {
-      toast(getErrorMessage(issue), "error");
+      toast(getErrorMessage(issue), 'error');
     }
   }
 
   async function handleLoadSession() {
     if (!session?.access_token) {
-      toast("Login first to load the current session.", "error");
+      toast('Login first to load the current session.', 'error');
       return;
     }
     try {
-      const response = await api.get<AuthUser>("/auth/me", {
+      const response = await api.get<AuthUser>('/auth/me', {
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
       setCurrentUser(response.data);
-      toast("Session refreshed from the backend.", "success");
+      toast('Session refreshed from the backend.', 'success');
     } catch (issue) {
-      toast(getErrorMessage(issue), "error");
+      toast(getErrorMessage(issue), 'error');
     }
   }
 
@@ -101,22 +106,22 @@ export function AccountSessionFormCard({
     if (!session?.access_token) {
       setSession(null);
       setCurrentUser(null);
-      toast("Local session cleared.", "info");
+      toast('Local session cleared.', 'info');
       return;
     }
     try {
       await api.post(
-        "/auth/logout",
+        '/auth/logout',
         {},
         {
           headers: { Authorization: `Bearer ${session.access_token}` },
-        },
+        }
       );
       setSession(null);
       setCurrentUser(null);
-      toast("Logged out successfully.", "success");
+      toast('Logged out successfully.', 'success');
     } catch (issue) {
-      toast(getErrorMessage(issue), "error");
+      toast(getErrorMessage(issue), 'error');
     }
   }
 
@@ -175,16 +180,14 @@ export function AccountSessionFormCard({
             aria-live="polite"
             className="text-sm text-gray-500"
           >
-            {registerForm.password.length > 0 && (
-              <div className="mt-2 space-y-2">
-                <PasswordStrength password_strength={password_strength} />
-                <PasswordValidation validation_result={validation_result} />
-              </div>
-            )}
+            <div className="mt-2 space-y-2">
+              <PasswordStrength password_strength={password_strength} />
+              <PasswordValidation validation_result={validation_result} />
+            </div>
           </div>
           <button
             onClick={handleRegister}
-            disabled={password_strength < 4}
+            disabled={!isStrong}
             className="w-full rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
           >
             Register account

@@ -1,5 +1,5 @@
-export type Severity = "critical" | "high" | "medium" | "low";
-export type OutageStatus = "open" | "resolved";
+export type Severity = 'critical' | 'high' | 'medium' | 'low';
+export type OutageStatus = 'open' | 'resolved';
 
 export interface Location {
   latitude: number;
@@ -7,12 +7,12 @@ export interface Location {
 }
 
 export interface SLAResult {
-  status: "met" | "violated";
+  status: 'met' | 'violated';
   mttr_minutes: number;
   threshold_minutes: number;
   amount: number;
-  payment_type: "reward" | "penalty";
-  rating: "exceptional" | "excellent" | "good" | "poor";
+  payment_type: 'reward' | 'penalty';
+  rating: 'exceptional' | 'excellent' | 'good' | 'poor';
 }
 
 export interface OutageResolutionPayment {

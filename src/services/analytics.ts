@@ -1,4 +1,4 @@
-import { api } from "@/lib/api";
+import { api } from '@/lib/api';
 
 export interface AnomalySegment {
   period: string;
@@ -6,7 +6,7 @@ export interface AnomalySegment {
   expected: number;
   actual: number;
   deviation: number;
-  severity: "low" | "medium" | "high";
+  severity: 'low' | 'medium' | 'high';
   note: string;
 }
 
@@ -17,13 +17,14 @@ export interface KPIConfidence {
   warning?: string;
 }
 
-export async function fetchAnomalies(
-  filters?: { date_from?: string; date_to?: string },
-): Promise<AnomalySegment[]> {
+export async function fetchAnomalies(filters?: {
+  date_from?: string;
+  date_to?: string;
+}): Promise<AnomalySegment[]> {
   const params = Object.fromEntries(
-    Object.entries(filters ?? {}).filter(([, v]) => v),
+    Object.entries(filters ?? {}).filter(([, v]) => v)
   );
-  const res = await api.get<AnomalySegment[]>("/sla/analytics/anomalies", {
+  const res = await api.get<AnomalySegment[]>('/sla/analytics/anomalies', {
     params,
   });
   return res.data;
@@ -31,7 +32,7 @@ export async function fetchAnomalies(
 
 export function computeKPIConfidence(
   sampleSize: number,
-  totalPopulation: number,
+  totalPopulation: number
 ): KPIConfidence {
   const ratio = totalPopulation > 0 ? sampleSize / totalPopulation : 0;
   const confidence = Math.round(Math.min(ratio, 1) * 100);

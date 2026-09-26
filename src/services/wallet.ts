@@ -1,4 +1,4 @@
-import { api } from "@/lib/api";
+import { api } from '@/lib/api';
 
 export interface Wallet {
   user_id: string;
@@ -48,7 +48,7 @@ export interface LinkWalletPayload {
 
 export async function getWalletDetail(
   userId: string,
-  options?: { signal?: AbortSignal },
+  options?: { signal?: AbortSignal }
 ): Promise<Wallet> {
   const { data } = await api.get<Wallet>(`/wallets/${userId}`, {
     signal: options?.signal,
@@ -58,7 +58,7 @@ export async function getWalletDetail(
 
 export async function getWalletStatus(
   userId: string,
-  options?: { signal?: AbortSignal },
+  options?: { signal?: AbortSignal }
 ): Promise<WalletStatus> {
   const { data } = await api.get<WalletStatus>(`/wallets/${userId}/status`, {
     signal: options?.signal,
@@ -68,7 +68,7 @@ export async function getWalletStatus(
 
 export async function getWalletBalance(
   address: string,
-  options?: { signal?: AbortSignal },
+  options?: { signal?: AbortSignal }
 ): Promise<WalletBalance> {
   const { data } = await api.get<WalletBalance>(`/wallets/${address}/balance`, {
     signal: options?.signal,
@@ -77,15 +77,13 @@ export async function getWalletBalance(
 }
 
 export async function createWallet(
-  payload: CreateWalletPayload,
+  payload: CreateWalletPayload
 ): Promise<Wallet> {
-  const { data } = await api.post<Wallet>("/wallets/create", payload);
+  const { data } = await api.post<Wallet>('/wallets/create', payload);
   return data;
 }
 
-export async function linkWallet(
-  payload: LinkWalletPayload,
-): Promise<Wallet> {
-  const { data } = await api.post<Wallet>("/wallets/link", payload);
+export async function linkWallet(payload: LinkWalletPayload): Promise<Wallet> {
+  const { data } = await api.post<Wallet>('/wallets/link', payload);
   return data;
 }
