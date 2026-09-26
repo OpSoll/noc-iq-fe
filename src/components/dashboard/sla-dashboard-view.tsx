@@ -12,6 +12,7 @@ import ExportModal from '@/components/dashboard/ExportModal';
 import FinancialSummaryWidget from '@/components/dashboard/FinancialSummaryWidget';
 import MTTRHistogramChart from '@/components/dashboard/MTTRHistogramChart';
 import SLABreachCountdownCard from '@/components/dashboard/SLABreachCountdownCard';
+import SystemStatusWidget from '@/components/dashboard/SystemStatusWidget';
 import { useToast } from '@/components/ui/toast';
 import { RouteErrorState } from '@/components/ui/route-state';
 import {
@@ -407,6 +408,8 @@ export default function SLADashboardView() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          {/* Closes #611: readiness pill in the header control row. */}
+          <SystemStatusWidget />
           <span className="text-xs uppercase tracking-wide text-gray-400">
             Updated {lastUpdated}
           </span>
