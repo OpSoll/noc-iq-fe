@@ -9,6 +9,7 @@ Base URL: `http://localhost:8000` (development) | `https://api.nociq.com` (produ
 - [Outages](#outages)
 - [Root Cause Analysis (RCA)](#root-cause-analysis-rca)
 - [SLA Management](#sla-management)
+- [Bulk Import](#bulk-import)
 - [Stellar Payments](#stellar-payments)
 - [Wallet Management](#wallet-management)
 - [Smart Contracts](#smart-contracts)
@@ -362,6 +363,69 @@ Get current SLA configurations.
     "reward_base": 600.00
   }
 }
+```
+
+---
+
+## Bulk Import
+
+Multipart file upload of outage records. Both endpoints take the same
+`multipart/form-data` body with a single `file` part and return the same shape.
+
+### POST `/outages/bulk`
+
+Imports the file. Writes rows.
+
+**Response `200`**
+
+```json
+{
+  "imported": 128,
+  "skipped": 4,
+  "errors": [
+    { "row": 12, "field": "end_time", "message": "must be after start_time" }
+  ]
+}
+```
+
+### POST `/outages/bulk/validate`
+
+Validates the file and writes nothing (issue #637). `imported` and `skipped` mean
+"would have been".
+
+**Response `200`**
+
+```json
+{
+  "imported": 128,
+  "skipped": 4,
+  "errors": [],
+  "database_modified": false
+}
+```
+
+`database_modified` is optional in the frontend types for now. The UI treats
+`true` as a failure rather than reporting zero modifications it cannot vouch for,
+and treats an absent field as "not reported" rather than as success. See the
+`TODO(#637)` on `BulkImportDryRunResult` in `src/types/bulkImport.ts` for the
+migration plan.
+
+### GET `/outages/bulk/history`
+
+**Response `200`** — array of past import records.
+
+```json
+[
+  {
+    "id": "imp_01",
+    "filename": "north-region.csv",
+    "imported": 128,
+    "skipped": 4,
+    "error_count": 1,
+    "errors": [],
+    "created_at": "2026-02-01T10:00:00Z"
+  }
+]
 ```
 
 ---
