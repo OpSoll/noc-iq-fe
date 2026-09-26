@@ -137,9 +137,10 @@ describe('ExportButton', () => {
     await openMenu();
 
     for (const format of EXPORT_FORMATS) {
-      expect(
-        screen.getByRole('menuitem', { name: EXPORT_FORMAT_LABEL[format] })
-      ).not.toHaveAttribute('aria-disabled', 'true');
+      const item = screen.getByRole('menuitem', {
+        name: EXPORT_FORMAT_LABEL[format],
+      });
+      expect(item).not.toHaveAttribute('aria-disabled', 'true');
     }
   });
 
@@ -154,14 +155,14 @@ describe('ExportButton', () => {
     );
     await openMenu();
 
-    await user.click(
-      screen.getByRole('menuitem', { name: EXPORT_FORMAT_LABEL.csv })
-    );
+    const csv = screen.getByRole('menuitem', { name: EXPORT_FORMAT_LABEL.csv });
+    await user.click(csv);
 
+    const expected = expect.stringContaining('"out-1","Lagos Core POP"');
     await waitFor(() =>
       expect(downloadText).toHaveBeenCalledWith(
         'outages.csv',
-        expect.stringContaining('"out-1","Lagos Core POP"'),
+        expected,
         'text/csv;charset=utf-8;'
       )
     );
@@ -177,15 +178,15 @@ describe('ExportButton', () => {
     render(<ExportButton rows={ROWS} capabilities={GRANTED} />);
     await openMenu();
 
-    await user.click(
-      screen.getByRole('menuitem', { name: EXPORT_FORMAT_LABEL.json })
-    );
+    const json = screen.getByRole('menuitem', {
+      name: EXPORT_FORMAT_LABEL.json,
+    });
+    await user.click(json);
 
-    await waitFor(() =>
-      expect(screen.getByRole('status')).toHaveTextContent(
-        'Exported 2 outages to outages.json.'
-      )
-    );
+    const live = screen.getByRole('status');
+    const summary = 'Exported 2 outages to outages.json.';
+    await waitFor(() => expect(live).toHaveTextContent(summary));
+
     expect(downloadJson).toHaveBeenCalledWith(
       'outages.json',
       buildExportRows(ROWS)
@@ -201,10 +202,7 @@ describe('ExportButton', () => {
         name: EXPORT_FORMAT_LABEL[format],
       });
       expect(item).toHaveAttribute('aria-disabled', 'true');
-      expect(item).toHaveAttribute(
-        'title',
-        'There are no outages to export.'
-      );
+      expect(item).toHaveAttribute('title', 'There are no outages to export.');
     }
 
     expect(screen.getByText('No outages to export')).toBeInTheDocument();
@@ -228,9 +226,10 @@ describe('ExportButton', () => {
     render(<ExportButton rows={ROWS} capabilities={[]} />);
     await openMenu();
 
-    await user.click(
-      screen.getByRole('menuitem', { name: EXPORT_FORMAT_LABEL.json })
-    );
+    const json = screen.getByRole('menuitem', {
+      name: EXPORT_FORMAT_LABEL.json,
+    });
+    await user.click(json);
 
     expect(downloadJson).not.toHaveBeenCalled();
     expect(downloadText).not.toHaveBeenCalled();
@@ -241,17 +240,15 @@ describe('ExportButton', () => {
     render(<ExportButton rows={ROWS} />);
     await openMenu();
 
-    expect(
-      screen.getByRole('menuitem', { name: EXPORT_FORMAT_LABEL.csv })
-    ).toHaveAttribute('aria-disabled', 'true');
+    const csv = screen.getByRole('menuitem', { name: EXPORT_FORMAT_LABEL.csv });
+    expect(csv).toHaveAttribute('aria-disabled', 'true');
   });
 
   it('blocks the trigger while the host is busy', () => {
     render(<ExportButton rows={ROWS} capabilities={GRANTED} disabled />);
 
-    expect(
-      screen.getByRole('button', { name: 'Export outages' })
-    ).toBeDisabled();
+    const trigger = screen.getByRole('button', { name: 'Export outages' });
+    expect(trigger).toBeDisabled();
   });
 
   it('surfaces a download failure instead of claiming success', async () => {
@@ -261,14 +258,12 @@ describe('ExportButton', () => {
     render(<ExportButton rows={ROWS} capabilities={GRANTED} />);
     await openMenu();
 
-    await user.click(
-      screen.getByRole('menuitem', { name: EXPORT_FORMAT_LABEL.csv })
-    );
+    const csv = screen.getByRole('menuitem', { name: EXPORT_FORMAT_LABEL.csv });
+    await user.click(csv);
 
+    const live = screen.getByRole('status');
     await waitFor(() =>
-      expect(screen.getByRole('status')).toHaveTextContent(
-        'Download blocked by the browser.'
-      )
+      expect(live).toHaveTextContent('Download blocked by the browser.')
     );
   });
 });

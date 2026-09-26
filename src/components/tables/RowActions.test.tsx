@@ -167,9 +167,10 @@ describe('RowActions menu', () => {
     await openMenu();
 
     for (const id of OUTAGE_ACTION_IDS) {
-      expect(
-        screen.getByRole('menuitem', { name: OUTAGE_ACTION_LABEL[id] })
-      ).not.toHaveAttribute('aria-disabled', 'true');
+      const item = screen.getByRole('menuitem', {
+        name: OUTAGE_ACTION_LABEL[id],
+      });
+      expect(item).not.toHaveAttribute('aria-disabled', 'true');
     }
   });
 
@@ -207,11 +208,10 @@ describe('RowActions menu', () => {
 
     await user.keyboard('{Escape}');
 
-    expect(
-      screen.queryByRole('menuitem', {
-        name: OUTAGE_ACTION_LABEL['soft-delete'],
-      })
-    ).toBeNull();
+    const item = screen.queryByRole('menuitem', {
+      name: OUTAGE_ACTION_LABEL['soft-delete'],
+    });
+    expect(item).toBeNull();
     expect(trigger).toHaveAttribute('aria-expanded', 'false');
     expect(onSoftDelete).not.toHaveBeenCalled();
   });
@@ -221,11 +221,10 @@ describe('RowActions menu', () => {
     render(<RowActions outage={OUTAGE} onSoftDelete={onSoftDelete} />);
     await openMenu();
 
-    await user.click(
-      screen.getByRole('menuitem', {
-        name: OUTAGE_ACTION_LABEL['soft-delete'],
-      })
-    );
+    const item = screen.getByRole('menuitem', {
+      name: OUTAGE_ACTION_LABEL['soft-delete'],
+    });
+    await user.click(item);
 
     const dialog = await screen.findByRole('dialog');
     expect(dialog).toHaveTextContent('Soft Delete Outage');
@@ -240,15 +239,14 @@ describe('RowActions menu', () => {
     render(<RowActions outage={OUTAGE} onResolve={vi.fn()} />);
     await openMenu();
 
-    await user.click(
-      screen.getByRole('menuitem', { name: OUTAGE_ACTION_LABEL.resolve })
-    );
+    const item = screen.getByRole('menuitem', {
+      name: OUTAGE_ACTION_LABEL.resolve,
+    });
+    await user.click(item);
 
-    await waitFor(() =>
-      expect(screen.getByRole('status')).toHaveTextContent(
-        'Outage out-1 resolved.'
-      )
-    );
+    const live = screen.getByRole('status');
+    const summary = 'Outage out-1 resolved.';
+    await waitFor(() => expect(live).toHaveTextContent(summary));
   });
 });
 
@@ -289,11 +287,10 @@ describe('RowActions permissions', () => {
     );
     await openMenu();
 
-    await user.click(
-      screen.getByRole('menuitem', {
-        name: OUTAGE_ACTION_LABEL['export-json'],
-      })
-    );
+    const item = screen.getByRole('menuitem', {
+      name: OUTAGE_ACTION_LABEL['export-json'],
+    });
+    await user.click(item);
 
     expect(onExportJson).not.toHaveBeenCalled();
   });
