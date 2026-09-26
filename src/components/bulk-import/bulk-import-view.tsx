@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useRef, useState, useCallback, useId } from 'react';
+import { useRef, useState, useCallback } from 'react';
 
 import { bulkImportOutages } from '@/services/bulkImportService';
 import type {
@@ -9,17 +9,18 @@ import type {
   ImportValidationError,
 } from '@/types/bulkImport';
 
+import {
+  ACCEPTED_EXTENSIONS,
+  DropZone,
+  validateImportFile,
+} from './DropZone';
+
 // ─── Constants ───────────────────────────────────────────────────────────────
-const ACCEPTED_TYPES = ['text/csv', 'application/json'] as const;
-const ACCEPTED_EXTENSIONS = ['.csv', '.json'] as const;
 const MAX_PREVIEW_ROWS = 100;
-const MAX_FILE_SIZE_MB = 5;
-const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 
 const REQUIRED_FIELDS = ['service_id', 'start_time', 'end_time'] as const;
 
 type AcceptedExtension = (typeof ACCEPTED_EXTENSIONS)[number];
-type AcceptedMimeType = (typeof ACCEPTED_TYPES)[number];
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface PreviewState {
@@ -28,11 +29,6 @@ interface PreviewState {
   warnings: ImportValidationError[];
   errors: ImportValidationError[];
   totalRows: number; // Added: track total for "showing X of Y" messaging
-}
-
-interface FileValidationResult {
-  valid: boolean;
-  error?: string;
 }
 
 type UploadStatus =
@@ -453,9 +449,7 @@ function ValidationTable({
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 export default function BulkImportView() {
-  const inputRef = useRef<HTMLInputElement>(null);
   const abortRef = useRef<AbortController | null>(null);
-  const dropZoneRef = useRef<HTMLDivElement>(null);
 
   const [file, setFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
@@ -464,121 +458,39 @@ export default function BulkImportView() {
   const [progress, setProgress] = useState(0);
   const [result, setResult] = useState<BulkImportResult | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [dragging, setDragging] = useState(false);
   const [showValidationTable, setShowValidationTable] = useState(false);
 
-  const id = useId();
-  const fileInputId = `file-input-${id}`;
-
-  // ─── File Validation ───────────────────────────────────────────────────────
-  const validateFile = useCallback((nextFile: File): FileValidationResult => {
-    const extension = nextFile.name
-      .slice(nextFile.name.lastIndexOf('.'))
-      .toLowerCase() as AcceptedExtension;
-    const isAcceptedType =
-      ACCEPTED_EXTENSIONS.includes(extension) ||
-      ACCEPTED_TYPES.includes(nextFile.type as AcceptedMimeType);
-
-    if (!isAcceptedType) {
-      return {
-        valid: false,
-        error: `Invalid file type. Accepted formats: ${ACCEPTED_EXTENSIONS.join(', ')}`,
-      };
+  // ─── File Handling ─────────────────────────────────────────────────────────
+  const handleFile = useCallback(async (nextFile: File) => {
+    // Defence in depth: DropZone already validated, but the file could be
+    // handed over by another entry point later on.
+    const check = validateImportFile(nextFile);
+    if (!check.ok) {
+      setFileError(check.message);
+      setFile(null);
+      setPreview(null);
+      return;
     }
 
-    if (nextFile.size > MAX_FILE_SIZE_BYTES) {
-      return {
-        valid: false,
-        error: `File too large. Maximum size: ${MAX_FILE_SIZE_MB}MB`,
-      };
-    }
+    setFileError(null);
+    setFile(nextFile);
+    setResult(null);
+    setSubmitError(null);
+    setStatus('validating');
 
-    if (nextFile.size === 0) {
-      return { valid: false, error: 'File is empty.' };
+    try {
+      const p = await buildPreview(nextFile);
+      setPreview(p);
+      setStatus(p.errors.length > 0 ? 'error' : 'idle');
+    } catch (err) {
+      setFileError('Failed to read file. Please check the file format.');
+      setStatus('error');
     }
-
-    return { valid: true };
   }, []);
 
-  // ─── File Handling ─────────────────────────────────────────────────────────
-  const handleFile = useCallback(
-    async (nextFile: File) => {
-      const validation = validateFile(nextFile);
-      if (!validation.valid) {
-        setFileError(validation.error ?? 'Invalid file');
-        setFile(null);
-        setPreview(null);
-        return;
-      }
-
-      setFileError(null);
-      setFile(nextFile);
-      setResult(null);
-      setSubmitError(null);
-      setStatus('validating');
-
-      try {
-        const p = await buildPreview(nextFile);
-        setPreview(p);
-        setStatus(p.errors.length > 0 ? 'error' : 'idle');
-      } catch (err) {
-        setFileError('Failed to read file. Please check the file format.');
-        setStatus('error');
-      }
-    },
-    [validateFile]
-  );
-
-  const handleInputChange = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      const nextFile = event.target.files?.[0];
-      if (nextFile) void handleFile(nextFile);
-      // Reset input so same file can be selected again if needed
-      event.target.value = '';
-    },
-    [handleFile]
-  );
-
-  // ─── Drag & Drop ───────────────────────────────────────────────────────────
-  const handleDragOver = useCallback(
-    (event: React.DragEvent<HTMLDivElement>) => {
-      event.preventDefault();
-      event.stopPropagation();
-      setDragging(true);
-    },
-    []
-  );
-
-  const handleDragLeave = useCallback(
-    (event: React.DragEvent<HTMLDivElement>) => {
-      event.preventDefault();
-      event.stopPropagation();
-      // Only set dragging false if leaving the dropzone, not entering a child
-      if (
-        dropZoneRef.current &&
-        !dropZoneRef.current.contains(event.relatedTarget as Node)
-      ) {
-        setDragging(false);
-      }
-    },
-    []
-  );
-
-  const handleDrop = useCallback(
-    (event: React.DragEvent<HTMLDivElement>) => {
-      event.preventDefault();
-      event.stopPropagation();
-      setDragging(false);
-
-      const files = event.dataTransfer.files;
-      if (files.length > 1) {
-        setFileError('Please upload only one file at a time.');
-        return;
-      }
-
-      const nextFile = files?.[0];
-      if (nextFile) void handleFile(nextFile);
-    },
+  // ─── Drop Zone plumbing ────────────────────────────────────────────────────
+  const handleFileSelected = useCallback(
+    (nextFile: File) => void handleFile(nextFile),
     [handleFile]
   );
 
@@ -603,8 +515,6 @@ export default function BulkImportView() {
       setFile(null);
       setPreview(null);
       setStatus('success');
-
-      if (inputRef.current) inputRef.current.value = '';
     } catch (err: unknown) {
       if (
         (err as { name?: string }).name === 'CanceledError' ||
@@ -640,7 +550,6 @@ export default function BulkImportView() {
     setSubmitError(null);
     setStatus('idle');
     setProgress(0);
-    if (inputRef.current) inputRef.current.value = '';
   }, []);
 
   const hasBlockingErrors = (preview?.errors.length ?? 0) > 0;
@@ -671,60 +580,11 @@ export default function BulkImportView() {
       </div>
 
       {/* Drop Zone */}
-      <div
-        ref={dropZoneRef}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        onClick={() => inputRef.current?.click()}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            inputRef.current?.click();
-          }
-        }}
-        role="button"
-        tabIndex={0}
-        aria-label="File upload dropzone. Click or press Enter to browse files."
-        className={`flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-10 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-          dragging
-            ? 'border-blue-500 bg-blue-100'
-            : 'border-gray-300 bg-gray-50 hover:border-blue-300 hover:bg-blue-50'
-        } ${isProcessing ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}`}
-      >
-        <svg
-          className="mb-3 h-10 w-10 text-gray-400"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={1.5}
-            d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1M12 12V4m0 0L8 8m4-4l4 4"
-          />
-        </svg>
-        <p className="text-sm font-medium text-gray-600">
-          Drag and drop or{' '}
-          <span className="text-blue-600 underline">browse</span>
-        </p>
-        <p className="mt-1 text-xs text-gray-400">
-          Accepted formats: {ACCEPTED_EXTENSIONS.join(', ')} (max{' '}
-          {MAX_FILE_SIZE_MB}MB)
-        </p>
-        <input
-          ref={inputRef}
-          id={fileInputId}
-          type="file"
-          accept={ACCEPTED_EXTENSIONS.join(',')}
-          className="hidden"
-          onChange={handleInputChange}
-          aria-label="Choose file"
-          disabled={isProcessing}
-        />
-      </div>
+      <DropZone
+        onFileSelected={handleFileSelected}
+        onError={setFileError}
+        disabled={isProcessing}
+      />
 
       {/* File Error */}
       {fileError && (
