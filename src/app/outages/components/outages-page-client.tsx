@@ -2,6 +2,11 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { WifiOff } from 'lucide-react';
+import {
+  HighlightedText,
+  OutageSearchBar,
+  matchesSearchTerm,
+} from '@/components/outages/OutageSearchBar';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useToast } from '@/components/ui/toast';
 import { downloadCsv } from '@/lib/urlSyncAndExport';
@@ -74,11 +79,9 @@ export default function OutagesPageClient({
   const filteredData = useMemo(() => {
     let result = [...rows];
 
-    // Search
+    // Search — matches the outage id, site name and description (#616)
     if (search) {
-      result = result.filter((item) =>
-        item.title.toLowerCase().includes(search.toLowerCase())
-      );
+      result = result.filter((item) => matchesSearchTerm(item, search));
     }
 
     if (severity) {
@@ -243,12 +246,11 @@ export default function OutagesPageClient({
     <div className="space-y-6">
       {/* Controls */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <input
-          type="text"
-          placeholder="Search outages..."
+        <OutageSearchBar
           value={search}
-          onChange={(e) => setFilters({ search: e.target.value })}
-          className="border rounded-md px-3 py-2 w-full sm:max-w-sm"
+          onChange={(value) => setFilters({ search: value })}
+          resultCount={filteredData.length}
+          totalCount={rows.length}
         />
 
         <div className="flex flex-wrap gap-2">
@@ -362,7 +364,9 @@ export default function OutagesPageClient({
               >
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="font-medium">{item.title}</h3>
+                    <h3 className="font-medium">
+                      <HighlightedText text={item.title} term={search} />
+                    </h3>
                     <SeverityBadge severity={item.severity} />
                     <span
                       className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-medium uppercase ${STATUS_STYLE[item.status]}`}
