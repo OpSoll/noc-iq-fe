@@ -174,7 +174,9 @@ describe('outages frontend flow', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Resolve Outage' }));
 
-    const mttrInput = screen.getByLabelText('Mean time to resolve (minutes)');
+    const mttrInput = await screen.findByLabelText(
+      'Mean time to resolve (minutes)'
+    );
     fireEvent.change(mttrInput, { target: { value: '42' } });
     await act(async () => {
       fireEvent.click(
