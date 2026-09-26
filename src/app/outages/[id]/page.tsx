@@ -53,7 +53,7 @@ function ResolveModalSkeleton() {
   );
 }
 
-// Dynamically import heavy modal with SSR disabled
+// Dynamically import the heavy modal with SSR disabled
 const ResolveOutageModal = dynamic(
   () =>
     import('@/features/outages/components/ResolveOutageModal').then((mod) => ({

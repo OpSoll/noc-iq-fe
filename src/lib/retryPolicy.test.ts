@@ -114,6 +114,7 @@ describe('fetchWithTimeoutAndRetry', () => {
     await vi.runAllTimersAsync();
 
     const err = await result;
+    expect(err).toBeInstanceOf(RetryPolicyError);
     expect(err.timedOut).toBe(true);
   });
 
@@ -172,6 +173,7 @@ describe('fetchWithTimeoutAndRetry', () => {
   it('throws RetryPolicyError with correct attempts count after all retries exhausted', async () => {
     vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('fail'));
 
+    const promise = fetchWithTimeoutAndRetry('/api/test', { maxRetries: 2 });
     const promise = fetchWithTimeoutAndRetry("/api/test", { maxRetries: 2 });
     const result = promise.catch((error) => error as RetryPolicyError);
     await vi.runAllTimersAsync();

@@ -53,6 +53,8 @@ const ToastWithProgress = ({
   useEffect(() => {
     // Check if user prefers reduced motion
     if (prefersReducedMotion()) {
+      // Reduced-motion users do not need an animated countdown.
+      return;
       // If reduced motion is preferred, set width to 0 immediately without animation
       const resetTimer = window.setTimeout(() => setWidth(0), 0);
       return () => window.clearTimeout(resetTimer);

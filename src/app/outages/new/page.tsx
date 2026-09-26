@@ -4,6 +4,12 @@ import { TextArea } from '@/components/ui/TextArea';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createOutage } from '@/services/outages';
+import { saveDraft, clearDraft, loadDraft } from '@/lib/drafts';
+import {
+  SITE_ID_ERROR,
+  SITE_ID_PATTERN,
+  validateSiteId,
+} from '@/lib/siteIdValidation';
 import { clearDraft, loadDraft, useAutoSaveDraft } from '@/lib/drafts';
 import type { OutageCreate, Severity, OutageStatus } from '@/types/outages';
 
@@ -57,6 +63,10 @@ export default function NewOutagePage() {
     e.preventDefault();
     if (!form.site_name.trim() || !form.description.trim()) {
       setError('Site name and description are required.');
+      return;
+    }
+    if (validateSiteId(form.site_id)) {
+      setError(SITE_ID_ERROR);
       return;
     }
 
@@ -150,6 +160,8 @@ export default function NewOutagePage() {
               value={form.site_id}
               onChange={(e) => set('site_id', e.target.value)}
               placeholder="Optional"
+              pattern={SITE_ID_PATTERN.source}
+              title={SITE_ID_ERROR}
             />
           </div>
         </div>
