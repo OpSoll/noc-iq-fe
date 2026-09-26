@@ -11,10 +11,10 @@ export type MttrValidation = {
  */
 function parsePart(value: string | number | null | undefined): number {
   if (value === null || value === undefined) return 0;
-  if (typeof value === "number") return Number.isFinite(value) ? value : NaN;
+  if (typeof value === 'number') return Number.isFinite(value) ? value : NaN;
 
   const trimmed = value.trim();
-  if (trimmed === "") return 0;
+  if (trimmed === '') return 0;
 
   const parsed = Number(trimmed);
   return Number.isFinite(parsed) ? parsed : NaN;
@@ -26,7 +26,7 @@ function parsePart(value: string | number | null | undefined): number {
  */
 export function toMttrMinutes(
   hours: string | number | null | undefined,
-  minutes: string | number | null | undefined,
+  minutes: string | number | null | undefined
 ): number {
   const h = parsePart(hours);
   const m = parsePart(minutes);
@@ -55,7 +55,8 @@ export function splitMttrMinutes(totalMinutes: number | null | undefined): {
 
   const hours = Math.floor(totalMinutes / MINUTES_PER_HOUR);
   // Rounded to shed floating-point noise from fractional inputs (e.g. 90.0000001).
-  const minutes = Math.round((totalMinutes - hours * MINUTES_PER_HOUR) * 100) / 100;
+  const minutes =
+    Math.round((totalMinutes - hours * MINUTES_PER_HOUR) * 100) / 100;
 
   return { hours, minutes };
 }
@@ -65,11 +66,11 @@ export function splitMttrMinutes(totalMinutes: number | null | undefined): {
  */
 export function validateMttrMinutes(totalMinutes: number): MttrValidation {
   if (!Number.isFinite(totalMinutes)) {
-    return { valid: false, error: "Enter MTTR as a number." };
+    return { valid: false, error: 'Enter MTTR as a number.' };
   }
 
   if (totalMinutes <= 0) {
-    return { valid: false, error: "MTTR must be greater than 0 minutes." };
+    return { valid: false, error: 'MTTR must be greater than 0 minutes.' };
   }
 
   return { valid: true, error: null };
@@ -77,10 +78,10 @@ export function validateMttrMinutes(totalMinutes: number): MttrValidation {
 
 /** Human-readable summary of a minutes total, e.g. `90 minutes (1h 30m)`. */
 export function formatMttrSummary(totalMinutes: number): string {
-  if (!Number.isFinite(totalMinutes) || totalMinutes <= 0) return "—";
+  if (!Number.isFinite(totalMinutes) || totalMinutes <= 0) return '—';
 
   const { hours, minutes } = splitMttrMinutes(totalMinutes);
-  const label = totalMinutes === 1 ? "minute" : "minutes";
+  const label = totalMinutes === 1 ? 'minute' : 'minutes';
 
   if (hours === 0) return `${totalMinutes} ${label}`;
   if (minutes === 0) return `${totalMinutes} ${label} (${hours}h)`;

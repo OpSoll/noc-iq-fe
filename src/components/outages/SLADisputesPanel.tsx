@@ -1,65 +1,67 @@
-"use client";
+'use client';
 
-import { useMemo, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMemo, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+import { api } from '@/lib/api';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 import {
   flagDispute,
   getDisputes,
   resolveDispute,
   triggerDisputeWebhook,
-} from "@/services/sla";
+} from '@/services/sla';
 import type {
   DisputeAttachment,
   DisputeStatus,
   SLADispute,
   SLAResult,
-} from "@/types/sla";
+} from '@/types/sla';
 
-import DisputeDeadlineBadge from "./DisputeDeadlineBadge";
-import DisputeAuditTrail from "./DisputeAuditTrail";
-import EvidencePreviewModal from "./EvidencePreviewModal";
-import EscalateDisputeModal from "./EscalateDisputeModal";
-import SLAReSimulateModal from "./SLAReSimulateModal";
+import { DisputeStats } from './DisputeStatsPanel';
+import DisputeDeadlineBadge from './DisputeDeadlineBadge';
+import DisputeAuditTrail from './DisputeAuditTrail';
+import EvidencePreviewModal from './EvidencePreviewModal';
+import EscalateDisputeModal from './EscalateDisputeModal';
+import SLAReSimulateModal from './SLAReSimulateModal';
+import { isEscalatable, ESCALATION_PRIORITY_LABELS } from './disputeEscalation';
 import {
-  isEscalatable,
-  ESCALATION_PRIORITY_LABELS,
-} from "./disputeEscalation";
-import { RESOLUTION_TEMPLATES, getResolutionTemplate } from "./disputeTemplates";
+  RESOLUTION_TEMPLATES,
+  getResolutionTemplate,
+} from './disputeTemplates';
 import {
   classifyDisputeCategory,
   DISPUTE_CATEGORIES,
   DISPUTE_CATEGORY_LABELS,
   type DisputeCategory,
-} from "./disputeCategory";
+} from './disputeCategory';
 
 const PAGE_SIZE = 5;
 
 const STATUS_OPTIONS = [
-  "",
-  "open",
-  "under_review",
-  "resolved",
-  "rejected",
+  '',
+  'open',
+  'under_review',
+  'resolved',
+  'rejected',
 ] as const;
 
-const CATEGORY_FILTER_OPTIONS: Array<DisputeCategory | ""> = [
-  "",
+const CATEGORY_FILTER_OPTIONS: Array<DisputeCategory | ''> = [
+  '',
   ...DISPUTE_CATEGORIES,
 ];
 
 const statusVariant: Record<
   string,
-  "outline" | "secondary" | "destructive" | "default"
+  'outline' | 'secondary' | 'destructive' | 'default'
 > = {
-  open: "destructive",
-  under_review: "secondary",
-  resolved: "default",
-  rejected: "outline",
+  open: 'destructive',
+  under_review: 'secondary',
+  resolved: 'default',
+  rejected: 'outline',
 };
 
 interface Props {
@@ -81,7 +83,7 @@ function parseRecipients(raw: string): string[] {
 
 interface ResolvePayload {
   disputeId: string;
-  action: "resolve" | "reject";
+  action: 'resolve' | 'reject';
   note?: string;
   recipients?: string[];
 }
@@ -89,13 +91,13 @@ interface ResolvePayload {
 interface NotificationLog {
   disputeId: string;
   recipients: string[];
-  status: "sent" | "failed";
+  status: 'sent' | 'failed';
   timestamp: string;
 }
 
 interface WebhookLog {
   disputeId: string;
-  status: "sent" | "failed";
+  status: 'sent' | 'failed';
   timestamp: string;
 }
 
@@ -107,12 +109,12 @@ export function SLADisputesPanel({
 }: Props) {
   const queryClient = useQueryClient();
 
-  const [statusFilter, setStatusFilter] = useState<DisputeStatus | "">("");
-  const [categoryFilter, setCategoryFilter] = useState<DisputeCategory | "">(
-    "",
+  const [statusFilter, setStatusFilter] = useState<DisputeStatus | ''>('');
+  const [categoryFilter, setCategoryFilter] = useState<DisputeCategory | ''>(
+    ''
   );
   const [page, setPage] = useState(1);
-  const [reason, setReason] = useState("");
+  const [reason, setReason] = useState('');
   const [noteInputs, setNoteInputs] = useState<Record<string, string>>({});
   const [selectedTemplates, setSelectedTemplates] = useState<
     Record<string, string>
@@ -120,20 +122,20 @@ export function SLADisputesPanel({
   const [recipientInputs, setRecipientInputs] = useState<
     Record<string, string>
   >({});
-  const [notificationLogs, setNotificationLogs] = useState<
-    NotificationLog[]
-  >([]);
+  const [notificationLogs, setNotificationLogs] = useState<NotificationLog[]>(
+    []
+  );
   const [webhookLogs, setWebhookLogs] = useState<WebhookLog[]>([]);
   const [previewAttachment, setPreviewAttachment] =
     useState<DisputeAttachment | null>(null);
   const [escalationTarget, setEscalationTarget] = useState<SLADispute | null>(
-    null,
+    null
   );
   const [resimulateOpen, setResimulateOpen] = useState(false);
 
   const queryKey = useMemo(
-    () => ["sla-disputes", outageId, statusFilter, page],
-    [outageId, statusFilter, page],
+    () => ['sla-disputes', outageId, statusFilter, page],
+    [outageId, statusFilter, page]
   );
 
   const { data, isLoading, isFetching, isError, error } = useQuery({
@@ -155,7 +157,7 @@ export function SLADisputesPanel({
   // over the already-fetched page.
   const disputes = categoryFilter
     ? allDisputes.filter(
-        (d) => classifyDisputeCategory(d.reason) === categoryFilter,
+        (d) => classifyDisputeCategory(d.reason) === categoryFilter
       )
     : allDisputes;
   const total = data?.total ?? 0;
@@ -164,7 +166,7 @@ export function SLADisputesPanel({
 
   const invalidateDisputes = async () => {
     await queryClient.invalidateQueries({
-      queryKey: ["sla-disputes", outageId],
+      queryKey: ['sla-disputes', outageId],
     });
   };
 
@@ -176,12 +178,12 @@ export function SLADisputesPanel({
       }),
 
     onSuccess: async () => {
-      setReason("");
+      setReason('');
       await invalidateDisputes();
     },
   });
 
-  const logWebhookResult = (disputeId: string, status: "sent" | "failed") => {
+  const logWebhookResult = (disputeId: string, status: 'sent' | 'failed') => {
     setWebhookLogs((prev) => [
       { disputeId, status, timestamp: new Date().toISOString() },
       ...prev,
@@ -190,8 +192,8 @@ export function SLADisputesPanel({
 
   const webhookMutation = useMutation({
     mutationFn: (disputeId: string) => triggerDisputeWebhook(disputeId),
-    onSuccess: (_, disputeId) => logWebhookResult(disputeId, "sent"),
-    onError: (_, disputeId) => logWebhookResult(disputeId, "failed"),
+    onSuccess: (_, disputeId) => logWebhookResult(disputeId, 'sent'),
+    onError: (_, disputeId) => logWebhookResult(disputeId, 'failed'),
   });
 
   const resolveMutation = useMutation({
@@ -217,7 +219,7 @@ export function SLADisputesPanel({
           {
             disputeId: variables.disputeId,
             recipients: variables.recipients ?? [],
-            status: "sent",
+            status: 'sent',
             timestamp: new Date().toISOString(),
           },
           ...prev,
@@ -227,7 +229,7 @@ export function SLADisputesPanel({
       // Notify external CRM/ERP integrations via webhook when a dispute is
       // resolved (not on reject — only a genuine resolution is external-
       // facing news).
-      if (variables.action === "resolve") {
+      if (variables.action === 'resolve') {
         webhookMutation.mutate(variables.disputeId);
       }
     },
@@ -238,7 +240,7 @@ export function SLADisputesPanel({
           {
             disputeId: variables.disputeId,
             recipients: variables.recipients ?? [],
-            status: "failed",
+            status: 'failed',
             timestamp: new Date().toISOString(),
           },
           ...prev,
@@ -247,9 +249,9 @@ export function SLADisputesPanel({
     },
   });
 
-  const handleAction = (dispute: SLADispute, action: "resolve" | "reject") => {
+  const handleAction = (dispute: SLADispute, action: 'resolve' | 'reject') => {
     const note = noteInputs[dispute.id]?.trim();
-    const recipients = parseRecipients(recipientInputs[dispute.id] ?? "");
+    const recipients = parseRecipients(recipientInputs[dispute.id] ?? '');
 
     resolveMutation.mutate({
       disputeId: dispute.id,
@@ -260,11 +262,11 @@ export function SLADisputesPanel({
 
     setNoteInputs((prev) => ({
       ...prev,
-      [dispute.id]: "",
+      [dispute.id]: '',
     }));
     setRecipientInputs((prev) => ({
       ...prev,
-      [dispute.id]: "",
+      [dispute.id]: '',
     }));
   };
 
@@ -330,7 +332,7 @@ export function SLADisputesPanel({
               disabled={!reason.trim() || flagMutation.isPending}
               onClick={() => flagMutation.mutate()}
             >
-              {flagMutation.isPending ? "Submitting..." : "Flag dispute"}
+              {flagMutation.isPending ? 'Submitting...' : 'Flag dispute'}
             </Button>
           </div>
 
@@ -364,7 +366,7 @@ export function SLADisputesPanel({
 
             return (
               <button
-                key={status || "all"}
+                key={status || 'all'}
                 type="button"
                 onClick={() => {
                   setStatusFilter(status);
@@ -372,11 +374,11 @@ export function SLADisputesPanel({
                 }}
                 className={`rounded-full border px-3 py-1 text-xs font-medium capitalize transition-colors ${
                   isActive
-                    ? "border-slate-900 bg-slate-900 text-white"
-                    : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100"
+                    ? 'border-slate-900 bg-slate-900 text-white'
+                    : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
                 }`}
               >
-                {status === "" ? "All" : status.replace("_", " ")}
+                {status === '' ? 'All' : status.replace('_', ' ')}
               </button>
             );
           })}
@@ -393,16 +395,16 @@ export function SLADisputesPanel({
 
             return (
               <button
-                key={category || "all"}
+                key={category || 'all'}
                 type="button"
                 onClick={() => setCategoryFilter(category)}
                 className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
                   isActive
-                    ? "border-slate-900 bg-slate-900 text-white"
-                    : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100"
+                    ? 'border-slate-900 bg-slate-900 text-white'
+                    : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
                 }`}
               >
-                {category === "" ? "All" : DISPUTE_CATEGORY_LABELS[category]}
+                {category === '' ? 'All' : DISPUTE_CATEGORY_LABELS[category]}
               </button>
             );
           })}
@@ -432,7 +434,7 @@ export function SLADisputesPanel({
             </p>
 
             <p className="mt-1 text-xs text-red-600">
-              {(error as Error)?.message ?? "Something went wrong."}
+              {(error as Error)?.message ?? 'Something went wrong.'}
             </p>
           </div>
         ) : null}
@@ -453,7 +455,7 @@ export function SLADisputesPanel({
         {/* Disputes */}
         {!isLoading &&
           disputes.map((dispute, index) => {
-            const noteValue = noteInputs[dispute.id] ?? "";
+            const noteValue = noteInputs[dispute.id] ?? '';
 
             return (
               <div key={dispute.id}>
@@ -463,10 +465,10 @@ export function SLADisputesPanel({
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex flex-wrap items-center gap-2">
                       <Badge
-                        variant={statusVariant[dispute.status] ?? "outline"}
+                        variant={statusVariant[dispute.status] ?? 'outline'}
                         className="capitalize"
                       >
-                        {dispute.status.replace("_", " ")}
+                        {dispute.status.replace('_', ' ')}
                       </Badge>
 
                       {dispute.escalated_at ? (
@@ -475,8 +477,8 @@ export function SLADisputesPanel({
                           className="border-red-600 bg-red-600 text-white"
                           title={
                             dispute.escalated_priority
-                              ? `Priority: ${ESCALATION_PRIORITY_LABELS[dispute.escalated_priority]}${dispute.escalated_manager ? ` — Manager: ${dispute.escalated_manager}` : ""}`
-                              : "Escalated to senior management"
+                              ? `Priority: ${ESCALATION_PRIORITY_LABELS[dispute.escalated_priority]}${dispute.escalated_manager ? ` — Manager: ${dispute.escalated_manager}` : ''}`
+                              : 'Escalated to senior management'
                           }
                         >
                           Escalated
@@ -568,7 +570,7 @@ export function SLADisputesPanel({
                   <DisputeAuditTrail dispute={dispute} />
 
                   {/* Resolver actions */}
-                  {canResolve && dispute.status === "open" ? (
+                  {canResolve && dispute.status === 'open' ? (
                     <div className="space-y-2 rounded-lg border border-slate-100 bg-slate-50 p-3">
                       {/* Resolution template selector (opsoll/noc-iq-fe#494) */}
                       <div className="space-y-1.5">
@@ -580,17 +582,16 @@ export function SLADisputesPanel({
                         </label>
                         <select
                           id={`resolution-template-${dispute.id}`}
-                          value={selectedTemplates[dispute.id] ?? ""}
+                          value={selectedTemplates[dispute.id] ?? ''}
                           onChange={(e) =>
-                            handleTemplateSelect(
-                              dispute.id,
-                              e.target.value,
-                            )
+                            handleTemplateSelect(dispute.id, e.target.value)
                           }
                           className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
                           disabled={isSubmitting}
                         >
-                          <option value="">Select a template (optional)...</option>
+                          <option value="">
+                            Select a template (optional)...
+                          </option>
                           {RESOLUTION_TEMPLATES.map((template) => (
                             <option key={template.id} value={template.id}>
                               {template.label}
@@ -616,7 +617,7 @@ export function SLADisputesPanel({
                       <input
                         className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
                         placeholder="Notify stakeholders (comma-separated emails)..."
-                        value={recipientInputs[dispute.id] ?? ""}
+                        value={recipientInputs[dispute.id] ?? ''}
                         onChange={(e) =>
                           setRecipientInputs((prev) => ({
                             ...prev,
@@ -627,13 +628,13 @@ export function SLADisputesPanel({
                         aria-label="Notify stakeholders"
                       />
 
-                      {parseRecipients(recipientInputs[dispute.id] ?? "")
+                      {parseRecipients(recipientInputs[dispute.id] ?? '')
                         .length > 0 ? (
                         <p className="text-xs text-slate-500">
-                          Will notify:{" "}
+                          Will notify:{' '}
                           {parseRecipients(
-                            recipientInputs[dispute.id] ?? "",
-                          ).join(", ")}
+                            recipientInputs[dispute.id] ?? ''
+                          ).join(', ')}
                         </p>
                       ) : null}
 
@@ -641,18 +642,18 @@ export function SLADisputesPanel({
                         <Button
                           size="sm"
                           disabled={isSubmitting}
-                          onClick={() => handleAction(dispute, "resolve")}
+                          onClick={() => handleAction(dispute, 'resolve')}
                         >
                           {resolveMutation.isPending
-                            ? "Processing..."
-                            : "Resolve"}
+                            ? 'Processing...'
+                            : 'Resolve'}
                         </Button>
 
                         <Button
                           size="sm"
                           variant="outline"
                           disabled={isSubmitting}
-                          onClick={() => handleAction(dispute, "reject")}
+                          onClick={() => handleAction(dispute, 'reject')}
                         >
                           Reject
                         </Button>
@@ -676,8 +677,8 @@ export function SLADisputesPanel({
                   {/* SLA re-simulation — always available to resolvers,
                       also for under_review disputes (opsoll/noc-iq-fe#498) */}
                   {canResolve &&
-                  (dispute.status === "open" ||
-                    dispute.status === "under_review") ? (
+                  (dispute.status === 'open' ||
+                    dispute.status === 'under_review') ? (
                     <Button
                       size="sm"
                       variant="outline"
@@ -689,7 +690,7 @@ export function SLADisputesPanel({
 
                   {/* Notification delivery log */}
                   {notificationLogs.some(
-                    (log) => log.disputeId === dispute.id,
+                    (log) => log.disputeId === dispute.id
                   ) ? (
                     <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
                       <p className="text-xs font-medium text-slate-500">
@@ -706,17 +707,15 @@ export function SLADisputesPanel({
                             >
                               <span
                                 className={
-                                  log.status === "sent"
-                                    ? "text-green-600"
-                                    : "text-red-600"
+                                  log.status === 'sent'
+                                    ? 'text-green-600'
+                                    : 'text-red-600'
                                 }
                               >
-                                {log.status === "sent"
-                                  ? "Sent"
-                                  : "Failed"}
+                                {log.status === 'sent' ? 'Sent' : 'Failed'}
                               </span>
                               <span className="text-slate-600">
-                                to {log.recipients.join(", ")}
+                                to {log.recipients.join(', ')}
                               </span>
                               <span className="text-slate-400">
                                 {new Date(log.timestamp).toLocaleString()}
@@ -728,14 +727,14 @@ export function SLADisputesPanel({
                   ) : null}
 
                   {/* Webhook notification status */}
-                  {dispute.status === "resolved" ? (
+                  {dispute.status === 'resolved' ? (
                     <div className="flex flex-wrap items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs">
                       <span className="font-medium text-slate-500">
                         Webhook (dispute.resolved):
                       </span>
                       {(() => {
                         const latest = webhookLogs.find(
-                          (log) => log.disputeId === dispute.id,
+                          (log) => log.disputeId === dispute.id
                         );
                         if (!latest) {
                           return (
@@ -748,12 +747,12 @@ export function SLADisputesPanel({
                           <>
                             <span
                               className={
-                                latest.status === "sent"
-                                  ? "text-green-600"
-                                  : "text-red-600"
+                                latest.status === 'sent'
+                                  ? 'text-green-600'
+                                  : 'text-red-600'
                               }
                             >
-                              {latest.status === "sent" ? "Sent" : "Failed"}
+                              {latest.status === 'sent' ? 'Sent' : 'Failed'}
                             </span>
                             <span className="text-slate-400">
                               {new Date(latest.timestamp).toLocaleString()}
@@ -769,8 +768,8 @@ export function SLADisputesPanel({
                       >
                         {webhookMutation.isPending &&
                         webhookMutation.variables === dispute.id
-                          ? "Sending…"
-                          : "Resend webhook"}
+                          ? 'Sending…'
+                          : 'Resend webhook'}
                       </button>
                     </div>
                   ) : null}
@@ -783,7 +782,7 @@ export function SLADisputesPanel({
         {totalPages > 1 ? (
           <div className="flex flex-col gap-3 border-t border-slate-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="text-xs text-slate-500">
-              Showing page <span className="font-medium">{page}</span> of{" "}
+              Showing page <span className="font-medium">{page}</span> of{' '}
               <span className="font-medium">{totalPages}</span> ({total} total
               disputes)
             </div>
@@ -829,7 +828,7 @@ export function SLADisputesPanel({
         isOpen={resimulateOpen}
         onClose={() => setResimulateOpen(false)}
         outageId={outageId}
-        severity={outageSeverity ?? "medium"}
+        severity={outageSeverity ?? 'medium'}
         originalResult={originalSlaResult}
       />
     </Card>
@@ -846,7 +845,7 @@ interface DisputeSearchProps {
 }
 
 function DisputeSearchInput({ onSearch, placeholder }: DisputeSearchProps) {
-  const [searchValue, setSearchValue] = useState("");
+  const [searchValue, setSearchValue] = useState('');
 
   const handleSearch = (value: string) => {
     setSearchValue(value);
@@ -859,11 +858,11 @@ function DisputeSearchInput({ onSearch, placeholder }: DisputeSearchProps) {
         type="text"
         value={searchValue}
         onChange={(e) => handleSearch(e.target.value)}
-        placeholder={placeholder ?? "Search by SLA Result ID or Outage ID..."}
+        placeholder={placeholder ?? 'Search by SLA Result ID or Outage ID...'}
         className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
       />
       {searchValue && (
-        <Button variant="ghost" size="sm" onClick={() => handleSearch("")}>
+        <Button variant="ghost" size="sm" onClick={() => handleSearch('')}>
           Clear
         </Button>
       )}
@@ -891,7 +890,7 @@ function filterDisputesBySearch(
 
 interface BulkActionToolbarProps {
   selectedIds: string[];
-  onBulkAction: (action: "resolve" | "reject") => void;
+  onBulkAction: (action: 'resolve' | 'reject') => void;
   onClearSelection: () => void;
 }
 
@@ -910,14 +909,14 @@ function BulkActionToolbar({
       <Button
         size="sm"
         variant="default"
-        onClick={() => onBulkAction("resolve")}
+        onClick={() => onBulkAction('resolve')}
       >
         Bulk Resolve
       </Button>
       <Button
         size="sm"
         variant="destructive"
-        onClick={() => onBulkAction("reject")}
+        onClick={() => onBulkAction('reject')}
       >
         Bulk Reject
       </Button>
@@ -941,7 +940,7 @@ function useBulkDisputeActions(invalidateFn: () => Promise<void>) {
   const clearSelection = () => setSelectedIds([]);
 
   const bulkResolve = useMutation({
-    mutationFn: async (action: "resolve" | "reject") => {
+    mutationFn: async (action: 'resolve' | 'reject') => {
       const results = await Promise.allSettled(
         selectedIds.map((id) =>
           resolveDispute(id, {
@@ -988,7 +987,7 @@ interface CreditAdjustment {
 
 function useCreditPreview(disputeId: string) {
   return useQuery({
-    queryKey: ["credit-preview", disputeId],
+    queryKey: ['credit-preview', disputeId],
     queryFn: async (): Promise<CreditAdjustment> => {
       const response = await api.get(`/sla/disputes/${disputeId}/preview`);
       return response.data;
@@ -1021,9 +1020,7 @@ function CreditPreviewModal({
           ) : adjustment ? (
             <>
               <div className="grid grid-cols-2 gap-2 text-sm">
-                <span className="text-muted-foreground">
-                  Current Balance:
-                </span>
+                <span className="text-muted-foreground">Current Balance:</span>
                 <span className="font-mono">
                   {adjustment.currentBalance} {adjustment.currency}
                 </span>
@@ -1046,11 +1043,7 @@ function CreditPreviewModal({
             <Button variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button
-              variant="default"
-              onClick={onConfirm}
-              disabled={isLoading}
-            >
+            <Button variant="default" onClick={onConfirm} disabled={isLoading}>
               Confirm Resolution
             </Button>
           </div>
@@ -1078,26 +1071,26 @@ interface AuditLogEntry {
 
 function generateAuditPDF(entries: AuditLogEntry[]): string {
   const lines: string[] = [];
-  lines.push("DISPUTE AUDIT LOG");
+  lines.push('DISPUTE AUDIT LOG');
   lines.push(`Generated: ${new Date().toISOString()}`);
   lines.push(`Total Entries: ${entries.length}`);
-  lines.push("=".repeat(60));
+  lines.push('='.repeat(60));
 
   for (const entry of entries) {
-    lines.push("");
+    lines.push('');
     lines.push(`Dispute ID:  ${entry.disputeId}`);
     lines.push(`Outage ID:   ${entry.outageId}`);
     lines.push(`SLA Result:  ${entry.slaResultId}`);
     lines.push(`Status:      ${entry.status}`);
     lines.push(`Created:     ${entry.createdAt}`);
-    lines.push(`Resolved:    ${entry.resolvedAt ?? "N/A"}`);
-    lines.push(`By:          ${entry.resolvedBy ?? "N/A"}`);
+    lines.push(`Resolved:    ${entry.resolvedAt ?? 'N/A'}`);
+    lines.push(`By:          ${entry.resolvedBy ?? 'N/A'}`);
     lines.push(`Reason:      ${entry.reason}`);
     lines.push(`Note:        ${entry.resolutionNote}`);
-    lines.push("-".repeat(40));
+    lines.push('-'.repeat(40));
   }
 
-  return lines.join("\n");
+  return lines.join('\n');
 }
 
 async function exportAuditToPDF(
@@ -1107,19 +1100,19 @@ async function exportAuditToPDF(
   const entries: AuditLogEntry[] = disputes.map((d) => ({
     disputeId: d.id,
     outageId: d.outage_id,
-    slaResultId: d.sla_result_id ?? "",
+    slaResultId: d.sla_result_id ?? '',
     status: d.status,
-    reason: d.reason ?? "",
-    resolutionNote: d.resolution_note ?? "",
+    reason: d.reason ?? '',
+    resolutionNote: d.resolution_note ?? '',
     createdAt: d.created_at,
     resolvedAt: d.resolved_at ?? null,
     resolvedBy: d.resolved_by ?? null,
   }));
 
   const content = generateAuditPDF(entries);
-  const blob = new Blob([content], { type: "text/plain" });
+  const blob = new Blob([content], { type: 'text/plain' });
   const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
+  const a = document.createElement('a');
   a.href = url;
   a.download = filename;
   document.body.appendChild(a);
@@ -1130,11 +1123,8 @@ async function exportAuditToPDF(
 
 function useExportAuditLog() {
   return useMutation({
-    mutationFn: async (params: {
-      outageId?: string;
-      status?: string;
-    }) => {
-      const response = await api.get("/sla/disputes", {
+    mutationFn: async (params: { outageId?: string; status?: string }) => {
+      const response = await api.get('/sla/disputes', {
         params: { ...params, page_size: 1000 },
       });
       const disputes = response.data.items ?? [];

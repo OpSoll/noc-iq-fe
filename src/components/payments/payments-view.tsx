@@ -1,18 +1,18 @@
-"use client";
+'use client';
 
-import { useUrlSync } from "@/hooks/useUrlSync";
-import { PaymentService } from "@/services/paymentService";
-import type { Payment } from "@/types/payment";
-import { useQuery } from "@tanstack/react-query";
-import { PaymentDetailDrawer } from "./payment-detail-drawer";
+import { useUrlSync } from '@/hooks/useUrlSync';
+import { PaymentService } from '@/services/paymentService';
+import type { Payment } from '@/types/payment';
+import { useQuery } from '@tanstack/react-query';
+import { PaymentDetailDrawer } from './payment-detail-drawer';
 
 import {
   explorerLink,
   STELLAR_NETWORK_LABEL,
   type ExplorerEntityType,
-} from "@/lib/explorer";
-import { ExternalLink, Inbox } from "lucide-react";
-import { EmptyState } from "@/components/ui/empty-state";
+} from '@/lib/explorer';
+import { ExternalLink, Inbox } from 'lucide-react';
+import { EmptyState } from '@/components/ui/empty-state';
 import {
   Pagination,
   PaginationContent,
@@ -21,10 +21,10 @@ import {
   PaginationPrevious,
   PaginationNext,
   PaginationEllipsis,
-} from "@/components/ui/pagination";
-import { queryKeys } from "@/lib/queryKeys";
+} from '@/components/ui/pagination';
+import { queryKeys } from '@/lib/queryKeys';
 
-type SortDirection = "asc" | "desc";
+type SortDirection = 'asc' | 'desc';
 
 function SortableHeader({
   columnKey,
@@ -46,13 +46,13 @@ function SortableHeader({
       onClick={() => onSort(columnKey)}
       role="columnheader"
       aria-sort={
-        isActive ? (activeDir === "asc" ? "ascending" : "descending") : "none"
+        isActive ? (activeDir === 'asc' ? 'ascending' : 'descending') : 'none'
       }
     >
       {label}
       {isActive && (
         <span className="ml-1 text-xs" aria-hidden>
-          {activeDir === "asc" ? "\u25B2" : "\u25BC"}
+          {activeDir === 'asc' ? '\u25B2' : '\u25BC'}
         </span>
       )}
     </th>
@@ -60,34 +60,34 @@ function SortableHeader({
 }
 
 const URL_DEFAULTS = {
-  status: "all",
-  type: "all",
-  dateFrom: "",
-  dateTo: "",
-  page: "1",
-  perPage: "20",
-  paymentId: "",
-  sortKey: "created_at",
-  sortDir: "desc",
+  status: 'all',
+  type: 'all',
+  dateFrom: '',
+  dateTo: '',
+  page: '1',
+  perPage: '20',
+  paymentId: '',
+  sortKey: 'created_at',
+  sortDir: 'desc',
 };
 
 function formatAmount(payment: Payment) {
-  const sign = payment.type === "penalty" ? "-" : "+";
+  const sign = payment.type === 'penalty' ? '-' : '+';
   return `${sign}$${payment.amount}`;
 }
 
 function getStatusBadge(status: string) {
   switch (status.toUpperCase()) {
-    case "CONFIRMED":
-      return "bg-green-100 text-green-700";
-    case "RELEASED":
-      return "bg-blue-100 text-blue-700";
-    case "REFUNDED":
-      return "bg-yellow-100 text-yellow-700";
-    case "FAILED":
-      return "bg-red-100 text-red-700";
+    case 'CONFIRMED':
+      return 'bg-green-100 text-green-700';
+    case 'RELEASED':
+      return 'bg-blue-100 text-blue-700';
+    case 'REFUNDED':
+      return 'bg-yellow-100 text-yellow-700';
+    case 'FAILED':
+      return 'bg-red-100 text-red-700';
     default:
-      return "bg-gray-100 text-gray-700";
+      return 'bg-gray-100 text-gray-700';
   }
 }
 
@@ -132,7 +132,7 @@ export function PaymentsView() {
 
   const dateError =
     dateFrom && dateTo && dateFrom > dateTo
-      ? "Start date cannot be after end date."
+      ? 'Start date cannot be after end date.'
       : null;
 
   const hasActiveFilters =
@@ -154,8 +154,8 @@ export function PaymentsView() {
     }),
     queryFn: () =>
       PaymentService.fetchPayments({
-        status: statusFilter !== "all" ? statusFilter : undefined,
-        type: typeFilter !== "all" ? typeFilter : undefined,
+        status: statusFilter !== 'all' ? statusFilter : undefined,
+        type: typeFilter !== 'all' ? typeFilter : undefined,
         date_from: dateFrom || undefined,
         date_to: dateTo || undefined,
         page,
@@ -171,7 +171,7 @@ export function PaymentsView() {
   const totalPages = Math.ceil(total / perPage);
 
   const handleFilterChange = (key: string, value: string) => {
-    setUrlState({ [key]: value, page: "1" } as Partial<typeof URL_DEFAULTS>);
+    setUrlState({ [key]: value, page: '1' } as Partial<typeof URL_DEFAULTS>);
   };
 
   const handlePageChange = (newPage: number) => {
@@ -183,13 +183,13 @@ export function PaymentsView() {
   };
 
   const handleCloseDrawer = () => {
-    setUrlState({ paymentId: "" });
+    setUrlState({ paymentId: '' });
   };
 
   const handleSort = (key: string) => {
-    const newDir = sortKey === key && sortDir === "asc" ? "desc" : "asc";
+    const newDir = sortKey === key && sortDir === 'asc' ? 'desc' : 'asc';
     // Reset to the first page — row 1 of the new ordering is what the user wants.
-    setUrlState({ sortKey: key, sortDir: newDir, page: "1" });
+    setUrlState({ sortKey: key, sortDir: newDir, page: '1' });
   };
 
   if (error) {
@@ -216,7 +216,7 @@ export function PaymentsView() {
           <div className="flex flex-wrap items-center gap-2">
             <select
               value={statusFilter}
-              onChange={(e) => handleFilterChange("status", e.target.value)}
+              onChange={(e) => handleFilterChange('status', e.target.value)}
               className="rounded border px-3 py-1.5 text-sm"
               aria-label="Filter by status"
             >
@@ -229,7 +229,7 @@ export function PaymentsView() {
             </select>
             <select
               value={typeFilter}
-              onChange={(e) => handleFilterChange("type", e.target.value)}
+              onChange={(e) => handleFilterChange('type', e.target.value)}
               className="rounded border px-3 py-1.5 text-sm"
               aria-label="Filter by type"
             >
@@ -241,16 +241,16 @@ export function PaymentsView() {
             <input
               type="date"
               value={dateFrom}
-              onChange={(e) => handleFilterChange("dateFrom", e.target.value)}
-              className={`rounded border px-3 py-1.5 text-sm ${dateError ? "border-red-500" : ""}`}
+              onChange={(e) => handleFilterChange('dateFrom', e.target.value)}
+              className={`rounded border px-3 py-1.5 text-sm ${dateError ? 'border-red-500' : ''}`}
               aria-label="Date from"
               aria-invalid={!!dateError}
             />
             <input
               type="date"
               value={dateTo}
-              onChange={(e) => handleFilterChange("dateTo", e.target.value)}
-              className={`rounded border px-3 py-1.5 text-sm ${dateError ? "border-red-500" : ""}`}
+              onChange={(e) => handleFilterChange('dateTo', e.target.value)}
+              className={`rounded border px-3 py-1.5 text-sm ${dateError ? 'border-red-500' : ''}`}
               aria-label="Date to"
               aria-invalid={!!dateError}
             />
@@ -318,27 +318,27 @@ export function PaymentsView() {
                     icon={Inbox}
                     title="No payments found"
                     description={
-                      statusFilter !== "all" ||
-                      typeFilter !== "all" ||
+                      statusFilter !== 'all' ||
+                      typeFilter !== 'all' ||
                       dateFrom ||
                       dateTo
-                        ? "Try adjusting your filters or clearing them to see all payments."
-                        : "As soon as payments are processed, they will appear here."
+                        ? 'Try adjusting your filters or clearing them to see all payments.'
+                        : 'As soon as payments are processed, they will appear here.'
                     }
                     action={
-                      statusFilter !== "all" ||
-                      typeFilter !== "all" ||
+                      statusFilter !== 'all' ||
+                      typeFilter !== 'all' ||
                       dateFrom ||
                       dateTo
                         ? {
-                            label: "Clear Filters",
+                            label: 'Clear Filters',
                             onClick: () =>
                               setUrlState({
-                                status: "all",
-                                type: "all",
-                                dateFrom: "",
-                                dateTo: "",
-                                page: "1",
+                                status: 'all',
+                                type: 'all',
+                                dateFrom: '',
+                                dateTo: '',
+                                page: '1',
                               }),
                           }
                         : undefined
@@ -354,7 +354,7 @@ export function PaymentsView() {
                   onClick={() => handleRowClick(payment.id)}
                   tabIndex={0}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
+                    if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
                       handleRowClick(payment.id);
                     }
@@ -376,7 +376,7 @@ export function PaymentsView() {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-gray-600">
-                    {payment.type ?? "N/A"}
+                    {payment.type ?? 'N/A'}
                   </td>
 
                   <td className="px-4 py-3">
@@ -389,7 +389,7 @@ export function PaymentsView() {
                   <td className="px-4 py-3 text-gray-600">
                     {payment.commissionId
                       ? `${payment.commissionId.slice(0, 8)}...`
-                      : "N/A"}
+                      : 'N/A'}
                   </td>
                 </tr>
               ))
@@ -408,8 +408,8 @@ export function PaymentsView() {
                   aria-disabled={page <= 1}
                   className={
                     page <= 1
-                      ? "pointer-events-none opacity-50"
-                      : "cursor-pointer"
+                      ? 'pointer-events-none opacity-50'
+                      : 'cursor-pointer'
                   }
                 />
               </PaginationItem>
@@ -440,8 +440,8 @@ export function PaymentsView() {
                   aria-disabled={page >= totalPages}
                   className={
                     page >= totalPages
-                      ? "pointer-events-none opacity-50"
-                      : "cursor-pointer"
+                      ? 'pointer-events-none opacity-50'
+                      : 'cursor-pointer'
                   }
                 />
               </PaginationItem>

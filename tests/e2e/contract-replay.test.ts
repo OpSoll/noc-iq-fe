@@ -1,5 +1,8 @@
-import { describe, it, expect } from "vitest";
-import { ALL_FIXTURES, type ContractFixture } from "@/tests/fixtures/contract-fixtures";
+import { describe, it, expect } from 'vitest';
+import {
+  ALL_FIXTURES,
+  type ContractFixture,
+} from '@/tests/fixtures/contract-fixtures';
 
 interface ParserResult<T> {
   parsed: boolean;
@@ -8,16 +11,16 @@ interface ParserResult<T> {
 }
 
 function replayFixture<T extends Record<string, unknown>>(
-  fixture: ContractFixture<T>,
+  fixture: ContractFixture<T>
 ): ParserResult<T> {
   const fields = Object.keys(fixture.data as object);
   const mismatches: string[] = [];
 
   // Validate fixture metadata
-  if (!fixture.version) mismatches.push("missing version");
-  if (!fixture.label) mismatches.push("missing label");
-  if (!fixture.capturedAt) mismatches.push("missing capturedAt");
-  if (!fixture.backendVersion) mismatches.push("missing backendVersion");
+  if (!fixture.version) mismatches.push('missing version');
+  if (!fixture.label) mismatches.push('missing label');
+  if (!fixture.capturedAt) mismatches.push('missing capturedAt');
+  if (!fixture.backendVersion) mismatches.push('missing backendVersion');
 
   return {
     parsed: mismatches.length === 0,
@@ -29,7 +32,7 @@ function replayFixture<T extends Record<string, unknown>>(
 function replayArrayFixture<T>(fixture: ContractFixture<T[]>): ParserResult<T> {
   const items = fixture.data;
   if (!Array.isArray(items)) {
-    return { parsed: false, fields: [], mismatches: ["data is not an array"] };
+    return { parsed: false, fields: [], mismatches: ['data is not an array'] };
   }
 
   if (items.length === 0) {
@@ -44,14 +47,14 @@ function replayArrayFixture<T>(fixture: ContractFixture<T[]>): ParserResult<T> {
     const itemFields = Object.keys(items[i] as object);
     const missing = fields.filter((f) => !itemFields.includes(f));
     if (missing.length > 0) {
-      mismatches.push(`item ${i} missing fields: ${missing.join(", ")}`);
+      mismatches.push(`item ${i} missing fields: ${missing.join(', ')}`);
     }
   }
 
   return { parsed: mismatches.length === 0, fields, mismatches };
 }
 
-describe("Contract Fixture Replay Tests", () => {
+describe('Contract Fixture Replay Tests', () => {
   const fixtureEntries = Object.entries(ALL_FIXTURES);
 
   fixtureEntries.forEach(([name, fixture]) => {
@@ -64,7 +67,7 @@ describe("Contract Fixture Replay Tests", () => {
       if (result.mismatches.length > 0) {
         console.error(
           `[${name}] Parser mismatches:\n`,
-          result.mismatches.join("\n"),
+          result.mismatches.join('\n')
         );
       }
 
@@ -94,8 +97,8 @@ describe("Contract Fixture Replay Tests", () => {
     }
   });
 
-  it("reports field-level parser mismatch details", () => {
-    const knownTypes = new Set(["string", "number", "boolean", "undefined"]);
+  it('reports field-level parser mismatch details', () => {
+    const knownTypes = new Set(['string', 'number', 'boolean', 'undefined']);
 
     fixtureEntries.forEach(([name, fixture]) => {
       const data = fixture.data;
@@ -105,7 +108,7 @@ describe("Contract Fixture Replay Tests", () => {
             const type = typeof value;
             if (!knownTypes.has(type)) {
               console.warn(
-                `[${name}][${idx}] field "${field}" has unexpected type: ${type}`,
+                `[${name}][${idx}] field "${field}" has unexpected type: ${type}`
               );
             }
           });
@@ -114,9 +117,9 @@ describe("Contract Fixture Replay Tests", () => {
     });
   });
 
-  it("all fixtures have versioning strategy documented", () => {
+  it('all fixtures have versioning strategy documented', () => {
     const versions = new Set(Object.values(ALL_FIXTURES).map((f) => f.version));
     expect(versions.size).toBeGreaterThanOrEqual(1);
-    console.log("Fixture versions in use:", [...versions].join(", "));
+    console.log('Fixture versions in use:', [...versions].join(', '));
   });
 });

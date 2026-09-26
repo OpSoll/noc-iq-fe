@@ -1,15 +1,16 @@
-"use client";
+'use client';
 
-import { useEffect, useRef, useState } from "react";
-import { useSession } from "@/hooks/useSession";
-import { useFocusTrap } from "@/hooks/useFocusTrap";
-import { useToast } from "@/components/ui/toast";
-import { PaymentService } from "@/services/paymentService";
-import type { PaginatedPayments, Payment } from "@/types/payment";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ExternalLink, RefreshCcw, Scale, X } from "lucide-react";
-import { explorerLink, STELLAR_NETWORK_LABEL } from "@/lib/explorer";
-import { queryKeys } from "@/lib/queryKeys";
+import { TextArea } from '@/components/ui/TextArea';
+import { useEffect, useRef, useState } from 'react';
+import { useSession } from '@/hooks/useSession';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
+import { useToast } from '@/components/ui/toast';
+import { PaymentService } from '@/services/paymentService';
+import type { PaginatedPayments, Payment } from '@/types/payment';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { ExternalLink, RefreshCcw, Scale, X } from 'lucide-react';
+import { explorerLink, STELLAR_NETWORK_LABEL } from '@/lib/explorer';
+import { queryKeys } from '@/lib/queryKeys';
 
 interface PaymentDetailDrawerProps {
   paymentId: string | null;
@@ -22,43 +23,43 @@ function formatMoney(payment: Payment) {
 
 function getStatusBadge(status: string) {
   switch (status.toUpperCase()) {
-    case "CONFIRMED":
-      return "bg-green-100 text-green-700";
-    case "RELEASED":
-      return "bg-blue-100 text-blue-700";
-    case "REFUNDED":
-      return "bg-yellow-100 text-yellow-700";
-    case "FAILED":
-      return "bg-red-100 text-red-700";
+    case 'CONFIRMED':
+      return 'bg-green-100 text-green-700';
+    case 'RELEASED':
+      return 'bg-blue-100 text-blue-700';
+    case 'REFUNDED':
+      return 'bg-yellow-100 text-yellow-700';
+    case 'FAILED':
+      return 'bg-red-100 text-red-700';
     default:
-      return "bg-gray-100 text-gray-700";
+      return 'bg-gray-100 text-gray-700';
   }
 }
 
 function getReconciliationBadge(status?: string | null) {
-  switch ((status ?? "").toLowerCase()) {
-    case "matched":
-      return "bg-green-50 text-green-700";
-    case "mismatched":
-      return "bg-red-50 text-red-700";
-    case "manual_review":
-      return "bg-amber-50 text-amber-700";
-    case "pending":
-      return "bg-slate-100 text-slate-700";
+  switch ((status ?? '').toLowerCase()) {
+    case 'matched':
+      return 'bg-green-50 text-green-700';
+    case 'mismatched':
+      return 'bg-red-50 text-red-700';
+    case 'manual_review':
+      return 'bg-amber-50 text-amber-700';
+    case 'pending':
+      return 'bg-slate-100 text-slate-700';
     default:
-      return "bg-gray-100 text-gray-600";
+      return 'bg-gray-100 text-gray-600';
   }
 }
 
 function updatePaymentsCache(
   current: PaginatedPayments | undefined,
-  updated: Payment,
+  updated: Payment
 ) {
   if (!current) return current;
   return {
     ...current,
     items: current.items.map((item) =>
-      item.id === updated.id ? updated : item,
+      item.id === updated.id ? updated : item
     ),
   };
 }
@@ -67,11 +68,11 @@ export function PaymentDetailDrawer({
   paymentId,
   onClose,
 }: PaymentDetailDrawerProps) {
-  const id = paymentId ?? "";
+  const id = paymentId ?? '';
 
   const drawerRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
-  const [actionNote, setActionNote] = useState("");
+  const [actionNote, setActionNote] = useState('');
   const [showFullHistory, setShowFullHistory] = useState(false);
   const queryClient = useQueryClient();
   const toast = useToast();
@@ -82,12 +83,12 @@ export function PaymentDetailDrawer({
   useEffect(() => {
     previousFocusRef.current = document.activeElement as HTMLElement;
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === 'Escape') onClose();
     };
-    document.addEventListener("keydown", handleEscape);
+    document.addEventListener('keydown', handleEscape);
     drawerRef.current?.focus();
     return () => {
-      document.removeEventListener("keydown", handleEscape);
+      document.removeEventListener('keydown', handleEscape);
       previousFocusRef.current?.focus();
     };
   }, [onClose]);
@@ -106,7 +107,7 @@ export function PaymentDetailDrawer({
   } = useQuery({
     queryKey: [
       ...queryKeys.payments.detail(id),
-      "history",
+      'history',
       payment?.transactionHash,
     ],
     queryFn: () => PaymentService.fetchPaymentHistory(payment!),
@@ -118,7 +119,7 @@ export function PaymentDetailDrawer({
     queryClient.setQueryData(queryKeys.payments.detail(id), updated);
     queryClient.setQueriesData<PaginatedPayments>(
       { queryKey: queryKeys.payments.all },
-      (current) => updatePaymentsCache(current, updated),
+      (current) => updatePaymentsCache(current, updated)
     );
     queryClient.invalidateQueries({ queryKey: queryKeys.payments.all });
     queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all });
@@ -130,13 +131,13 @@ export function PaymentDetailDrawer({
     onSuccess: (updatedPayment) => {
       syncCaches(updatedPayment);
       void refetchHistory();
-      setActionNote("");
-      toast("Payment retry submitted.", "success");
+      setActionNote('');
+      toast('Payment retry submitted.', 'success');
     },
     onError: (error) => {
       toast(
-        error instanceof Error ? error.message : "Failed to retry payment.",
-        "error",
+        error instanceof Error ? error.message : 'Failed to retry payment.',
+        'error'
       );
     },
   });
@@ -149,13 +150,13 @@ export function PaymentDetailDrawer({
     onSuccess: (updatedPayment) => {
       syncCaches(updatedPayment);
       void refetchHistory();
-      setActionNote("");
-      toast("Payment reconciliation queued.", "success");
+      setActionNote('');
+      toast('Payment reconciliation queued.', 'success');
     },
     onError: (error) => {
       toast(
-        error instanceof Error ? error.message : "Failed to reconcile payment.",
-        "error",
+        error instanceof Error ? error.message : 'Failed to reconcile payment.',
+        'error'
       );
     },
   });
@@ -184,14 +185,14 @@ export function PaymentDetailDrawer({
   }
 
   const role = user?.role ?? null;
-  const isPrivilegedOperator = role === "admin" || role === "engineer";
+  const isPrivilegedOperator = role === 'admin' || role === 'engineer';
   const normalizedStatus = payment.status.toUpperCase();
-  const reconciliationState = payment.reconciliationStatus ?? "untracked";
-  const canRetry = isPrivilegedOperator && normalizedStatus === "FAILED";
+  const reconciliationState = payment.reconciliationStatus ?? 'untracked';
+  const canRetry = isPrivilegedOperator && normalizedStatus === 'FAILED';
   const canReconcile =
     isPrivilegedOperator &&
-    ["CONFIRMED", "RELEASED", "REFUNDED"].includes(normalizedStatus) &&
-    reconciliationState !== "matched";
+    ['CONFIRMED', 'RELEASED', 'REFUNDED'].includes(normalizedStatus) &&
+    reconciliationState !== 'matched';
   const visibleHistory = showFullHistory ? history : history.slice(0, 6);
 
   return (
@@ -248,7 +249,7 @@ export function PaymentDetailDrawer({
                 <span
                   className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${getReconciliationBadge(payment.reconciliationStatus)}`}
                 >
-                  Reconciliation: {reconciliationState.replace("_", " ")}
+                  Reconciliation: {reconciliationState.replace('_', ' ')}
                 </span>
               </div>
             </div>
@@ -268,7 +269,7 @@ export function PaymentDetailDrawer({
               <p className="font-medium">
                 {payment.createdAt
                   ? new Date(payment.createdAt).toLocaleString()
-                  : "Unknown"}
+                  : 'Unknown'}
               </p>
             </div>
             <div>
@@ -276,7 +277,7 @@ export function PaymentDetailDrawer({
               <p className="font-medium font-mono text-sm">
                 {payment.commissionId
                   ? `${payment.commissionId.slice(0, 12)}...`
-                  : "Unavailable"}
+                  : 'Unavailable'}
               </p>
             </div>
           </div>
@@ -285,7 +286,7 @@ export function PaymentDetailDrawer({
             <p className="text-sm text-gray-500">Client Wallet</p>
             {(() => {
               const addr = payment.clientWallet ?? payment.toAddress;
-              const link = explorerLink("account", addr);
+              const link = explorerLink('account', addr);
               if (!addr)
                 return (
                   <p className="font-mono text-sm text-gray-400">Unavailable</p>
@@ -309,7 +310,7 @@ export function PaymentDetailDrawer({
             <p className="text-sm text-gray-500">Artist Wallet</p>
             {(() => {
               const addr = payment.artistWallet ?? payment.fromAddress;
-              const link = explorerLink("account", addr);
+              const link = explorerLink('account', addr);
               if (!addr)
                 return (
                   <p className="font-mono text-sm text-gray-400">Unavailable</p>
@@ -339,7 +340,7 @@ export function PaymentDetailDrawer({
                 {(() => {
                   const href =
                     payment.explorerUrl ??
-                    explorerLink("tx", payment.transactionHash);
+                    explorerLink('tx', payment.transactionHash);
                   return href ? (
                     <a
                       href={href}
@@ -361,7 +362,7 @@ export function PaymentDetailDrawer({
             <p className="font-medium">
               {payment.platformFeeUsdc
                 ? `${payment.platformFeeUsdc} USDC`
-                : "Unavailable"}
+                : 'Unavailable'}
             </p>
           </div>
 
@@ -382,7 +383,8 @@ export function PaymentDetailDrawer({
               >
                 Operator note (optional)
               </label>
-              <textarea
+              <TextArea
+                maxLength={500}
                 id="action-note"
                 value={actionNote}
                 onChange={(e) => setActionNote(e.target.value)}
@@ -401,7 +403,7 @@ export function PaymentDetailDrawer({
                     className="inline-flex flex-1 items-center justify-center gap-2 rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
                   >
                     <RefreshCcw className="h-4 w-4" />
-                    {retryMutation.isPending ? "Retrying..." : "Retry Payment"}
+                    {retryMutation.isPending ? 'Retrying...' : 'Retry Payment'}
                   </button>
                 ) : null}
                 {canReconcile ? (
@@ -415,8 +417,8 @@ export function PaymentDetailDrawer({
                   >
                     <Scale className="h-4 w-4" />
                     {reconcileMutation.isPending
-                      ? "Reconciling..."
-                      : "Reconcile Payment"}
+                      ? 'Reconciling...'
+                      : 'Reconcile Payment'}
                   </button>
                 ) : null}
               </div>
@@ -445,7 +447,7 @@ export function PaymentDetailDrawer({
                   className="text-xs font-medium text-blue-600 hover:underline"
                 >
                   {showFullHistory
-                    ? "Show recent only"
+                    ? 'Show recent only'
                     : `Show all (${history.length})`}
                 </button>
               ) : null}
@@ -490,13 +492,13 @@ export function PaymentDetailDrawer({
                             : entry.status}
                         </p>
                         <p className="text-xs uppercase tracking-wide text-slate-500">
-                          {entry.eventType.replace("_", " ")}
+                          {entry.eventType.replace('_', ' ')}
                         </p>
                       </div>
                       <p className="text-xs text-slate-500">
                         {entry.timestamp
                           ? new Date(entry.timestamp).toLocaleString()
-                          : "Unknown time"}
+                          : 'Unknown time'}
                       </p>
                     </div>
                     {entry.actor ? (

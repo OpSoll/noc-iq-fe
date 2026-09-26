@@ -4,44 +4,44 @@
  */
 
 const DEFAULT_BLOCKED_FIELDS: Set<string> = new Set([
-  "token",
-  "access_token",
-  "refresh_token",
-  "secret",
-  "api_key",
-  "apikey",
-  "api-key",
-  "client_secret",
-  "clientsecret",
-  "client-secret",
-  "password",
-  "passwd",
-  "private_key",
-  "privatekey",
-  "private-key",
-  "authorization",
-  "auth",
-  "ssn",
-  "social_security",
-  "email",
-  "phone",
-  "phone_number",
-  "phonenumber",
-  "credit_card",
-  "card_number",
-  "cardnumber",
-  "cvv",
-  "account_number",
-  "accountnumber",
-  "wallet_private_key",
-  "walletprivatekey",
-  "wallet_private",
-  "mnemonic",
-  "seed_phrase",
-  "seedphrase",
+  'token',
+  'access_token',
+  'refresh_token',
+  'secret',
+  'api_key',
+  'apikey',
+  'api-key',
+  'client_secret',
+  'clientsecret',
+  'client-secret',
+  'password',
+  'passwd',
+  'private_key',
+  'privatekey',
+  'private-key',
+  'authorization',
+  'auth',
+  'ssn',
+  'social_security',
+  'email',
+  'phone',
+  'phone_number',
+  'phonenumber',
+  'credit_card',
+  'card_number',
+  'cardnumber',
+  'cvv',
+  'account_number',
+  'accountnumber',
+  'wallet_private_key',
+  'walletprivatekey',
+  'wallet_private',
+  'mnemonic',
+  'seed_phrase',
+  'seedphrase',
 ]);
 
-const SANITIZED = "[REDACTED]";
+const SANITIZED = '[REDACTED]';
 
 let blockedFields: Set<string> = new Set(DEFAULT_BLOCKED_FIELDS);
 
@@ -58,7 +58,7 @@ export function resetBlockedFields(): void {
 }
 
 function isBlocked(key: string): boolean {
-  return blockedFields.has(key.toLowerCase().replace(/[-_\s]/g, ""));
+  return blockedFields.has(key.toLowerCase().replace(/[-_\s]/g, ''));
 }
 
 /**
@@ -66,7 +66,7 @@ function isBlocked(key: string): boolean {
  * Returns a new object; original is never mutated.
  */
 export function sanitize<T>(obj: T): T {
-  if (obj === null || typeof obj !== "object") return obj;
+  if (obj === null || typeof obj !== 'object') return obj;
 
   if (Array.isArray(obj)) {
     return obj.map(sanitize) as T;

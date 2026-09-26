@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import type { ReactNode } from "react";
+import type { ReactNode } from 'react';
 
 import {
   AlertTriangleIcon,
   RefreshCwIcon,
   RotateCcwIcon,
-} from "@/components/ui/icons";
+} from '@/components/ui/icons';
 
 /* -------------------------------------------------------------------------- */
 /*                                    Types                                   */
@@ -16,7 +16,7 @@ type ActionButtonProps = {
   label: string;
   onClick: () => void;
   icon?: ReactNode;
-  variant?: "primary" | "secondary";
+  variant?: 'primary' | 'secondary';
 };
 
 type BaseRouteStateProps = {
@@ -45,7 +45,7 @@ function RouteStateContainer({
   description,
   icon,
   children,
-  className = "",
+  className = '',
 }: BaseRouteStateProps) {
   return (
     <div className="flex min-h-[40vh] items-center justify-center px-4 py-10">
@@ -62,13 +62,9 @@ function RouteStateContainer({
           {title}
         </h2>
 
-        <p className="mt-2 text-sm leading-6 text-slate-500">
-          {description}
-        </p>
+        <p className="mt-2 text-sm leading-6 text-slate-500">{description}</p>
 
-        {children ? (
-          <div className="mt-6">{children}</div>
-        ) : null}
+        {children ? <div className="mt-6">{children}</div> : null}
       </div>
     </div>
   );
@@ -82,12 +78,12 @@ function ActionButton({
   label,
   onClick,
   icon,
-  variant = "primary",
+  variant = 'primary',
 }: ActionButtonProps) {
   const styles =
-    variant === "primary"
-      ? "bg-slate-900 text-white hover:bg-slate-800 border-transparent"
-      : "border-slate-200 bg-white text-slate-700 hover:bg-slate-100";
+    variant === 'primary'
+      ? 'bg-slate-900 text-white hover:bg-slate-800 border-transparent'
+      : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-100';
 
   return (
     <button
@@ -108,7 +104,7 @@ function ActionButton({
 export function RouteLoadingState({
   title,
   description,
-}: Pick<BaseRouteStateProps, "title" | "description">) {
+}: Pick<BaseRouteStateProps, 'title' | 'description'>) {
   return (
     <RouteStateContainer
       title={title}
@@ -171,20 +167,14 @@ export function RouteErrorState({
       title={title}
       description={description}
       className="border-red-200"
-      icon={
-        <AlertTriangleIcon className="h-7 w-7 text-red-600" />
-      }
+      icon={<AlertTriangleIcon className="h-7 w-7 text-red-600" />}
     >
       <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
         {primaryAction ? (
           <ActionButton
             label={primaryAction.label}
             onClick={primaryAction.onClick}
-            icon={
-              primaryAction.icon ?? (
-                <RotateCcwIcon className="h-4 w-4" />
-              )
-            }
+            icon={primaryAction.icon ?? <RotateCcwIcon className="h-4 w-4" />}
             variant="primary"
           />
         ) : null}
@@ -193,11 +183,7 @@ export function RouteErrorState({
           <ActionButton
             label={secondaryAction.label}
             onClick={secondaryAction.onClick}
-            icon={
-              secondaryAction.icon ?? (
-                <RefreshCwIcon className="h-4 w-4" />
-              )
-            }
+            icon={secondaryAction.icon ?? <RefreshCwIcon className="h-4 w-4" />}
             variant="secondary"
           />
         ) : null}

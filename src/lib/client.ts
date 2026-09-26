@@ -1,15 +1,12 @@
-import { buildApiUrl } from "@/lib/url";
-import { normalizeApiError } from "@/lib/normalizeApiError";
+import { buildApiUrl } from '@/lib/url';
+import { normalizeApiError } from '@/lib/normalizeApiError';
 
-export async function apiClient(
-  path: string,
-  options?: RequestInit
-) {
+export async function apiClient(path: string, options?: RequestInit) {
   const url = buildApiUrl(path);
 
   const res = await fetch(url, {
     ...options,
-    credentials: "include",
+    credentials: 'include',
   });
 
   if (!res.ok) {
@@ -20,7 +17,7 @@ export async function apiClient(
         status: res.status,
         data,
         headers: {
-          "x-correlation-id": res.headers.get("x-correlation-id"),
+          'x-correlation-id': res.headers.get('x-correlation-id'),
         },
       },
     });
