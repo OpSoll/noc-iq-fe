@@ -4,16 +4,15 @@
 
 ## Issue Completion
 
-| Metric              | Value |
-| ------------------- | ----- |
-| Total Wave 5 issues | 129   |
-| Closed              | 100   |
-| Open                | 29    |
-| Completion          | 78%   |
+| Metric | Value |
+|--------|-------|
+| Total Wave 5 issues | 128 |
+| Closed | 100 |
+| Open | 28 |
+| Completion | 78% |
 
 ## Open Issues
 
-- [ ] #693 Form Validation: Add custom regex format validator for site ID input fields
 - [ ] #692 Form Validation: Implement race condition guard hook for concurrent mutation requests
 - [ ] #691 Form Validation: Add Optimistic UI update and rollback hook for status toggles
 - [ ] #689 Form Validation: Add debounced live input validation feedback
@@ -75,6 +74,7 @@
 - [x] #696 Form Validation: Implement smart datetime input picker with min/max constraint validation
 - [x] #695 Form Validation: Add input character counter for text area fields
 - [x] #694 Form Validation: Implement auto-save draft form state to local storage
+- [x] #693 Form Validation: Add custom regex format validator for site ID input fields
 - [x] #690 Form Validation: Implement password strength meter and validator component
 - [x] #688 Form Validation: Implement stale data detection guard hook on form submission
 - [x] #687 Form Validation: Add Zod schema validation for outage creation form
@@ -144,7 +144,6 @@
 - [x] #514 Webhooks: Add HMAC SHA-256 signature verification code generator snippet
 - [x] #513 Webhooks: Add GIN index search box for searching webhook JSON payloads
 - [x] #512 Webhooks: Add webhook event subscription multi-select checkboxes (sla.violation, sla.warning, sla.resolved)
-- [x] #511 Webhooks: Add webhook endpoint ping test button in Create Webhook modal
 
 ---
 
