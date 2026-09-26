@@ -2,8 +2,6 @@ import { useCallback, useRef, useState } from 'react';
 import type { UseQueryResult } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 
-import { api } from '@/lib/api';
-
 export interface Timestamped {
   updated_at: string;
 }
@@ -34,75 +32,26 @@ export interface QueryStaleGuardResult<T> extends UseStaleGuardReturn {
   isLoading: boolean;
   isError: boolean;
   error: UseQueryResult<T, Error>['error'];
-} {
-  const options = 'endpoint' in input ? input : null;
-  const query: UseQueryResult<T, Error> | null = options
-    ? null
-    : (input as UseQueryResult<T, Error>);
-  const [conflict, setConflict] = useState<StaleConflict | null>(null);
-  const [isChecking, setIsChecking] = useState(false);
-  const [checkError, setCheckError] = useState<string | null>(null);
-  const pendingSubmit = useRef<(() => void | Promise<void>) | null>(null);
-
-  const guardedSubmit = useCallback(
-    async (onSubmit: () => void | Promise<void>) => {
-      if (!options) return;
-      setIsChecking(true);
-      setCheckError(null);
-      setConflict(null);
-      pendingSubmit.current = null;
-      try {
-        const response = await api.get<{ updated_at: string | number | Date }>(
-          options.endpoint
-        );
-        const serverUpdatedAt = response.data.updated_at;
-        if (timestamp(serverUpdatedAt) > timestamp(options.formUpdatedAt)) {
-          pendingSubmit.current = onSubmit;
-          setConflict({
-            formUpdatedAt: options.formUpdatedAt,
-            serverUpdatedAt,
-          });
-        } else {
-          await onSubmit();
-        }
-      } catch (error) {
-        setCheckError(
-          error instanceof Error
-            ? error.message
-            : 'Failed to verify record freshness'
-        );
-      } finally {
-        setIsChecking(false);
-      }
-    },
-    [options]
-  );
-
-  const dismissConflict = useCallback(() => {
-    pendingSubmit.current = null;
-    setConflict(null);
-  }, []);
-
-  const forceSubmit = useCallback(async () => {
-    const submit = pendingSubmit.current;
-    pendingSubmit.current = null;
-    setConflict(null);
-    if (submit) await submit();
-  }, []);
+}
 
 type StaleCheckResult =
   | { decision: 'proceed'; formUpdatedAt: string; serverUpdatedAt: string }
   | { decision: 'stale'; formUpdatedAt: string; serverUpdatedAt: string }
-  | { decision: 'error'; formUpdatedAt: string; serverUpdatedAt: null; error: string };
+  | {
+      decision: 'error';
+      formUpdatedAt: string;
+      serverUpdatedAt: null;
+      error: string;
+    };
 
 export function useStaleGuard<T>(
-  query: UseQueryResult<T, Error>,
+  query: UseQueryResult<T, Error>
 ): QueryStaleGuardResult<T>;
 export function useStaleGuard(
-  options: UseStaleGuardOptions,
+  options: UseStaleGuardOptions
 ): UseStaleGuardReturn;
 export function useStaleGuard<T>(
-  input: UseQueryResult<T, Error> | UseStaleGuardOptions,
+  input: UseQueryResult<T, Error> | UseStaleGuardOptions
 ): QueryStaleGuardResult<T> | UseStaleGuardReturn {
   const isQueryResult = !('endpoint' in input);
   const endpoint = isQueryResult ? undefined : input.endpoint;
@@ -122,8 +71,7 @@ export function useStaleGuard<T>(
       const serverUpdatedAt = response.data.updated_at;
 
       if (
-        new Date(serverUpdatedAt).getTime() >
-        new Date(formUpdatedAt).getTime()
+        new Date(serverUpdatedAt).getTime() > new Date(formUpdatedAt).getTime()
       ) {
         return { decision: 'stale', formUpdatedAt, serverUpdatedAt };
       }
@@ -166,7 +114,7 @@ export function useStaleGuard<T>(
         setIsChecking(false);
       }
     },
-    [checkFreshness],
+    [checkFreshness]
   );
 
   const dismissConflict = useCallback(() => {
@@ -186,23 +134,15 @@ export function useStaleGuard<T>(
     conflict,
     isChecking,
     checkError,
-    guardedSubmit,
     dismissConflict,
     forceSubmit,
-    data: query?.isStale && query.isFetching ? undefined : query?.data,
-    isStale: query?.isStale ?? false,
-    isFetching: query?.isFetching ?? false,
-    isLoading: query?.isLoading ?? false,
-    isError: query?.isError ?? false,
-    error: query?.error ?? null,
   };
 
   if (isQueryResult) {
     const query = input as UseQueryResult<T, Error>;
     return {
       ...result,
-      data:
-        query.isStale && query.isFetching ? undefined : query.data,
+      data: query.isStale && query.isFetching ? undefined : query.data,
       isStale: query.isStale,
       isFetching: query.isFetching,
       isLoading: query.isLoading,

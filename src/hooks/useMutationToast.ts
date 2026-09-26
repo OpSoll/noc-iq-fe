@@ -164,10 +164,9 @@ export function useMutationToast<
           : (errorMessage ?? parseErrorMessage(error));
 
       // ── Append retry hint when appropriate ────────────────────────
-      const retryHint = showRetry && !errorMessage
-        ? " (click Retry to try again)"
-        : "";
-      toast(`${msg}${retryHint}`, "error");
+      const retryHint =
+        showRetry && !errorMessage ? ' (click Retry to try again)' : '';
+      toast(`${msg}${retryHint}`, 'error');
 
       userOnError?.(error, variables, onMutateResult, context);
     },
