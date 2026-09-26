@@ -14,7 +14,6 @@ import {
   resolveDispute,
   triggerDisputeWebhook,
 } from '@/services/sla';
-import { api } from '@/lib/api';
 import type {
   DisputeAttachment,
   DisputeStatus,
