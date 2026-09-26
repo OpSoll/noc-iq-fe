@@ -13,12 +13,12 @@
 
 ## Enforced Budgets
 
-| Metric | Budget |
-|---|---:|
-| LCP | < 2.5s |
-| CLS | < 0.1 |
-| INP | < 200ms |
-| Performance Score | ≥ 80 |
+| Metric            |  Budget |
+| ----------------- | ------: |
+| LCP               |  < 2.5s |
+| CLS               |   < 0.1 |
+| INP               | < 200ms |
+| Performance Score |    ≥ 80 |
 
 ## Baseline Status
 

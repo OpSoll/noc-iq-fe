@@ -1,12 +1,21 @@
-"use client";
+'use client';
 
-import type { ReactNode } from "react";
-import { useConflictDetection } from "@/components/notifications/ConflictNotification";
-import { ConflictNotification } from "@/components/notifications/ConflictNotification";
-import SessionExpiryModal from "@/components/session/SessionExpiryModal";
-import { getPendingMutations, clearAllPendingMutations } from "@/lib/mutationTracker";
+import type { ReactNode } from 'react';
+import { useConflictDetection } from '@/components/notifications/ConflictNotification';
+import { ConflictNotification } from '@/components/notifications/ConflictNotification';
+import SessionExpiryModal from '@/components/session/SessionExpiryModal';
+import {
+  getPendingMutations,
+  clearAllPendingMutations,
+} from '@/lib/mutationTracker';
 
-export default function ClientShell({ children, nonce }: { children: ReactNode; nonce?: string }) {
+export default function ClientShell({
+  children,
+  nonce,
+}: {
+  children: ReactNode;
+  nonce?: string;
+}) {
   const { conflict, dismiss, refreshContext } = useConflictDetection();
   const pendingMutations = getPendingMutations().map((m) => ({
     id: m.id,
@@ -15,7 +24,7 @@ export default function ClientShell({ children, nonce }: { children: ReactNode; 
       try {
         const res = await fetch(m.url, {
           method: m.method,
-          headers: { "Content-Type": "application/json" },
+          headers: { 'Content-Type': 'application/json' },
           body: m.data ? JSON.stringify(m.data) : undefined,
         });
         if (!res.ok) throw new Error(`Retry failed: ${res.status}`);

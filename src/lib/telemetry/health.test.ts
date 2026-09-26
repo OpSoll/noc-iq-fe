@@ -1,26 +1,26 @@
-import { describe, it, expect, beforeEach } from "vitest";
-import { TelemetryHealthManager } from "@/lib/telemetry/health";
+import { describe, it, expect, beforeEach } from 'vitest';
+import { TelemetryHealthManager } from '@/lib/telemetry/health';
 
-describe("TelemetryHealthManager", () => {
+describe('TelemetryHealthManager', () => {
   let manager: TelemetryHealthManager;
 
   beforeEach(() => {
     manager = new TelemetryHealthManager();
   });
 
-  it("starts in normal state", () => {
-    expect(manager.getState()).toBe("normal");
+  it('starts in normal state', () => {
+    expect(manager.getState()).toBe('normal');
   });
 
-  it("stays normal with low drop rate", () => {
+  it('stays normal with low drop rate', () => {
     for (let i = 0; i < 100; i++) {
       manager.recordEmit();
     }
     manager.recordDrop();
-    expect(manager.getState()).toBe("normal");
+    expect(manager.getState()).toBe('normal');
   });
 
-  it("transitions to degraded with high drop rate", () => {
+  it('transitions to degraded with high drop rate', () => {
     for (let i = 0; i < 100; i++) {
       if (i % 10 === 0) {
         manager.recordDrop();
@@ -28,21 +28,21 @@ describe("TelemetryHealthManager", () => {
         manager.recordEmit();
       }
     }
-    expect(manager.getState()).toBe("degraded");
+    expect(manager.getState()).toBe('degraded');
   });
 
-  it("returns disabled state when disabled", () => {
+  it('returns disabled state when disabled', () => {
     manager.disable();
-    expect(manager.getState()).toBe("disabled");
+    expect(manager.getState()).toBe('disabled');
   });
 
-  it("resumes normal after enable", () => {
+  it('resumes normal after enable', () => {
     manager.disable();
     manager.enable();
-    expect(manager.getState()).toBe("normal");
+    expect(manager.getState()).toBe('normal');
   });
 
-  it("counts drops correctly", () => {
+  it('counts drops correctly', () => {
     manager.recordDrop();
     manager.recordDrop();
     manager.recordEmit();
@@ -52,12 +52,12 @@ describe("TelemetryHealthManager", () => {
     expect(metrics.dropRate).toBeCloseTo(2 / 3);
   });
 
-  it("reports uptime", () => {
+  it('reports uptime', () => {
     const metrics = manager.getMetrics();
     expect(metrics.uptimeMs).toBeGreaterThanOrEqual(0);
   });
 
-  it("resets all state", () => {
+  it('resets all state', () => {
     manager.recordDrop();
     manager.recordDrop();
     manager.recordDrop();
@@ -65,10 +65,10 @@ describe("TelemetryHealthManager", () => {
     const metrics = manager.getMetrics();
     expect(metrics.totalDropped).toBe(0);
     expect(metrics.totalEmitted).toBe(0);
-    expect(manager.getState()).toBe("normal");
+    expect(manager.getState()).toBe('normal');
   });
 
-  it("does not record when disabled", () => {
+  it('does not record when disabled', () => {
     manager.disable();
     manager.recordEmit();
     manager.recordDrop();

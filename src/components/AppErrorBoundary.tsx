@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 /**
  * AppErrorBoundary
@@ -16,7 +16,13 @@
  * Closes #712 – UI Resilience: Add global React Error Boundary with fallback recovery UI
  */
 
-import { Component, useEffect, useState, type ErrorInfo, type ReactNode } from "react";
+import {
+  Component,
+  useEffect,
+  useState,
+  type ErrorInfo,
+  type ReactNode,
+} from 'react';
 
 // ─── Telemetry logging ────────────────────────────────────────────────────────
 
@@ -26,17 +32,14 @@ import { Component, useEffect, useState, type ErrorInfo, type ReactNode } from "
  * error-monitoring services such as Sentry via their SDK instrumentation).
  * The function is extracted so it can be spied on in tests.
  */
-export function logErrorToTelemetry(
-  error: Error,
-  errorInfo: ErrorInfo,
-): void {
+export function logErrorToTelemetry(error: Error, errorInfo: ErrorInfo): void {
   console.error(
-    "[AppErrorBoundary] Caught render error:",
+    '[AppErrorBoundary] Caught render error:',
     error.message,
-    "\nComponent stack:",
-    errorInfo.componentStack ?? "(unavailable)",
-    "\nStack trace:",
-    error.stack ?? "(unavailable)",
+    '\nComponent stack:',
+    errorInfo.componentStack ?? '(unavailable)',
+    '\nStack trace:',
+    error.stack ?? '(unavailable)'
   );
 }
 
@@ -100,7 +103,7 @@ function ErrorFallbackCard({
         {/* Heading */}
         <h2 className="text-lg font-semibold text-red-900">
           Something went wrong
-          {section ? ` in ${section}` : ""}
+          {section ? ` in ${section}` : ''}
         </h2>
 
         {/* Description */}
@@ -110,7 +113,7 @@ function ErrorFallbackCard({
         </p>
 
         {/* Error details (collapsed) — only in dev / when message is available */}
-        {process.env.NODE_ENV !== "production" && error?.message && (
+        {process.env.NODE_ENV !== 'production' && error?.message && (
           <details className="mt-4 text-left">
             <summary className="cursor-pointer text-xs font-medium text-red-600 hover:underline">
               Error details
@@ -207,18 +210,18 @@ export class AppErrorBoundary extends Component<BoundaryProps, BoundaryState> {
 
 // ─── useDarkMode hook (preserved from original file) ─────────────────────────
 
-const DARK_MODE_KEY = "noc_dark_mode";
+const DARK_MODE_KEY = 'noc_dark_mode';
 
 export function useDarkMode() {
   const [isDark, setIsDark] = useState(() => {
-    if (typeof window === "undefined") return false;
+    if (typeof window === 'undefined') return false;
     const stored = localStorage.getItem(DARK_MODE_KEY);
-    if (stored) return stored === "true";
-    return window.matchMedia("(prefers-color-scheme: dark)").matches;
+    if (stored) return stored === 'true';
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
   });
 
   useEffect(() => {
-    document.documentElement.classList.toggle("dark", isDark);
+    document.documentElement.classList.toggle('dark', isDark);
   }, [isDark]);
 
   const toggle = () => {

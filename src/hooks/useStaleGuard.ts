@@ -1,4 +1,4 @@
-import type { UseQueryResult } from "@tanstack/react-query";
+import type { UseQueryResult } from '@tanstack/react-query';
 
 interface StaleGuardResult<T> {
   data: T | undefined;
@@ -6,18 +6,18 @@ interface StaleGuardResult<T> {
   isFetching: boolean;
   isLoading: boolean;
   isError: boolean;
-  error: UseQueryResult<T, Error>["error"];
+  error: UseQueryResult<T, Error>['error'];
 }
 
 export function useStaleGuard<T>(
-  query: UseQueryResult<T, Error>,
+  query: UseQueryResult<T, Error>
 ): StaleGuardResult<T> {
   return {
-    data: query.isStale && query.isFetching ? undefined : query.data,
-    isStale: query.isStale,
-    isFetching: query.isFetching,
-    isLoading: query.isLoading,
-    isError: query.isError,
-    error: query.error,
+    guardedSubmit,
+    conflict,
+    dismissConflict,
+    forceSubmit,
+    isChecking,
+    checkError,
   };
 }

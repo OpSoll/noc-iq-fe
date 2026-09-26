@@ -6,28 +6,28 @@
  * available and which priorities the escalation modal offers.
  */
 
-import type { EscalationPriority, SLADispute } from "@/types/sla";
+import type { EscalationPriority, SLADispute } from '@/types/sla';
 
 export const ESCALATION_THRESHOLD_DAYS = 7;
 
 export const ESCALATION_PRIORITIES: EscalationPriority[] = [
-  "low",
-  "normal",
-  "high",
-  "critical",
+  'low',
+  'normal',
+  'high',
+  'critical',
 ];
 
 export const ESCALATION_PRIORITY_LABELS: Record<EscalationPriority, string> = {
-  low: "Low",
-  normal: "Normal",
-  high: "High",
-  critical: "Critical",
+  low: 'Low',
+  normal: 'Normal',
+  high: 'High',
+  critical: 'Critical',
 };
 
 /** Pending statuses a dispute can still be escalated from. */
-const ESCALATABLE_STATUSES: ReadonlyArray<SLADispute["status"]> = [
-  "open",
-  "under_review",
+const ESCALATABLE_STATUSES: ReadonlyArray<SLADispute['status']> = [
+  'open',
+  'under_review',
 ];
 
 /**
@@ -35,8 +35,8 @@ const ESCALATABLE_STATUSES: ReadonlyArray<SLADispute["status"]> = [
  * and older than the 7-day escalation threshold.
  */
 export function isEscalatable(
-  dispute: Pick<SLADispute, "created_at" | "status">,
-  now: Date = new Date(),
+  dispute: Pick<SLADispute, 'created_at' | 'status'>,
+  now: Date = new Date()
 ): boolean {
   if (!ESCALATABLE_STATUSES.includes(dispute.status)) {
     return false;

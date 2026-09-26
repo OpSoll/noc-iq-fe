@@ -3,14 +3,15 @@
  * Typed event definitions for all major user actions.
  */
 
-export type EventCategory = "outage" | "payment" | "webhook" | "auth";
+export type EventCategory = 'outage' | 'payment' | 'webhook' | 'auth';
 
-export type OutageAction = "create" | "resolve" | "update";
-export type PaymentAction = "process" | "refund";
-export type WebhookAction = "create" | "delete";
-export type AuthAction = "login" | "logout";
+export type OutageAction = 'create' | 'resolve' | 'update';
+export type PaymentAction = 'process' | 'refund';
+export type WebhookAction = 'create' | 'delete';
+export type AuthAction = 'login' | 'logout';
 
-export type EventAction = OutageAction | PaymentAction | WebhookAction | AuthAction;
+export type EventAction =
+  OutageAction | PaymentAction | WebhookAction | AuthAction;
 
 export interface BaseTelemetryEvent {
   action: EventAction;
@@ -20,60 +21,66 @@ export interface BaseTelemetryEvent {
 }
 
 export interface OutageEvent extends BaseTelemetryEvent {
-  category: "outage";
+  category: 'outage';
   outageId?: string;
   severity?: string;
 }
 
 export interface PaymentEvent extends BaseTelemetryEvent {
-  category: "payment";
+  category: 'payment';
   paymentId?: string;
   amount?: number;
 }
 
 export interface WebhookEvent extends BaseTelemetryEvent {
-  category: "webhook";
+  category: 'webhook';
   webhookId?: string;
   url?: string;
 }
 
 export interface AuthEvent extends BaseTelemetryEvent {
-  category: "auth";
+  category: 'auth';
   userId?: string;
 }
 
-export type TelemetryEvent = OutageEvent | PaymentEvent | WebhookEvent | AuthEvent;
+export type TelemetryEvent =
+  OutageEvent | PaymentEvent | WebhookEvent | AuthEvent;
 
 // ── Schema validation ────────────────────────────────────────────────────────
 
-const VALID_CATEGORIES: Set<string> = new Set(["outage", "payment", "webhook", "auth"]);
+const VALID_CATEGORIES: Set<string> = new Set([
+  'outage',
+  'payment',
+  'webhook',
+  'auth',
+]);
 
 const ACTIONS_BY_CATEGORY: Record<EventCategory, Set<string>> = {
-  outage: new Set(["create", "resolve", "update"]),
-  payment: new Set(["process", "refund"]),
-  webhook: new Set(["create", "delete"]),
-  auth: new Set(["login", "logout"]),
+  outage: new Set(['create', 'resolve', 'update']),
+  payment: new Set(['process', 'refund']),
+  webhook: new Set(['create', 'delete']),
+  auth: new Set(['login', 'logout']),
 };
 
 export class EventValidationError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = "EventValidationError";
+    this.name = 'EventValidationError';
   }
 }
 
 export function validateEvent(event: unknown): event is TelemetryEvent {
-  if (typeof event !== "object" || event === null) {
-    throw new EventValidationError("Event must be an object");
+  if (typeof event !== 'object' || event === null) {
+    throw new EventValidationError('Event must be an object');
   }
 
   const e = event as Record<string, unknown>;
 
-  if (typeof e.action !== "string") {
+  if (typeof e.action !== 'string') {
     throw new EventValidationError("Event must have a string 'action'");
   }
 
-  if (typeof e.category !== "string") {
+  if (typeof e.category !== 'string') {
     throw new EventValidationError("Event must have a string 'category'");
   }
 
@@ -84,15 +91,15 @@ export function validateEvent(event: unknown): event is TelemetryEvent {
   const validActions = ACTIONS_BY_CATEGORY[e.category as EventCategory];
   if (!validActions.has(e.action)) {
     throw new EventValidationError(
-      `Invalid action '${e.action}' for category '${e.category}'`,
+      `Invalid action '${e.action}' for category '${e.category}'`
     );
   }
 
-  if (typeof e.timestamp !== "number") {
+  if (typeof e.timestamp !== 'number') {
     throw new EventValidationError("Event must have a numeric 'timestamp'");
   }
 
-  if (typeof e.route !== "string") {
+  if (typeof e.route !== 'string') {
     throw new EventValidationError("Event must have a string 'route'");
   }
 
@@ -112,7 +119,7 @@ export function resetEmitFn(): void {
 }
 
 export function emitTelemetry(event: TelemetryEvent): void {
-  if (process.env.NODE_ENV === "development") {
+  if (process.env.NODE_ENV === 'development') {
     validateEvent(event);
   }
 
@@ -128,11 +135,11 @@ export function emitTelemetry(event: TelemetryEvent): void {
 export function createOutageEvent(
   action: OutageAction,
   route: string,
-  meta?: { outageId?: string; severity?: string },
+  meta?: { outageId?: string; severity?: string }
 ): OutageEvent {
   return {
     action,
-    category: "outage",
+    category: 'outage',
     timestamp: Date.now(),
     route,
     ...meta,
@@ -142,11 +149,11 @@ export function createOutageEvent(
 export function createPaymentEvent(
   action: PaymentAction,
   route: string,
-  meta?: { paymentId?: string; amount?: number },
+  meta?: { paymentId?: string; amount?: number }
 ): PaymentEvent {
   return {
     action,
-    category: "payment",
+    category: 'payment',
     timestamp: Date.now(),
     route,
     ...meta,
@@ -156,11 +163,11 @@ export function createPaymentEvent(
 export function createWebhookEvent(
   action: WebhookAction,
   route: string,
-  meta?: { webhookId?: string; url?: string },
+  meta?: { webhookId?: string; url?: string }
 ): WebhookEvent {
   return {
     action,
-    category: "webhook",
+    category: 'webhook',
     timestamp: Date.now(),
     route,
     ...meta,
@@ -170,11 +177,11 @@ export function createWebhookEvent(
 export function createAuthEvent(
   action: AuthAction,
   route: string,
-  meta?: { userId?: string },
+  meta?: { userId?: string }
 ): AuthEvent {
   return {
     action,
-    category: "auth",
+    category: 'auth',
     timestamp: Date.now(),
     route,
     ...meta,

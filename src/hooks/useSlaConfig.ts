@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { api } from "@/lib/api";
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { api } from '@/lib/api';
 
-type Severity = "critical" | "high" | "medium" | "low";
+type Severity = 'critical' | 'high' | 'medium' | 'low';
 
 type SLASeverityConfig = {
   threshold_minutes: number;
@@ -22,16 +22,21 @@ const SEVERITY_ORDER: Record<Severity, number> = {
   low: 3,
 };
 
-const SLA_CONFIG_KEY = ["sla", "config"] as const;
+const SLA_CONFIG_KEY = ['sla', 'config'] as const;
 
 export function useSlaConfig() {
   return useQuery({
     queryKey: SLA_CONFIG_KEY,
     queryFn: async () => {
-      const { data } = await api.get<SLAConfigMap>("/sla/config");
+      const { data } = await api.get<SLAConfigMap>('/sla/config');
       return Object.entries(data)
-        .map(([severity, config]) => ({ severity: severity as Severity, ...config }))
-        .sort((a, b) => SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity]);
+        .map(([severity, config]) => ({
+          severity: severity as Severity,
+          ...config,
+        }))
+        .sort(
+          (a, b) => SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity]
+        );
     },
   });
 }
@@ -41,12 +46,18 @@ export function useUpdateSlaConfig() {
 
   return useMutation({
     mutationFn: async ({ severity, ...body }: EditableConfig) => {
-      const { data } = await api.put<SLASeverityConfig>(`/sla/config/${severity}`, body);
+      const { data } = await api.put<SLASeverityConfig>(
+        `/sla/config/${severity}`,
+        body
+      );
       return { severity, ...data } as EditableConfig;
     },
     onSuccess: (updated) => {
-      queryClient.setQueryData<EditableConfig[]>(SLA_CONFIG_KEY, (prev) =>
-        prev?.map((c) => (c.severity === updated.severity ? updated : c)) ?? [],
+      queryClient.setQueryData<EditableConfig[]>(
+        SLA_CONFIG_KEY,
+        (prev) =>
+          prev?.map((c) => (c.severity === updated.severity ? updated : c)) ??
+          []
       );
     },
   });

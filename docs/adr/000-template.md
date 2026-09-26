@@ -20,8 +20,8 @@ What becomes easier or harder after this decision? Include trade-offs.
 ## Alternatives Considered
 
 | Option | Reason rejected |
-|--------|----------------|
-|        |                |
+| ------ | --------------- |
+|        |                 |
 
 ## References
 

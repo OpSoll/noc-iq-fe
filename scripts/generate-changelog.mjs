@@ -20,9 +20,13 @@ let sinceRef = sinceIndex !== -1 ? args[sinceIndex + 1] : null;
 // Fall back to last tag, or first commit if no tags exist
 if (!sinceRef) {
   try {
-    sinceRef = execSync('git describe --tags --abbrev=0', { encoding: 'utf8' }).trim();
+    sinceRef = execSync('git describe --tags --abbrev=0', {
+      encoding: 'utf8',
+    }).trim();
   } catch {
-    sinceRef = execSync('git rev-list --max-parents=0 HEAD', { encoding: 'utf8' }).trim();
+    sinceRef = execSync('git rev-list --max-parents=0 HEAD', {
+      encoding: 'utf8',
+    }).trim();
   }
 }
 
@@ -35,10 +39,9 @@ const TYPES = {
 };
 
 // git log: <hash> <subject> | <body>
-const log = execSync(
-  `git log ${sinceRef}..HEAD --pretty=format:"%H %s"`,
-  { encoding: 'utf8' }
-).trim();
+const log = execSync(`git log ${sinceRef}..HEAD --pretty=format:"%H %s"`, {
+  encoding: 'utf8',
+}).trim();
 
 if (!log) {
   console.log('No commits since', sinceRef);
@@ -49,18 +52,29 @@ const commits = log.split('\n').map((line) => {
   const [hash, ...rest] = line.split(' ');
   const subject = rest.join(' ');
   const match = subject.match(/^(\w+)(\(.+?\))?!?:\s*(.+)/);
-  return { hash, subject, type: match?.[1] ?? 'other', scope: match?.[2] ?? '', message: match?.[3] ?? subject };
+  return {
+    hash,
+    subject,
+    type: match?.[1] ?? 'other',
+    scope: match?.[2] ?? '',
+    message: match?.[3] ?? subject,
+  };
 });
 
 // Detect route-impacting commits: any commit that touched src/app/
 const routeCommits = new Set();
 for (const { hash } of commits) {
   try {
-    const files = execSync(`git diff-tree --no-commit-id -r --name-only ${hash}`, { encoding: 'utf8' });
+    const files = execSync(
+      `git diff-tree --no-commit-id -r --name-only ${hash}`,
+      { encoding: 'utf8' }
+    );
     if (files.split('\n').some((f) => f.startsWith('src/app/'))) {
       routeCommits.add(hash);
     }
-  } catch { /* skip */ }
+  } catch {
+    /* skip */
+  }
 }
 
 // Group by type
@@ -80,12 +94,16 @@ for (const [type, heading] of Object.entries(TYPES)) {
   for (const c of grouped[type]) {
     const routeNote = routeCommits.has(c.hash) ? ' ⚠️ **route-impacting**' : '';
     const scope = c.scope ? `**${c.scope.replace(/[()]/g, '')}**: ` : '';
-    lines.push(`- ${scope}${c.message}${routeNote} (\`${c.hash.slice(0, 7)}\`)`);
+    lines.push(
+      `- ${scope}${c.message}${routeNote} (\`${c.hash.slice(0, 7)}\`)`
+    );
   }
   lines.push('');
 }
 
-lines.push('> **Rollout notes:** Review route-impacting changes above before deploying. Manual corrections can be made directly in CHANGELOG.md.');
+lines.push(
+  '> **Rollout notes:** Review route-impacting changes above before deploying. Manual corrections can be made directly in CHANGELOG.md.'
+);
 lines.push('');
 
 const section = lines.join('\n');
@@ -104,7 +122,11 @@ const idx = existing.indexOf(insertAfter);
 
 let updated;
 if (idx !== -1) {
-  updated = existing.slice(0, idx + insertAfter.length) + '\n\n' + section + existing.slice(idx + insertAfter.length);
+  updated =
+    existing.slice(0, idx + insertAfter.length) +
+    '\n\n' +
+    section +
+    existing.slice(idx + insertAfter.length);
 } else {
   updated = existing + '\n' + section;
 }

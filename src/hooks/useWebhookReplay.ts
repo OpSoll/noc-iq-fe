@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { api } from "@/lib/api";
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { api } from '@/lib/api';
 
 interface ReplayResult {
   success: boolean;
@@ -13,11 +13,13 @@ export function useWebhookReplay() {
 
   return useMutation({
     mutationFn: async (deliveryId: string) => {
-      const { data } = await api.post<ReplayResult>(`/webhooks/deliveries/${deliveryId}/replay`);
+      const { data } = await api.post<ReplayResult>(
+        `/webhooks/deliveries/${deliveryId}/replay`
+      );
       return data;
     },
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ["webhooks"] });
+      void qc.invalidateQueries({ queryKey: ['webhooks'] });
     },
   });
 }

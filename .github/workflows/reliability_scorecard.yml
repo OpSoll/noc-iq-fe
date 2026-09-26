@@ -21,13 +21,13 @@ jobs:
           RESPONSE=$(curl -s -X POST "https://api.managehub.internal/api/v1/metrics/scorecard/evaluate" \
             -H "Content-Type: application/json" \
             -d '{"slo_success_rate": 0.985, "test_pass_rate": 1.00, "open_security_vulns": 0, "incident_count": 0}')
-          
+
           STATUS=$(echo $RESPONSE | jq -r '.data.status')
           INDEX=$(echo $RESPONSE | jq -r '.data.reliability_index')
-          
+
           echo "Calculated Reliability Index: $INDEX"
           echo "Governance Verdict: $STATUS"
-          
+
           if [ "$STATUS" != "GO" ]; then
             echo "CRITICAL: Release Candidate failed to meet governance reliability targets."
             exit 1
