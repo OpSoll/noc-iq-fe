@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 
 import KPICard from '@/components/dashboard/KPICard';
+import OutageAlertBanner from '@/components/dashboard/OutageAlertBanner';
 import PenaltiesRewardsChart from '@/components/dashboard/PenaltiesRewardsChart';
 import SLATrendChart from '@/components/dashboard/SLATrendChart';
 import AutoRefreshControl from '@/components/dashboard/AutoRefreshControl';
@@ -349,6 +350,9 @@ export default function SLADashboardView() {
 
   return (
     <div className="space-y-6 p-6">
+      {/* Closes #604: sticky critical-outage alert, pinned above the header. */}
+      <OutageAlertBanner />
+
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-1">
           <h1 className="text-2xl font-bold text-gray-800">
