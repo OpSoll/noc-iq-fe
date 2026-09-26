@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useRef, useState, useCallback } from 'react';
+import { useMemo, useRef, useState, useCallback } from 'react';
 
 import { bulkImportOutages } from '@/services/bulkImportService';
 import type {
@@ -9,6 +9,14 @@ import type {
   ImportValidationError,
 } from '@/types/bulkImport';
 
+import {
+  ColumnMapper,
+  applyColumnMapping,
+  autoDetectMapping,
+  missingRequiredFields,
+  type ColumnFieldSpec,
+  type ColumnMapping,
+} from './ColumnMapper';
 import {
   ACCEPTED_EXTENSIONS,
   DropZone,
@@ -19,6 +27,13 @@ import {
 const MAX_PREVIEW_ROWS = 100;
 
 const REQUIRED_FIELDS = ['service_id', 'start_time', 'end_time'] as const;
+
+/** Schema the wizard maps incoming columns onto (mirrors REQUIRED_FIELDS). */
+const SCHEMA_FIELDS: ColumnFieldSpec[] = [
+  { id: 'service_id', label: 'Service ID', required: true },
+  { id: 'start_time', label: 'Start Time', required: true },
+  { id: 'end_time', label: 'End Time', required: true },
+];
 
 type AcceptedExtension = (typeof ACCEPTED_EXTENSIONS)[number];
 
@@ -31,8 +46,7 @@ interface PreviewState {
   totalRows: number; // Added: track total for "showing X of Y" messaging
 }
 
-type UploadStatus =
-  'idle' | 'validating' | 'uploading' | 'success' | 'error' | 'cancelled';
+type UploadStatus = 'idle' | 'uploading' | 'success' | 'cancelled';
 
 // ─── CSV Parsing ─────────────────────────────────────────────────────────────
 interface ParsedCSV {
@@ -218,8 +232,22 @@ function validateJSON(text: string): {
   return { errors, parsed: records };
 }
 
-// ─── Preview Builder ─────────────────────────────────────────────────────────
-async function buildPreview(file: File): Promise<PreviewState> {
+// ─── Parsing ─────────────────────────────────────────────────────────────────
+
+/**
+ * Raw parse result kept in component state, so a column mapping change never
+ * has to re-read the file from disk.
+ */
+interface ParsedFile {
+  kind: 'csv' | 'json';
+  headers: string[];
+  rows: string[][];
+  totalRows: number;
+  /** Format level errors (malformed JSON, non-object items, ...). */
+  errors: ImportValidationError[];
+}
+
+async function parseImportFile(file: File): Promise<ParsedFile> {
   const text = await file.text();
   const ext = file.name
     .slice(file.name.lastIndexOf('.'))
@@ -227,25 +255,13 @@ async function buildPreview(file: File): Promise<PreviewState> {
 
   if (ext === '.csv' || file.type === 'text/csv') {
     const { headers, rows, totalRows } = parseCSV(text);
-    const errors = validateCSV(headers, rows);
-    const warnings: ImportValidationError[] = [];
-
-    if (totalRows === 0 && errors.length === 0) {
-      warnings.push({ message: 'File has a header row but no data rows.' });
-    } else if (totalRows > MAX_PREVIEW_ROWS) {
-      warnings.push({
-        message: `Showing ${MAX_PREVIEW_ROWS} of ${totalRows} total rows.`,
-      });
-    }
-
-    return { headers, rows, errors, warnings, totalRows };
+    return { kind: 'csv', headers, rows, totalRows, errors: [] };
   }
 
-  // JSON
   const { errors, parsed } = validateJSON(text);
 
   if (errors.length > 0 || !parsed) {
-    return { headers: [], rows: [], errors, warnings: [], totalRows: 0 };
+    return { kind: 'json', headers: [], rows: [], totalRows: 0, errors };
   }
 
   const headers = parsed.length > 0 ? Object.keys(parsed[0]) : [];
@@ -253,14 +269,57 @@ async function buildPreview(file: File): Promise<PreviewState> {
     .slice(0, MAX_PREVIEW_ROWS)
     .map((r) => headers.map((h) => String(r[h] ?? '')));
 
+  return {
+    kind: 'json',
+    headers,
+    rows,
+    totalRows: parsed.length,
+    errors,
+  };
+}
+
+// ─── Preview Builder ─────────────────────────────────────────────────────────
+
+/**
+ * Pure projection of a parsed file onto the preview state. The column mapping
+ * is applied before validation, which is what lets a CSV with non-standard
+ * headers (e.g. `Start Time`) satisfy `validateCSV`. JSON records are already
+ * keyed by the schema field names, so they skip both the mapping and the
+ * CSV-specific validation.
+ */
+function buildPreview(
+  parsed: ParsedFile,
+  mapping: ColumnMapping
+): PreviewState {
+  const isCsv = parsed.kind === 'csv';
+  const mapped = isCsv
+    ? applyColumnMapping(parsed.headers, parsed.rows, mapping)
+    : { headers: parsed.headers, rows: parsed.rows };
+
+  const errors = isCsv
+    ? validateCSV(mapped.headers, mapped.rows)
+    : parsed.errors;
   const warnings: ImportValidationError[] = [];
-  if (parsed.length > MAX_PREVIEW_ROWS) {
+
+  if (isCsv && parsed.totalRows === 0 && errors.length === 0) {
+    warnings.push({ message: 'File has a header row but no data rows.' });
+  }
+
+  if (parsed.totalRows > MAX_PREVIEW_ROWS) {
+    const unit = isCsv ? 'rows' : 'records';
+
     warnings.push({
-      message: `Showing ${MAX_PREVIEW_ROWS} of ${parsed.length} total records.`,
+      message: `Showing ${MAX_PREVIEW_ROWS} of ${parsed.totalRows} total ${unit}.`,
     });
   }
 
-  return { headers, rows, errors, warnings, totalRows: parsed.length };
+  return {
+    headers: mapped.headers,
+    rows: mapped.rows,
+    errors,
+    warnings,
+    totalRows: parsed.totalRows,
+  };
 }
 
 // ─── Components ──────────────────────────────────────────────────────────────
@@ -453,12 +512,25 @@ export default function BulkImportView() {
 
   const [file, setFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
-  const [preview, setPreview] = useState<PreviewState | null>(null);
+  const [parsed, setParsed] = useState<ParsedFile | null>(null);
+  const [mapping, setMapping] = useState<ColumnMapping>({});
+  const [mappingConfirmed, setMappingConfirmed] = useState(false);
   const [status, setStatus] = useState<UploadStatus>('idle');
   const [progress, setProgress] = useState(0);
   const [result, setResult] = useState<BulkImportResult | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [showValidationTable, setShowValidationTable] = useState(false);
+
+  // ─── Derived State ─────────────────────────────────────────────────────────
+  const preview = useMemo(
+    () => (parsed ? buildPreview(parsed, mapping) : null),
+    [parsed, mapping]
+  );
+
+  const missingFields = useMemo(
+    () => missingRequiredFields(SCHEMA_FIELDS, mapping),
+    [mapping]
+  );
 
   // ─── File Handling ─────────────────────────────────────────────────────────
   const handleFile = useCallback(async (nextFile: File) => {
@@ -468,7 +540,7 @@ export default function BulkImportView() {
     if (!check.ok) {
       setFileError(check.message);
       setFile(null);
-      setPreview(null);
+      setParsed(null);
       return;
     }
 
@@ -476,16 +548,30 @@ export default function BulkImportView() {
     setFile(nextFile);
     setResult(null);
     setSubmitError(null);
-    setStatus('validating');
+    setStatus('idle');
+    setShowValidationTable(false);
+    setMappingConfirmed(false);
+    setMapping({});
 
     try {
-      const p = await buildPreview(nextFile);
-      setPreview(p);
-      setStatus(p.errors.length > 0 ? 'error' : 'idle');
+      const next = await parseImportFile(nextFile);
+      setParsed(next);
+      setMapping(autoDetectMapping(next.headers, SCHEMA_FIELDS));
     } catch (err) {
       setFileError('Failed to read file. Please check the file format.');
-      setStatus('error');
+      // Drop the file as well: without a parse there is nothing to preview
+      // and the upload must stay blocked until a new file is picked.
+      setFile(null);
+      setParsed(null);
     }
+  }, []);
+
+  const handleMappingChange = useCallback((next: ColumnMapping) => {
+    setMapping(next);
+  }, []);
+
+  const handleMappingContinue = useCallback(() => {
+    setMappingConfirmed(true);
   }, []);
 
   // ─── Drop Zone plumbing ────────────────────────────────────────────────────
@@ -513,7 +599,7 @@ export default function BulkImportView() {
 
       setResult(response);
       setFile(null);
-      setPreview(null);
+      setParsed(null);
       setStatus('success');
     } catch (err: unknown) {
       if (
@@ -523,10 +609,10 @@ export default function BulkImportView() {
         setStatus('cancelled');
       } else if (err instanceof Error) {
         setSubmitError(err.message || 'Upload failed. Please try again.');
-        setStatus('error');
+        setStatus('idle');
       } else {
         setSubmitError('Upload failed. Please try again.');
-        setStatus('error');
+        setStatus('idle');
       }
     } finally {
       abortRef.current = null;
@@ -545,7 +631,9 @@ export default function BulkImportView() {
   const handleReset = useCallback(() => {
     setFile(null);
     setFileError(null);
-    setPreview(null);
+    setParsed(null);
+    setMapping({});
+    setMappingConfirmed(false);
     setResult(null);
     setSubmitError(null);
     setStatus('idle');
@@ -553,7 +641,14 @@ export default function BulkImportView() {
   }, []);
 
   const hasBlockingErrors = (preview?.errors.length ?? 0) > 0;
-  const isProcessing = status === 'uploading' || status === 'validating';
+  const isUploading = status === 'uploading';
+  const isParsing = file !== null && parsed === null;
+  const isProcessing = isUploading || isParsing;
+  const isCsv = parsed?.kind === 'csv';
+  const showColumnMapper =
+    isCsv && (!mappingConfirmed || missingFields.length > 0);
+  const showMappingSummary =
+    isCsv && mappingConfirmed && missingFields.length === 0;
 
   return (
     <div className="mx-auto max-w-2xl space-y-6 p-6">
@@ -636,6 +731,35 @@ export default function BulkImportView() {
               </svg>
             </button>
           )}
+        </div>
+      )}
+
+      {/* Column Mapping Wizard */}
+      {showColumnMapper && parsed && (
+        <ColumnMapper
+          headers={parsed.headers}
+          fields={SCHEMA_FIELDS}
+          mapping={mapping}
+          onMappingChange={handleMappingChange}
+          onContinue={handleMappingContinue}
+        />
+      )}
+
+      {/* Column Mapping (confirmed) */}
+      {showMappingSummary && (
+        <div className="flex items-center justify-between rounded-lg border bg-white px-4 py-3">
+          <p className="text-xs text-gray-500">
+            Column mapping confirmed for{' '}
+            {SCHEMA_FIELDS.length - missingFields.length} of{' '}
+            {SCHEMA_FIELDS.length} columns
+          </p>
+          <button
+            type="button"
+            onClick={() => setMappingConfirmed(false)}
+            className="text-xs font-medium text-blue-600 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-1"
+          >
+            Change mapping
+          </button>
         </div>
       )}
 
@@ -762,7 +886,7 @@ export default function BulkImportView() {
 
       {/* Actions */}
       <div className="space-y-2">
-        {status === 'uploading' ? (
+        {isUploading ? (
           <>
             <div
               className="w-full rounded-full bg-gray-200 h-2 overflow-hidden"
@@ -791,10 +915,15 @@ export default function BulkImportView() {
         ) : (
           <button
             onClick={() => void handleSubmit()}
-            disabled={!file || hasBlockingErrors || isProcessing}
+            disabled={
+              !file ||
+              hasBlockingErrors ||
+              missingFields.length > 0 ||
+              isProcessing
+            }
             className="w-full rounded-lg bg-blue-600 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-blue-600"
           >
-            {status === 'validating' ? 'Validating...' : 'Upload File'}
+            Upload File
           </button>
         )}
       </div>
