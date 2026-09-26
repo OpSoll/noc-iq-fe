@@ -6,10 +6,10 @@
 
 | Metric | Value |
 |--------|-------|
-| Total Wave 5 issues | 105 |
+| Total Wave 5 issues | 129 |
 | Closed | 100 |
-| Open | 5 |
-| Completion | 95% |
+| Open | 29 |
+| Completion | 78% |
 
 ## Open Issues
 
@@ -18,6 +18,30 @@
 - [ ] #691 Form Validation: Add Optimistic UI update and rollback hook for status toggles
 - [ ] #689 Form Validation: Add debounced live input validation feedback
 - [ ] #684 Navigation: Implement URL query parameter synchronization hook for table filters
+- [ ] #679 Navigation: Add active route focus indicator for screen readers
+- [ ] #678 Navigation: Implement global keyboard shortcuts helper modal (Shift+?)
+- [ ] #677 Navigation: Add breadcrumb navigation bar with dynamic route labels
+- [ ] #676 Navigation: Implement sidebar navigation auto-collapse state persistence
+- [ ] #675 Navigation: Add Cmd+K / Ctrl+K global command palette search modal
+- [ ] #674 Webhooks UI: Implement webhook delivery search and filter controls
+- [ ] #673 Webhooks UI: Add delivery latency performance line chart
+- [ ] #672 Webhooks UI: Implement webhook endpoint deletion confirmation modal
+- [ ] #671 Webhooks UI: Add outbound rate limit configuration slider
+- [ ] #670 Webhooks UI: Implement webhook payload JSON schema viewer modal
+- [ ] #669 Webhooks UI: Add topic subscription selector checklist component
+- [ ] #668 Webhooks UI: Implement manual test ping button in webhook list
+- [ ] #667 Webhooks UI: Add webhook endpoint health status pill indicator
+- [ ] #666 Webhooks UI: Implement webhook secret key rotation modal with grace window options
+- [ ] #665 Webhooks UI: Add dead-letter queue management table with batch replay
+- [ ] #664 Webhooks UI: Implement webhook delivery history log inspector drawer
+- [ ] #663 Webhooks UI: Add webhook endpoint registration modal component
+- [ ] #662 Wallet: Implement minimum XLM reserve balance alert badge
+- [ ] #661 Wallet: Add transaction simulation error explainer component
+- [ ] #660 Wallet: Implement payment disbursement transaction history table
+- [ ] #659 Wallet: Add custom SAC token contract address tracker modal
+- [ ] #658 Wallet: Implement QR code modal for public key sharing
+- [ ] #657 Wallet: Add wallet disconnect button with session state cleanup
+- [ ] #656 Wallet: Implement active network passphrase mismatch detection alert
 
 ## Closed Issues
 
