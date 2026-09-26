@@ -17,6 +17,12 @@ import {
 import { saveDraft, loadDraft, clearDraft } from '@/lib/drafts';
 import type { Webhook, WebhookDelivery } from '@/types/webhook';
 import { WebhookDeliveryChart } from '@/components/webhooks/WebhookDeliveryChart';
+import { DeliverySearchFilter } from '@/components/webhooks/DeliverySearchFilter';
+import {
+  filterDeliveryLogs,
+  type DeliveryLogFilters,
+  type DeliveryStatusCategory,
+} from '@/lib/webhookDeliveryFilter';
 import { JsonPayloadViewer } from '@/components/webhooks/JsonPayloadViewer';
 import { useToast } from '@/components/ui/toast';
 import { RotateSecretModal } from '@/components/webhooks/RotateSecretModal';
@@ -48,10 +54,22 @@ export default function WebhooksPage() {
   const [draftRestored, setDraftRestored] = useState(hasDraft);
 
   const searchParams = useSearchParams();
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [eventFilter, setEventFilter] = useState(
-    searchParams.get('event') || 'all'
-  );
+  // Normalizes legacy `?status=` values (success/client_error/server_error)
+  // to the HTTP status categories used by DeliverySearchFilter (#674).
+  const initialStatus = (() => {
+    const raw = searchParams.get('status') || 'all';
+    if (raw === 'success') return '2xx';
+    if (raw === 'client_error') return '4xx';
+    if (raw === 'server_error') return '5xx';
+    if (raw === '2xx' || raw === '4xx' || raw === '5xx') return raw;
+    return 'all';
+  })();
+  const [deliveryFilters, setDeliveryFilters] = useState<DeliveryLogFilters>({
+    search: '',
+    statusCategory: initialStatus as DeliveryStatusCategory,
+    eventTopic: searchParams.get('event') || 'all',
+    date: '',
+  });
 
   useEffect(() => {
     if (!showForm || editingId || !draftRestored) return;
@@ -94,17 +112,10 @@ export default function WebhooksPage() {
   });
 
   const filteredDeliveries = useMemo(() => {
-    return deliveries.filter((d) => {
-      const code = d.response_code ?? -1;
-      const statusMatch =
-        statusFilter === 'all' ||
-        (statusFilter === 'success' && code >= 200 && code < 300) ||
-        (statusFilter === 'client_error' && code >= 400 && code < 500) ||
-        (statusFilter === 'server_error' && code >= 500);
-      const eventMatch = eventFilter === 'all' || d.event === eventFilter;
-      return statusMatch && eventMatch;
+    return filterDeliveryLogs(deliveries, deliveryFilters, {
+      webhookUrl: selectedWebhook?.url,
     });
-  }, [deliveries, statusFilter, eventFilter]);
+  }, [deliveries, deliveryFilters, selectedWebhook?.url]);
 
   const [customHeaders, setCustomHeaders] = useState<
     Array<{ key: string; value: string }>
@@ -151,7 +162,6 @@ export default function WebhooksPage() {
   };
   const [maxRetries, setMaxRetries] = useState(3);
   const [backoffSeconds, setBackoffSeconds] = useState(5);
-  const [payloadSearchQuery, setPayloadSearchQuery] = useState('');
 
   const verifySnippetNode = `const crypto = require('crypto');
 const signature = req.headers['x-signature'];
@@ -257,12 +267,14 @@ is_valid = hmac.compare_digest(signature, hash)`;
     setShowForm(true);
   }
 
-  function handleFilterChange(type: 'status' | 'event', value: string) {
+  function updateDeliveryFilters(next: DeliveryLogFilters) {
+    // Keep deep-linkable `?status=` / `?event=` params in sync so filtered
+    // views remain shareable.
     const url = new URL(window.location.href);
-    url.searchParams.set(type, value);
+    url.searchParams.set('status', next.statusCategory);
+    url.searchParams.set('event', next.eventTopic);
     window.history.pushState({}, '', url);
-    if (type === 'status') setStatusFilter(value);
-    if (type === 'event') setEventFilter(value);
+    setDeliveryFilters(next);
   }
 
   function toggleEvent(event: string) {
@@ -526,47 +538,17 @@ is_valid = hmac.compare_digest(signature, hash)`;
                   <div className="mb-3">
                     <WebhookDeliveryChart deliveries={filteredDeliveries} />
                   </div>
-                  <div className="mb-2 flex items-center justify-between">
-                    <div className="flex items-center justify-between w-full pr-4">
-                      <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                        Delivery history
-                      </h3>
-                      <input
-                        type="text"
-                        placeholder="Search JSON payloads..."
-                        value={payloadSearchQuery}
-                        onChange={(e) => setPayloadSearchQuery(e.target.value)}
-                        className="rounded border p-1 text-xs text-gray-800 max-w-xs"
-                      />
-                    </div>
-                    <div className="flex gap-2">
-                      <select
-                        value={statusFilter}
-                        onChange={(e) =>
-                          handleFilterChange('status', e.target.value)
-                        }
-                        className="rounded-md border-gray-300 py-1 text-xs focus:border-blue-500 focus:ring-blue-500"
-                      >
-                        <option value="all">All Statuses</option>
-                        <option value="success">Success (2xx)</option>
-                        <option value="client_error">Client Error (4xx)</option>
-                        <option value="server_error">Server Error (5xx)</option>
-                      </select>
-                      <select
-                        value={eventFilter}
-                        onChange={(e) =>
-                          handleFilterChange('event', e.target.value)
-                        }
-                        className="rounded-md border-gray-300 py-1 text-xs focus:border-blue-500 focus:ring-blue-500"
-                      >
-                        <option value="all">All Events</option>
-                        {AVAILABLE_EVENTS.map((ev) => (
-                          <option key={ev} value={ev}>
-                            {ev}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                  <div className="mb-2 space-y-2">
+                    <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                      Delivery history
+                    </h3>
+                    <DeliverySearchFilter
+                      filters={deliveryFilters}
+                      onChange={updateDeliveryFilters}
+                      events={AVAILABLE_EVENTS}
+                      totalCount={deliveries.length}
+                      resultCount={filteredDeliveries.length}
+                    />
                   </div>
                   {deliveriesLoading ? (
                     <p className="text-xs text-gray-400">Loading…</p>
