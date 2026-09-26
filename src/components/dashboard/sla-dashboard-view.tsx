@@ -13,10 +13,13 @@ import FinancialSummaryWidget from '@/components/dashboard/FinancialSummaryWidge
 import MTTRHistogramChart from '@/components/dashboard/MTTRHistogramChart';
 import SLABreachCountdownCard from '@/components/dashboard/SLABreachCountdownCard';
 import { useToast } from '@/components/ui/toast';
+import { RouteErrorState } from '@/components/ui/route-state';
 import {
-  RouteErrorState,
-  RouteLoadingState,
-} from '@/components/ui/route-state';
+  Skeleton,
+  SkeletonChart,
+  SkeletonMetricCard,
+  SkeletonStatus,
+} from '@/components/ui/skeleton';
 import {
   buildDashboardShareUrl,
   buildDashboardSnapshot,
@@ -44,6 +47,9 @@ function delta(a: number, b: number) {
 }
 
 const SEVERITIES = ['', 'low', 'medium', 'high', 'critical'];
+// Closes #610: highlight tones for the four KPI card placeholders, in the same
+// order and colours as the real cards below.
+const METRIC_CARD_TONES = ['green', 'red', 'green', 'red'] as const;
 // Closes #609: the export modal reuses the MTTR widget's cache entry, so the
 // resolved-outage sample is fetched once and shared between both components.
 const MTTR_SAMPLE_PARAMS = { status: 'resolved', page_size: 500 };
@@ -313,12 +319,28 @@ export default function SLADashboardView() {
     [pushPaymentDrilldown]
   );
 
+  // Closes #610: placeholder state that mirrors the real widget geometry, so
+  // the first paint already occupies the final layout box and nothing shifts
+  // when the metrics query resolves.
   if (primary.isLoading) {
     return (
-      <RouteLoadingState
-        title="Loading dashboard"
-        description="Pulling the latest SLA compliance, trends, and payout metrics."
-      />
+      <div className="space-y-6 p-6">
+        <div className="space-y-1" aria-hidden="true">
+          <Skeleton className="h-8 w-64" />
+          <Skeleton className="h-5 w-96 max-w-full" />
+        </div>
+        <SkeletonStatus label="Loading SLA metrics" className="space-y-6">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {METRIC_CARD_TONES.map((highlight, index) => (
+              <SkeletonMetricCard key={index} highlight={highlight} />
+            ))}
+          </div>
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <SkeletonChart rows={4} />
+            <SkeletonChart rows={4} />
+          </div>
+        </SkeletonStatus>
+      </div>
     );
   }
 
