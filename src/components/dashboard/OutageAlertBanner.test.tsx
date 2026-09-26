@@ -202,7 +202,9 @@ describe('OutageAlertBanner', () => {
     mockOutages([makeOutage({ id: 'out-42' })]);
 
     const first = render(<OutageAlertBanner />, { wrapper });
-    await user.click(await screen.findByRole('button', { name: 'Dismiss' }));
+    await user.click(
+      await screen.findByRole('button', { name: 'Dismiss outage alert' })
+    );
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     expect(localStorage.getItem(DISMISSED_OUTAGE_KEY)).toBe('out-42');
     first.unmount();
