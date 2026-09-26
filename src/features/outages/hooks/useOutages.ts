@@ -1,7 +1,7 @@
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 
-import { fetchOutages } from "@/lib/outages";
-import type { PaginatedOutages } from "@/types/outages";
+import { fetchOutages } from '@/lib/outages';
+import type { PaginatedOutages } from '@/types/outages';
 
 export interface UseOutagesParams {
   page?: number;
@@ -28,16 +28,17 @@ export function useOutages(params: UseOutagesParams = {}) {
   };
 
   return useQuery<PaginatedOutages, Error>({
-    queryKey: ["outages", normalizedParams],
+    queryKey: ['outages', normalizedParams],
 
-    queryFn: () => fetchOutages({
-      page: normalizedParams.page ?? DEFAULT_PAGE,
-      page_size: normalizedParams.page_size,
-      severity: normalizedParams.severity,
-      status: normalizedParams.status,
-      search: normalizedParams.search,
-      sort: normalizedParams.sort,
-    }),
+    queryFn: () =>
+      fetchOutages({
+        page: normalizedParams.page ?? DEFAULT_PAGE,
+        page_size: normalizedParams.page_size,
+        severity: normalizedParams.severity,
+        status: normalizedParams.status,
+        search: normalizedParams.search,
+        sort: normalizedParams.sort,
+      }),
 
     placeholderData: keepPreviousData,
 

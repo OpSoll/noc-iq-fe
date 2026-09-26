@@ -28,16 +28,12 @@ export const MAX_GET_RETRIES = 2;
 export const RETRY_BASE_DELAY_MS = 1_000;
 
 /** Methods that must not be retried. */
-const MUTATING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
+const MUTATING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type ErrorClass =
-  | "timeout"
-  | "serverError"
-  | "auth"
-  | "validation"
-  | "network";
+  'timeout' | 'serverError' | 'auth' | 'validation' | 'network';
 
 export interface RetryConfig {
   maxRetries: number;
@@ -72,7 +68,7 @@ export class RetryPolicyError extends Error {
     timedOut?: boolean;
   }) {
     super(message);
-    this.name = "RetryPolicyError";
+    this.name = 'RetryPolicyError';
     this.cause = cause;
     this.attempts = attempts;
     this.timedOut = timedOut;
@@ -94,12 +90,12 @@ export function getRetryConfig(errorClass: ErrorClass): RetryConfig {
 }
 
 export function classifyError(status?: number, code?: string): ErrorClass {
-  if (!status && code === "ECONNABORTED") return "timeout";
-  if (!status) return "network";
-  if (status === 401 || status === 403) return "auth";
-  if (status === 422) return "validation";
-  if (status >= 500) return "serverError";
-  return "network";
+  if (!status && code === 'ECONNABORTED') return 'timeout';
+  if (!status) return 'network';
+  if (status === 401 || status === 403) return 'auth';
+  if (status === 422) return 'validation';
+  if (status >= 500) return 'serverError';
+  return 'network';
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -123,7 +119,7 @@ function delay(ms: number): Promise<void> {
  */
 export function backoffDelay(
   attempt: number,
-  baseMs: number = RETRY_BASE_DELAY_MS,
+  baseMs: number = RETRY_BASE_DELAY_MS
 ): number {
   return baseMs * Math.pow(2, attempt - 1);
 }
@@ -151,14 +147,11 @@ export function backoffDelay(
  */
 export async function fetchWithTimeoutAndRetry(
   url: string | URL,
-  options: FetchWithRetryOptions = {},
+  options: FetchWithRetryOptions = {}
 ): Promise<Response> {
-  const {
-    timeoutMs = REQUEST_TIMEOUT_MS,
-    fetchInit = {},
-  } = options;
+  const { timeoutMs = REQUEST_TIMEOUT_MS, fetchInit = {} } = options;
 
-  const method = (fetchInit.method ?? "GET").toUpperCase();
+  const method = (fetchInit.method ?? 'GET').toUpperCase();
   const canRetry = isRetryableMethod(method);
   const maxAttempts = canRetry
     ? 1 + (options.maxRetries ?? MAX_GET_RETRIES)
@@ -185,7 +178,7 @@ export async function fetchWithTimeoutAndRetry(
 
       const isTimeout =
         err instanceof Error &&
-        (err.name === "AbortError" || err.name === "TimeoutError");
+        (err.name === 'AbortError' || err.name === 'TimeoutError');
 
       // Do not retry if:
       //   • The method is mutating (already canRetry=false so maxAttempts=1).

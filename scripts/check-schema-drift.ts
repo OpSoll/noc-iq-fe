@@ -4,22 +4,39 @@ import path from 'path';
 export interface OpenAPISchema {
   openapi: string;
   info: { title: string; version: string };
-  paths: Record<string, Record<string, { summary?: string; parameters?: Array<{ name: string; in: string }> }>>;
+  paths: Record<
+    string,
+    Record<
+      string,
+      { summary?: string; parameters?: Array<{ name: string; in: string }> }
+    >
+  >;
 }
 
-const DEFAULT_OPENAPI_URL = process.env.OPENAPI_URL || 'http://localhost:8000/openapi.json';
+const DEFAULT_OPENAPI_URL =
+  process.env.OPENAPI_URL || 'http://localhost:8000/openapi.json';
 
 const MOCK_FALLBACK_SCHEMA: OpenAPISchema = {
   openapi: '3.0.0',
   info: { title: 'NOC-IQ API', version: '1.0.0' },
   paths: {
     '/api/auth/login': { post: { summary: 'User login' } },
-    '/api/users/profile': { get: { summary: 'Get user profile' }, patch: { summary: 'Update profile' } },
-    '/api/settings': { get: { summary: 'Get settings' }, put: { summary: 'Update settings' } },
+    '/api/users/profile': {
+      get: { summary: 'Get user profile' },
+      patch: { summary: 'Update profile' },
+    },
+    '/api/settings': {
+      get: { summary: 'Get settings' },
+      put: { summary: 'Update settings' },
+    },
   },
 };
 
-export async function checkSchemaDrift(): Promise<{ matched: string[]; missing: string[]; report: string }> {
+export async function checkSchemaDrift(): Promise<{
+  matched: string[];
+  missing: string[];
+  report: string;
+}> {
   let schema: OpenAPISchema;
 
   try {
@@ -28,7 +45,9 @@ export async function checkSchemaDrift(): Promise<{ matched: string[]; missing: 
     schema = (await res.json()) as OpenAPISchema;
     console.log(`Fetched live OpenAPI schema from ${DEFAULT_OPENAPI_URL}`);
   } catch {
-    console.log(`Backend endpoint ${DEFAULT_OPENAPI_URL} offline, using OpenAPI schema definition for drift check.`);
+    console.log(
+      `Backend endpoint ${DEFAULT_OPENAPI_URL} offline, using OpenAPI schema definition for drift check.`
+    );
     schema = MOCK_FALLBACK_SCHEMA;
   }
 
@@ -40,7 +59,10 @@ export async function checkSchemaDrift(): Promise<{ matched: string[]; missing: 
     const files = fs.readdirSync(servicesDir);
     for (const file of files) {
       if (file.endsWith('.ts') || file.endsWith('.tsx')) {
-        serviceFilesContent += fs.readFileSync(path.join(servicesDir, file), 'utf8');
+        serviceFilesContent += fs.readFileSync(
+          path.join(servicesDir, file),
+          'utf8'
+        );
       }
     }
   }
@@ -50,7 +72,10 @@ export async function checkSchemaDrift(): Promise<{ matched: string[]; missing: 
 
   for (const openPath of openApiPaths) {
     // Check if frontend service contains route path
-    if (serviceFilesContent.includes(openPath) || serviceFilesContent.length === 0) {
+    if (
+      serviceFilesContent.includes(openPath) ||
+      serviceFilesContent.length === 0
+    ) {
       matched.push(openPath);
     } else {
       missing.push(openPath);
@@ -62,7 +87,9 @@ export async function checkSchemaDrift(): Promise<{ matched: string[]; missing: 
     `Total OpenAPI endpoints checked: ${openApiPaths.length}`,
     `Matched endpoints in src/services/: ${matched.length}`,
     `Missing/Drifted endpoints: ${missing.length}`,
-    missing.length > 0 ? `Unmatched routes: ${missing.join(', ')}` : '✅ All OpenAPI endpoints match frontend service definitions.',
+    missing.length > 0
+      ? `Unmatched routes: ${missing.join(', ')}`
+      : '✅ All OpenAPI endpoints match frontend service definitions.',
   ].join('\n');
 
   console.log(report);
@@ -70,7 +97,10 @@ export async function checkSchemaDrift(): Promise<{ matched: string[]; missing: 
   return { matched, missing, report };
 }
 
-if (require.main === module || process.argv[1]?.endsWith('check-schema-drift.ts')) {
+if (
+  require.main === module ||
+  process.argv[1]?.endsWith('check-schema-drift.ts')
+) {
   checkSchemaDrift().catch((err) => {
     console.error('Schema drift check failed:', err);
     process.exit(1);

@@ -11,7 +11,10 @@ export type TimelineDiff = {
   hasChanges: boolean;
 };
 
-export function computeDiff(before: Record<string, unknown>, after: Record<string, unknown>): FieldMutation[] {
+export function computeDiff(
+  before: Record<string, unknown>,
+  after: Record<string, unknown>
+): FieldMutation[] {
   const mutations: FieldMutation[] = [];
   const allKeys = new Set([...Object.keys(before), ...Object.keys(after)]);
   for (const key of allKeys) {
@@ -22,7 +25,12 @@ export function computeDiff(before: Record<string, unknown>, after: Record<strin
   return mutations;
 }
 
-export function buildTimelineDiff(entryId: string, timestamp: string, before: Record<string, unknown>, after: Record<string, unknown>): TimelineDiff {
+export function buildTimelineDiff(
+  entryId: string,
+  timestamp: string,
+  before: Record<string, unknown>,
+  after: Record<string, unknown>
+): TimelineDiff {
   const mutations = computeDiff(before, after);
   return { entryId, timestamp, mutations, hasChanges: mutations.length > 0 };
 }
@@ -31,7 +39,10 @@ export function formatMutation(mutation: FieldMutation): string {
   return `${mutation.field}: "${String(mutation.before)}" → "${String(mutation.after)}"`;
 }
 
-export function diffModeSummary(diffs: TimelineDiff[]): { totalChanges: number; fieldsAffected: string[] } {
+export function diffModeSummary(diffs: TimelineDiff[]): {
+  totalChanges: number;
+  fieldsAffected: string[];
+} {
   const fields = new Set<string>();
   let count = 0;
   for (const diff of diffs) {

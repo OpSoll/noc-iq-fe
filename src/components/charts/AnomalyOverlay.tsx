@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import type { AnomalySegment } from "@/services/analytics";
+import { useState } from 'react';
+import type { AnomalySegment } from '@/services/analytics';
 
 interface AnomalyOverlayProps {
   anomalies: AnomalySegment[];
@@ -10,15 +10,15 @@ interface AnomalyOverlayProps {
 }
 
 const SEVERITY_COLORS: Record<string, string> = {
-  low: "bg-yellow-100 border-yellow-300",
-  medium: "bg-orange-100 border-orange-300",
-  high: "bg-red-100 border-red-300",
+  low: 'bg-yellow-100 border-yellow-300',
+  medium: 'bg-orange-100 border-orange-300',
+  high: 'bg-red-100 border-red-300',
 };
 
 const SEVERITY_DOT: Record<string, string> = {
-  low: "bg-yellow-400",
-  medium: "bg-orange-400",
-  high: "bg-red-500",
+  low: 'bg-yellow-400',
+  medium: 'bg-orange-400',
+  high: 'bg-red-500',
 };
 
 export default function AnomalyOverlay({
@@ -51,7 +51,7 @@ export default function AnomalyOverlay({
           <div
             key={idx}
             className={`rounded-lg border p-3 text-xs transition-colors ${
-              SEVERITY_COLORS[anomaly.severity] ?? "bg-gray-50 border-gray-200"
+              SEVERITY_COLORS[anomaly.severity] ?? 'bg-gray-50 border-gray-200'
             }`}
           >
             <button
@@ -63,7 +63,7 @@ export default function AnomalyOverlay({
               <div className="flex items-center gap-2">
                 <span
                   className={`h-2 w-2 rounded-full ${
-                    SEVERITY_DOT[anomaly.severity] ?? "bg-gray-400"
+                    SEVERITY_DOT[anomaly.severity] ?? 'bg-gray-400'
                   }`}
                 />
                 <span className="font-medium text-slate-700">
@@ -73,17 +73,17 @@ export default function AnomalyOverlay({
               </div>
               <span
                 className={`font-mono font-medium ${
-                  anomaly.deviation > 0 ? "text-red-600" : "text-green-600"
+                  anomaly.deviation > 0 ? 'text-red-600' : 'text-green-600'
                 }`}
               >
-                {anomaly.deviation > 0 ? "+" : ""}
+                {anomaly.deviation > 0 ? '+' : ''}
                 {anomaly.deviation.toFixed(1)}%
               </span>
             </button>
             {expanded === `${idx}` && (
               <div className="mt-2 space-y-1 border-t border-current border-opacity-20 pt-2 text-slate-600">
                 <p>
-                  Expected: {anomaly.expected.toLocaleString()} | Actual:{" "}
+                  Expected: {anomaly.expected.toLocaleString()} | Actual:{' '}
                   {anomaly.actual.toLocaleString()}
                 </p>
                 <p className="italic">{anomaly.note}</p>

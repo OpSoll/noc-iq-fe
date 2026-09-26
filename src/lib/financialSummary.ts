@@ -1,4 +1,4 @@
-import type { DashboardMetrics, TrendPoint } from "@/types/dashboard";
+import type { DashboardMetrics, TrendPoint } from '@/types/dashboard';
 
 // Closes #452: SLA penalty/reward aggregate financial widget helpers
 
@@ -19,8 +19,11 @@ function monthKeyFor(period: string): { key: string; label: string } {
   if (ISO_DATE_PATTERN.test(period)) {
     const date = new Date(period);
     if (!Number.isNaN(date.getTime())) {
-      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-      const label = date.toLocaleString(undefined, { month: "short", year: "2-digit" });
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      const label = date.toLocaleString(undefined, {
+        month: 'short',
+        year: '2-digit',
+      });
       return { key, label };
     }
   }
@@ -50,7 +53,9 @@ export function aggregateMonthlyNet(trends: TrendPoint[]): MonthlyNetPoint[] {
     }
   }
 
-  return Array.from(byMonth.values()).sort((a, b) => (a.monthKey < b.monthKey ? -1 : 1));
+  return Array.from(byMonth.values()).sort((a, b) =>
+    a.monthKey < b.monthKey ? -1 : 1
+  );
 }
 
 export interface FinancialTotals {
@@ -59,7 +64,9 @@ export interface FinancialTotals {
   netSettlement: number;
 }
 
-export function computeFinancialTotals(metrics: DashboardMetrics): FinancialTotals {
+export function computeFinancialTotals(
+  metrics: DashboardMetrics
+): FinancialTotals {
   return {
     totalPenalties: metrics.penalties.total,
     totalRewards: metrics.rewards.total,

@@ -1,9 +1,9 @@
-import React, { useState } from "react";
-import { ColumnDef } from "@tanstack/react-table";
-import { api } from "@/lib/api";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import type { Outage } from "@/types/outages";
+import React, { useState } from 'react';
+import { ColumnDef } from '@tanstack/react-table';
+import { api } from '@/lib/api';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import type { Outage } from '@/types/outages';
 
 function SelectAllCheckbox({
   table,
@@ -12,7 +12,7 @@ function SelectAllCheckbox({
     getIsAllRowsSelected: () => boolean;
     getIsSomeRowsSelected: () => boolean;
     getToggleAllRowsSelectedHandler: () => (
-      event: React.ChangeEvent<HTMLInputElement>,
+      event: React.ChangeEvent<HTMLInputElement>
     ) => void;
   };
 }) {
@@ -46,7 +46,7 @@ function SelectionCell({
     original: Outage;
     index: number;
     getToggleSelectedHandler: () => (
-      e: React.ChangeEvent<HTMLInputElement>,
+      e: React.ChangeEvent<HTMLInputElement>
     ) => void;
   };
   table: { getRowModel: () => { rows: Array<{ original: Outage }> } };
@@ -122,7 +122,7 @@ export function selectionColumn(options: {
   onRowSelectionChange: (selection: Record<string, boolean>) => void;
 }): ColumnDef<Outage> {
   return {
-    id: "select",
+    id: 'select',
     header: ({ table }) => <SelectAllCheckbox table={table} />,
     cell: ({ row, table }) => (
       <SelectionCell
@@ -153,13 +153,13 @@ const ActionCell = ({ row }: { row: { original: Outage } }) => {
 
       // Invalidate queries via React Query or router refresh
     } catch (error) {
-      console.error("Failed to recompute SLA:", error);
+      console.error('Failed to recompute SLA:', error);
     } finally {
       setIsRecomputing(false);
     }
   };
 
-  if (outage.status !== "resolved") {
+  if (outage.status !== 'resolved') {
     return null;
   }
 
@@ -170,7 +170,7 @@ const ActionCell = ({ row }: { row: { original: Outage } }) => {
       onClick={handleRecompute}
       disabled={isRecomputing}
     >
-      {isRecomputing ? "Recomputing..." : "Recompute SLA"}
+      {isRecomputing ? 'Recomputing...' : 'Recompute SLA'}
     </Button>
   );
 };
@@ -180,30 +180,30 @@ const ActionCell = ({ row }: { row: { original: Outage } }) => {
 /* -------------------------------------------------------------------------- */
 
 export const columns: ColumnDef<Outage>[] = [
-  { accessorKey: "id", header: "ID" },
+  { accessorKey: 'id', header: 'ID' },
   {
-    accessorKey: "severity",
-    header: "Severity",
+    accessorKey: 'severity',
+    header: 'Severity',
     cell: ({ row }) => (
       <Badge variant="destructive">{row.original.severity}</Badge>
     ),
   },
   {
-    accessorKey: "status",
-    header: "Status",
+    accessorKey: 'status',
+    header: 'Status',
     cell: ({ row }) => (
       <Badge
-        variant={row.original.status === "open" ? "destructive" : "default"}
+        variant={row.original.status === 'open' ? 'destructive' : 'default'}
       >
         {row.original.status}
       </Badge>
     ),
   },
-  { accessorKey: "detected_at", header: "Detected" },
-  { accessorKey: "resolved_at", header: "Resolved" },
+  { accessorKey: 'detected_at', header: 'Detected' },
+  { accessorKey: 'resolved_at', header: 'Resolved' },
   {
-    id: "actions",
-    header: "Actions",
+    id: 'actions',
+    header: 'Actions',
     cell: ActionCell,
   },
 ];

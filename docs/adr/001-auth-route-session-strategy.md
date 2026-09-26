@@ -24,10 +24,10 @@ The auth routes (`/login`, `/register`) must handle token storage, redirect pres
 
 ## Alternatives Considered
 
-| Option | Reason rejected |
-|--------|----------------|
-| Next.js middleware-based auth | Added complexity without benefit given current backend JWT model |
-| Cookie-only session | Freighter wallet auth is client-side, making server cookie approach impractical |
+| Option                        | Reason rejected                                                                 |
+| ----------------------------- | ------------------------------------------------------------------------------- |
+| Next.js middleware-based auth | Added complexity without benefit given current backend JWT model                |
+| Cookie-only session           | Freighter wallet auth is client-side, making server cookie approach impractical |
 
 ## References
 

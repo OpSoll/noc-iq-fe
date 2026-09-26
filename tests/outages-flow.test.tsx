@@ -1,11 +1,17 @@
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import React from "react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react';
+import React from 'react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import OutagesPageClient from "@/app/outages/components/outages-page-client";
-import OutageDetailsPage from "@/app/outages/[id]/page";
+import OutagesPageClient from '@/app/outages/components/outages-page-client';
+import OutageDetailsPage from '@/app/outages/[id]/page';
 
-vi.mock("next/link", () => ({
+vi.mock('next/link', () => ({
   default: ({
     children,
     href,
@@ -17,13 +23,15 @@ vi.mock("next/link", () => ({
   ),
 }));
 
-import { ToastProvider } from "@/components/ui/toast";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ToastProvider } from '@/components/ui/toast';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-const testQueryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+const testQueryClient = new QueryClient({
+  defaultOptions: { queries: { retry: false } },
+});
 
-vi.mock("next/navigation", () => ({
-  useParams: () => ({ id: "outage-1" }),
+vi.mock('next/navigation', () => ({
+  useParams: () => ({ id: 'outage-1' }),
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }),
 }));
 
@@ -33,35 +41,35 @@ const mockGetOutage = vi.fn();
 const mockResolveOutage = vi.fn();
 const mockPreviewSLA = vi.fn();
 
-vi.mock("@/hooks/useOutagesTableState", () => ({
+vi.mock('@/hooks/useOutagesTableState', () => ({
   useOutagesTableState: () => mockUseOutagesTableState(),
 }));
 
-vi.mock("@/features/outages/hooks/useOutages", () => ({
+vi.mock('@/features/outages/hooks/useOutages', () => ({
   useOutages: (...args: unknown[]) => mockUseOutages(...args),
 }));
 
-vi.mock("@/services/outages", () => ({
+vi.mock('@/services/outages', () => ({
   getOutage: (...args: unknown[]) => mockGetOutage(...args),
   resolveOutage: (...args: unknown[]) => mockResolveOutage(...args),
 }));
 
-vi.mock("@/services/sla", () => ({
+vi.mock('@/services/sla', () => ({
   previewSLA: (...args: unknown[]) => mockPreviewSLA(...args),
 }));
 
 const baseOutage = {
-  id: "outage-1",
-  site_name: "Lagos Core POP",
-  severity: "critical",
-  status: "open",
-  detected_at: "2026-03-27T08:00:00.000Z",
-  description: "Transit outage",
-  affected_services: ["Backhaul", "Voice"],
+  id: 'outage-1',
+  site_name: 'Lagos Core POP',
+  severity: 'critical',
+  status: 'open',
+  detected_at: '2026-03-27T08:00:00.000Z',
+  description: 'Transit outage',
+  affected_services: ['Backhaul', 'Voice'],
   affected_subscribers: 3200,
 };
 
-describe("outages frontend flow", () => {
+describe('outages frontend flow', () => {
   beforeEach(() => {
     mockUseOutagesTableState.mockReset();
     mockUseOutages.mockReset();
@@ -69,15 +77,15 @@ describe("outages frontend flow", () => {
     mockResolveOutage.mockReset();
     mockPreviewSLA.mockReset();
     mockPreviewSLA.mockResolvedValue({
-      status: "met",
-      rating: "excellent",
+      status: 'met',
+      rating: 'excellent',
       threshold_minutes: 60,
       amount: 150,
-      payment_type: "reward",
+      payment_type: 'reward',
     });
   });
 
-  it("covers outage list browsing", async () => {
+  it('covers outage list browsing', async () => {
     mockUseOutagesTableState.mockReturnValue({
       state: { page: 1, page_size: 10, severity: undefined, status: undefined },
       actions: {
@@ -104,49 +112,49 @@ describe("outages frontend flow", () => {
           <OutagesPageClient
             data={[
               {
-                id: "outage-1",
-                title: "Lagos Core POP",
-                severity: "critical",
-                status: "open",
-                createdAt: "2026-03-27T08:00:00.000Z",
+                id: 'outage-1',
+                title: 'Lagos Core POP',
+                severity: 'critical',
+                status: 'open',
+                createdAt: '2026-03-27T08:00:00.000Z',
               },
             ]}
           />
         </ToastProvider>
-      </QueryClientProvider>,
+      </QueryClientProvider>
     );
 
-    expect(screen.getByText("Lagos Core POP")).toBeInTheDocument();
+    expect(screen.getByText('Lagos Core POP')).toBeInTheDocument();
   });
 
-  it("covers outage detail loading and resolution", async () => {
+  it('covers outage detail loading and resolution', async () => {
     mockGetOutage.mockResolvedValue(baseOutage);
     mockResolveOutage.mockResolvedValue({
       outage: {
         ...baseOutage,
-        status: "resolved",
-        resolved_at: "2026-03-27T09:00:00.000Z",
+        status: 'resolved',
+        resolved_at: '2026-03-27T09:00:00.000Z',
       },
       sla: {
-        status: "met",
+        status: 'met',
         mttr_minutes: 42,
         threshold_minutes: 60,
         amount: 150,
-        payment_type: "reward",
-        rating: "excellent",
+        payment_type: 'reward',
+        rating: 'excellent',
       },
       payment: {
-        id: "pay-1",
-        transaction_hash: "tx-001",
-        type: "reward",
+        id: 'pay-1',
+        transaction_hash: 'tx-001',
+        type: 'reward',
         amount: 150,
-        asset_code: "USDC",
-        from_address: "from-address",
-        to_address: "to-address",
-        status: "pending",
-        outage_id: "outage-1",
+        asset_code: 'USDC',
+        from_address: 'from-address',
+        to_address: 'to-address',
+        status: 'pending',
+        outage_id: 'outage-1',
         sla_result_id: 12,
-        created_at: "2026-03-27T09:00:00.000Z",
+        created_at: '2026-03-27T09:00:00.000Z',
         confirmed_at: null,
       },
     });
@@ -156,28 +164,38 @@ describe("outages frontend flow", () => {
         <ToastProvider>
           <OutageDetailsPage />
         </ToastProvider>
-      </QueryClientProvider>,
+      </QueryClientProvider>
     );
 
-    expect(await screen.findByRole("heading", { name: "Outage outage-1" })).toBeInTheDocument();
-    expect(mockGetOutage).toHaveBeenCalledWith("outage-1", expect.anything());
+    expect(
+      await screen.findByRole('heading', { name: 'Outage outage-1' })
+    ).toBeInTheDocument();
+    expect(mockGetOutage).toHaveBeenCalledWith('outage-1', expect.anything());
 
-    fireEvent.click(screen.getByRole("button", { name: "Resolve Outage" }));
+    fireEvent.click(screen.getByRole('button', { name: 'Resolve Outage' }));
 
-    const mttrInput = screen.getByLabelText("Mean time to resolve (minutes)");
-    fireEvent.change(mttrInput, { target: { value: "42" } });
+    const mttrInput = await screen.findByLabelText(
+      'Mean time to resolve (minutes)'
+    );
+    fireEvent.change(mttrInput, { target: { value: '42' } });
     await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: "Review resolution" }));
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Review resolution' })
+      );
     });
     await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: "Confirm resolution" }));
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Confirm resolution' })
+      );
     });
 
     await waitFor(() => {
-      expect(mockResolveOutage).toHaveBeenCalledWith("outage-1", { mttr_minutes: 42 });
+      expect(mockResolveOutage).toHaveBeenCalledWith('outage-1', {
+        mttr_minutes: 42,
+      });
     });
 
-    expect(await screen.findByText("pending")).toBeInTheDocument();
+    expect(await screen.findByText('pending')).toBeInTheDocument();
     expect(screen.getByText(/150 USDC/)).toBeInTheDocument();
   });
 });

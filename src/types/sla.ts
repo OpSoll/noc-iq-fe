@@ -1,16 +1,16 @@
 export interface SLAResult {
   outage_id?: string;
-  status: "met" | "violated";
+  status: 'met' | 'violated';
   mttr_minutes: number;
   threshold_minutes: number;
   amount: number; // negative = penalty, positive = reward
-  payment_type: "reward" | "penalty";
-  rating: "exceptional" | "excellent" | "good" | "poor";
+  payment_type: 'reward' | 'penalty';
+  rating: 'exceptional' | 'excellent' | 'good' | 'poor';
 }
 
-export type DisputeStatus = "open" | "under_review" | "resolved" | "rejected";
+export type DisputeStatus = 'open' | 'under_review' | 'resolved' | 'rejected';
 
-export type EscalationPriority = "low" | "normal" | "high" | "critical";
+export type EscalationPriority = 'low' | 'normal' | 'high' | 'critical';
 
 export interface DisputeAttachment {
   id: string;
@@ -45,7 +45,7 @@ export interface FlagDisputePayload {
 }
 
 export interface ResolveDisputePayload {
-  action: "resolve" | "reject";
+  action: 'resolve' | 'reject';
   resolution_note?: string;
   /** Stakeholder email addresses to notify of the resolution. */
   notify_recipients?: string[];

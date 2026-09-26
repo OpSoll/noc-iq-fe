@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 
 export interface ConflictInfo {
-  type: "concurrent-session" | "stale-state";
+  type: 'concurrent-session' | 'stale-state';
   message: string;
   affectedActions: string[];
-  severity: "warning" | "error";
+  severity: 'warning' | 'error';
 }
 
 interface ConflictNotificationProps {
@@ -28,9 +28,9 @@ export function ConflictNotification({
   if (!visible) return null;
 
   const bgColor =
-    conflict.severity === "error"
-      ? "border-red-200 bg-red-50 text-red-800"
-      : "border-amber-200 bg-amber-50 text-amber-800";
+    conflict.severity === 'error'
+      ? 'border-red-200 bg-red-50 text-red-800'
+      : 'border-amber-200 bg-amber-50 text-amber-800';
 
   return (
     <div
@@ -40,14 +40,14 @@ export function ConflictNotification({
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 space-y-2">
           <p className="text-sm font-semibold">
-            {conflict.type === "concurrent-session"
-              ? "Session Conflict Detected"
-              : "Stale State Warning"}
+            {conflict.type === 'concurrent-session'
+              ? 'Session Conflict Detected'
+              : 'Stale State Warning'}
           </p>
           <p className="text-xs">{conflict.message}</p>
           {conflict.affectedActions.length > 0 && (
             <p className="text-xs font-medium">
-              Affected actions: {conflict.affectedActions.join(", ")}
+              Affected actions: {conflict.affectedActions.join(', ')}
             </p>
           )}
           <div className="flex gap-2 pt-1">
@@ -105,13 +105,13 @@ export function useConflictDetection() {
     }
 
     window.addEventListener(
-      "session:conflict",
-      handleConflictEvent as EventListener,
+      'session:conflict',
+      handleConflictEvent as EventListener
     );
     return () =>
       window.removeEventListener(
-        "session:conflict",
-        handleConflictEvent as EventListener,
+        'session:conflict',
+        handleConflictEvent as EventListener
       );
   }, []);
 
@@ -122,7 +122,7 @@ export function useConflictDetection() {
         message: info.message,
         timestamp: new Date().toISOString(),
       };
-      localStorage.setItem("noc_conflict_telemetry", JSON.stringify(payload));
+      localStorage.setItem('noc_conflict_telemetry', JSON.stringify(payload));
     } catch {
       // telemetry storage unavailable
     }
@@ -135,7 +135,7 @@ export function useConflictDetection() {
 
   const dismiss = () => setConflict(null);
   const refreshContext = () => {
-    window.dispatchEvent(new Event("auth:refresh-context"));
+    window.dispatchEvent(new Event('auth:refresh-context'));
     setConflict(null);
   };
 

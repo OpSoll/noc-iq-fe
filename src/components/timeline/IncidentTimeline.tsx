@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import React, { useMemo, useState, useCallback } from "react";
+import React, { useMemo, useState, useCallback } from 'react';
 
 export type TimelineEventType =
-  | "user_action"
-  | "backend_response"
-  | "error"
-  | "webhook"
-  | "payment"
-  | "outage";
+  | 'user_action'
+  | 'backend_response'
+  | 'error'
+  | 'webhook'
+  | 'payment'
+  | 'outage';
 
 export interface TimelineEvent {
   id: string;
@@ -20,7 +20,7 @@ export interface TimelineEvent {
   outageId?: string;
   paymentId?: string;
   webhookId?: string;
-  severity?: "info" | "warning" | "error";
+  severity?: 'info' | 'warning' | 'error';
 }
 
 interface IncidentTimelineProps {
@@ -31,18 +31,18 @@ interface IncidentTimelineProps {
 }
 
 const typeIcon: Record<TimelineEventType, string> = {
-  user_action: "👤",
-  backend_response: "⚙️",
-  error: "❌",
-  webhook: "🔔",
-  payment: "💳",
-  outage: "🔴",
+  user_action: '👤',
+  backend_response: '⚙️',
+  error: '❌',
+  webhook: '🔔',
+  payment: '💳',
+  outage: '🔴',
 };
 
 const severityColor: Record<string, string> = {
-  info: "border-blue-300 bg-blue-50 text-blue-800",
-  warning: "border-yellow-300 bg-yellow-50 text-yellow-800",
-  error: "border-red-300 bg-red-50 text-red-800",
+  info: 'border-blue-300 bg-blue-50 text-blue-800',
+  warning: 'border-yellow-300 bg-yellow-50 text-yellow-800',
+  error: 'border-red-300 bg-red-50 text-red-800',
 };
 
 const TimelineEventItem = React.memo(
@@ -55,7 +55,7 @@ const TimelineEventItem = React.memo(
         </div>
         <div
           className={`flex-1 rounded-md border p-3 ${
-            severityColor[event.severity ?? "info"]
+            severityColor[event.severity ?? 'info']
           }`}
         >
           <div className="flex items-center justify-between">
@@ -68,9 +68,9 @@ const TimelineEventItem = React.memo(
         </div>
       </div>
     );
-  },
+  }
 );
-TimelineEventItem.displayName = "TimelineEventItem";
+TimelineEventItem.displayName = 'TimelineEventItem';
 
 function exportToJson(events: TimelineEvent[]): string {
   return JSON.stringify(events, null, 2);
@@ -109,8 +109,8 @@ export default function IncidentTimeline({
   paymentId,
   webhookId,
 }: IncidentTimelineProps) {
-  const [filterType, setFilterType] = useState<TimelineEventType | "all">(
-    "all",
+  const [filterType, setFilterType] = useState<TimelineEventType | 'all'>(
+    'all'
   );
   const [visibleCount, setVisibleCount] = useState(50);
 
@@ -119,17 +119,17 @@ export default function IncidentTimeline({
     if (outageId) result = result.filter((e) => e.outageId === outageId);
     if (paymentId) result = result.filter((e) => e.paymentId === paymentId);
     if (webhookId) result = result.filter((e) => e.webhookId === webhookId);
-    if (filterType !== "all")
+    if (filterType !== 'all')
       result = result.filter((e) => e.type === filterType);
     return result.sort(
       (a, b) =>
-        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
+        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
     );
   }, [events, filterType, outageId, paymentId, webhookId]);
 
   const chains = useMemo(
     () => causalityChain(filteredEvents),
-    [filteredEvents],
+    [filteredEvents]
   );
 
   const visibleChains = useMemo(() => {
@@ -139,9 +139,9 @@ export default function IncidentTimeline({
 
   const handleExport = useCallback(() => {
     const json = exportToJson(filteredEvents);
-    const blob = new Blob([json], { type: "application/json" });
+    const blob = new Blob([json], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
+    const a = document.createElement('a');
     a.href = url;
     a.download = `incident-timeline-${Date.now()}.json`;
     a.click();
@@ -166,7 +166,7 @@ export default function IncidentTimeline({
         <select
           value={filterType}
           onChange={(e) =>
-            setFilterType(e.target.value as TimelineEventType | "all")
+            setFilterType(e.target.value as TimelineEventType | 'all')
           }
           className="rounded-md border border-gray-300 px-2 py-1 text-sm"
         >
@@ -221,7 +221,7 @@ export default function IncidentTimeline({
       )}
 
       <p className="mt-4 text-xs text-gray-400">
-        {filteredEvents.length} event{filteredEvents.length !== 1 ? "s" : ""}
+        {filteredEvents.length} event{filteredEvents.length !== 1 ? 's' : ''}
       </p>
     </div>
   );

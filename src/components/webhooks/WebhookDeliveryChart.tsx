@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useMemo } from "react";
+import { useMemo } from 'react';
 
-import type { WebhookDelivery } from "@/types/webhook";
+import type { WebhookDelivery } from '@/types/webhook';
 
 interface Props {
   deliveries: WebhookDelivery[];
@@ -14,18 +14,19 @@ interface Props {
  */
 export function WebhookDeliveryChart({ deliveries }: Props) {
   const { buckets, avgLatencyMs } = useMemo(() => {
-    const buckets = { "2xx": 0, "4xx": 0, "5xx": 0 };
+    const buckets = { '2xx': 0, '4xx': 0, '5xx': 0 };
     let latencySum = 0;
     let latencyCount = 0;
 
     for (const d of deliveries) {
       const code = d.response_code ?? 0;
-      if (code >= 200 && code < 300) buckets["2xx"] += 1;
-      else if (code >= 400 && code < 500) buckets["4xx"] += 1;
-      else if (code >= 500) buckets["5xx"] += 1;
+      if (code >= 200 && code < 300) buckets['2xx'] += 1;
+      else if (code >= 400 && code < 500) buckets['4xx'] += 1;
+      else if (code >= 500) buckets['5xx'] += 1;
 
-      const latency = (d as WebhookDelivery & { latency_ms?: number }).latency_ms;
-      if (typeof latency === "number") {
+      const latency = (d as WebhookDelivery & { latency_ms?: number })
+        .latency_ms;
+      if (typeof latency === 'number') {
         latencySum += latency;
         latencyCount += 1;
       }
@@ -47,7 +48,7 @@ export function WebhookDeliveryChart({ deliveries }: Props) {
         </h3>
         <span className="text-xs text-gray-500">
           {avgLatencyMs === null
-            ? "Avg latency: n/a"
+            ? 'Avg latency: n/a'
             : `Avg latency: ${Math.round(avgLatencyMs)}ms`}
         </span>
       </div>
@@ -59,15 +60,15 @@ export function WebhookDeliveryChart({ deliveries }: Props) {
         aria-label="Webhook delivery status code bar chart"
       >
         <title>Webhook delivery status codes</title>
-        {(["2xx", "4xx", "5xx"] as const).map((key, i) => {
+        {(['2xx', '4xx', '5xx'] as const).map((key, i) => {
           const barHeight = Math.max(2, (buckets[key] / max) * 64);
           const x = i * 72 + 12;
           const color =
-            key === "2xx"
-              ? "text-green-600"
-              : key === "4xx"
-                ? "text-amber-500"
-                : "text-red-600";
+            key === '2xx'
+              ? 'text-green-600'
+              : key === '4xx'
+                ? 'text-amber-500'
+                : 'text-red-600';
           return (
             <g key={key}>
               <rect

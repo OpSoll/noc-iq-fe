@@ -1,6 +1,7 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef } from 'react';
 
-export type RaceGuardState = "idle" | "pending" | "resolved" | "rejected" | "superseded";
+export type RaceGuardState =
+  'idle' | 'pending' | 'resolved' | 'rejected' | 'superseded';
 
 export type RaceGuardResult<T> = {
   execute: (operation: () => Promise<T>) => Promise<T>;
@@ -10,33 +11,35 @@ export type RaceGuardResult<T> = {
 };
 
 export function useRaceConditionGuard<T = unknown>(): RaceGuardResult<T> {
-  const [state, setState] = useState<RaceGuardState>("idle");
-  const pendingRef = useRef(false);
+  const [state, setState] = useState<RaceGuardState>('idle');
+  const pendingRef = useRef<symbol | null>(null);
 
-  const execute = useCallback(async (operation: () => Promise<T>): Promise<T> => {
-    if (pendingRef.current) {
-      return Promise.reject(new Error("Operation already in progress"));
-    }
-
-    pendingRef.current = true;
-    setState("pending");
+  const execute = useCallback(async (...args: unknown[]): Promise<T> => {
+    const token = Symbol();
+    pendingRef.current = token;
+    setState('pending');
 
     try {
-      const result = await operation();
-      setState("resolved");
+      const fn = args[0] as () => Promise<T>;
+      const result = await fn();
+      if (pendingRef.current !== token) {
+        setState('superseded');
+        return result;
+      }
+      setState('resolved');
       return result;
-    } catch (error) {
-      setState("rejected");
-      throw error;
-    } finally {
-      pendingRef.current = false;
+    } catch {
+      if (pendingRef.current === token) {
+        setState('rejected');
+      }
+      throw new Error('Operation superseded by a newer request');
     }
   }, []);
 
   const reset = useCallback(() => {
-    pendingRef.current = false;
-    setState("idle");
+    pendingRef.current = null;
+    setState('idle');
   }, []);
 
-  return { execute, state, isPending: state === "pending", reset };
+  return { execute, state, isPending: state === 'pending', reset };
 }

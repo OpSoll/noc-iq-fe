@@ -1,8 +1,11 @@
-"use client";
+'use client';
 
 // Closes #454: auto-refresh interval toggle (10s / 30s / 60s / Off) in the dashboard header
 
-import { AUTO_REFRESH_OPTIONS, type AutoRefreshMs } from "@/hooks/useAutoRefresh";
+import {
+  AUTO_REFRESH_OPTIONS,
+  type AutoRefreshMs,
+} from '@/hooks/useAutoRefresh';
 
 interface AutoRefreshControlProps {
   value: AutoRefreshMs;
@@ -22,14 +25,16 @@ export default function AutoRefreshControl({
       <span
         className={`inline-block h-2 w-2 rounded-full ${
           isPolling && isTabVisible
-            ? "animate-pulse bg-green-500"
+            ? 'animate-pulse bg-green-500'
             : isPolling && !isTabVisible
-              ? "bg-amber-400"
-              : "bg-gray-300"
+              ? 'bg-amber-400'
+              : 'bg-gray-300'
         }`}
         aria-hidden="true"
       />
-      <span className="text-xs uppercase tracking-wide text-gray-400">Auto-refresh</span>
+      <span className="text-xs uppercase tracking-wide text-gray-400">
+        Auto-refresh
+      </span>
       <select
         aria-label="Auto-refresh interval"
         className="rounded border border-gray-200 bg-white px-2 py-1 text-sm text-gray-700"
@@ -43,7 +48,10 @@ export default function AutoRefreshControl({
         ))}
       </select>
       {isPolling && !isTabVisible ? (
-        <span className="text-xs text-amber-500" title="Polling paused while this tab is inactive">
+        <span
+          className="text-xs text-amber-500"
+          title="Polling paused while this tab is inactive"
+        >
           Paused
         </span>
       ) : null}

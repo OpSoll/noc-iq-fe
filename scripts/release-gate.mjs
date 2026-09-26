@@ -3,25 +3,25 @@
 // Usage: node scripts/release-gate.mjs
 // Bypass:  RELEASE_GATE_BYPASS=approved node scripts/release-gate.mjs
 
-import { readFileSync } from "node:fs";
-import { createRequire } from "node:module";
-import { fileURLToPath } from "node:url";
-import path from "node:path";
+import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const root = path.resolve(__dirname, "..");
+const root = path.resolve(__dirname, '..');
 
 // ── Load compatibility logic (compiled JS lives in .next; for the gate we
 //    duplicate the pure logic inline to avoid a build dependency at tag time).
 /** @type {Record<string, string[]>} */
 const COMPATIBILITY_MATRIX = {
-  "0.1": ["v1", "v1.1"],
-  "0.2": ["v1.1", "v2"],
-  "1.0": ["v2", "v2.1"],
+  0.1: ['v1', 'v1.1'],
+  0.2: ['v1.1', 'v2'],
+  '1.0': ['v2', 'v2.1'],
 };
 
 function checkCompatibility(feVersion, beVersion) {
-  const prefix = feVersion.split(".").slice(0, 2).join(".");
+  const prefix = feVersion.split('.').slice(0, 2).join('.');
   const supported = COMPATIBILITY_MATRIX[prefix];
   if (!supported) {
     return {
@@ -32,7 +32,7 @@ function checkCompatibility(feVersion, beVersion) {
   if (!supported.includes(beVersion)) {
     return {
       compatible: false,
-      details: `Frontend ${feVersion} supports backend API versions [${supported.join(", ")}], but got "${beVersion}".`,
+      details: `Frontend ${feVersion} supports backend API versions [${supported.join(', ')}], but got "${beVersion}".`,
     };
   }
   return {
@@ -42,24 +42,24 @@ function checkCompatibility(feVersion, beVersion) {
 }
 
 // ── Resolve versions ──────────────────────────────────────────────────────────
-const pkg = JSON.parse(readFileSync(path.join(root, "package.json"), "utf8"));
+const pkg = JSON.parse(readFileSync(path.join(root, 'package.json'), 'utf8'));
 const feVersion = pkg.version;
 
 let beVersion = process.env.BACKEND_API_VERSION;
 if (!beVersion) {
-  const contractPath = path.join(root, "fixtures", "backend-contract.json");
-  const contract = JSON.parse(readFileSync(contractPath, "utf8"));
+  const contractPath = path.join(root, 'fixtures', 'backend-contract.json');
+  const contract = JSON.parse(readFileSync(contractPath, 'utf8'));
   beVersion = contract.apiVersion;
 }
 
 console.log(`Release gate: FE=${feVersion}  BE=${beVersion}`);
 
 // ── Bypass path ───────────────────────────────────────────────────────────────
-if (process.env.RELEASE_GATE_BYPASS === "approved") {
+if (process.env.RELEASE_GATE_BYPASS === 'approved') {
   console.warn(
     `[RELEASE-GATE BYPASS] Compatibility check skipped. ` +
-      `Approved by: ${process.env.RELEASE_GATE_APPROVER ?? "unspecified"}. ` +
-      `Reason: ${process.env.RELEASE_GATE_REASON ?? "no reason provided"}.`
+      `Approved by: ${process.env.RELEASE_GATE_APPROVER ?? 'unspecified'}. ` +
+      `Reason: ${process.env.RELEASE_GATE_REASON ?? 'no reason provided'}.`
   );
   process.exit(0);
 }

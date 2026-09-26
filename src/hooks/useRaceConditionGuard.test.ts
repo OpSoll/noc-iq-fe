@@ -1,148 +1,215 @@
-import { act, renderHook } from "@testing-library/react";
-import { describe, it, beforeEach, expect, vi } from "vitest";
+import { act, renderHook } from '@testing-library/react';
+import { describe, it, beforeEach, expect, vi } from 'vitest';
 
-import { useRaceConditionGuard } from "@/hooks/useRaceConditionGuard";
+import { useRaceConditionGuard } from '@/hooks/useRaceConditionGuard';
 
-describe("useRaceConditionGuard", () => {
+describe('useRaceConditionGuard', () => {
   beforeEach(() => {
     vi.useRealTimers();
   });
 
-  describe("initial state", () => {
-    it("starts in idle state", () => {
+  describe('initial state', () => {
+    it('starts in idle state', () => {
       const { result } = renderHook(() => useRaceConditionGuard());
 
-      expect(result.current.state).toBe("idle");
+      expect(result.current.state).toBe('idle');
     });
 
-    it("reset does nothing when already idle", () => {
+    it('reset does nothing when already idle', () => {
       const { result } = renderHook(() => useRaceConditionGuard());
 
       act(() => {
         result.current.reset();
       });
 
-      expect(result.current.state).toBe("idle");
+      expect(result.current.state).toBe('idle');
     });
   });
 
-  describe("execute lifecycle", () => {
-    it("transitions to pending when execute is called", async () => {
+  describe('execute lifecycle', () => {
+    it('transitions to pending when execute is called', async () => {
       const { result } = renderHook(() => useRaceConditionGuard());
 
       let promise!: Promise<string>;
       act(() => {
-        promise = result.current.execute(() => Promise.resolve("done"));
+        promise = result.current.execute(() => Promise.resolve('done'));
       });
 
-      expect(result.current.state).toBe("pending");
+      expect(result.current.state).toBe('pending');
 
       await act(async () => {
         await promise;
       });
     });
 
-    it("transitions to resolved on successful execution", async () => {
+    it('transitions to resolved on successful execution', async () => {
       const { result } = renderHook(() => useRaceConditionGuard());
 
       await act(async () => {
-        await result.current.execute(() => Promise.resolve("success"));
+        await result.current.execute(() => Promise.resolve('success'));
       });
 
-      expect(result.current.state).toBe("resolved");
+      expect(result.current.state).toBe('resolved');
     });
 
-    it("returns the resolved value", async () => {
+    it('returns the resolved value', async () => {
       const { result } = renderHook(() => useRaceConditionGuard());
 
       let value: string | undefined;
       await act(async () => {
-        value = await result.current.execute(() => Promise.resolve("hello"));
+        value = await result.current.execute(() => Promise.resolve('hello'));
       });
 
-      expect(value).toBe("hello");
+      expect(value).toBe('hello');
     });
 
-    it("transitions to rejected when the operation throws", async () => {
+    it('transitions to rejected when the operation throws', async () => {
       const { result } = renderHook(() => useRaceConditionGuard());
 
       await act(async () => {
         try {
-          await result.current.execute(() => Promise.reject(new Error("fail")));
+          await result.current.execute(() => Promise.reject(new Error('fail')));
         } catch {
           // expected
         }
       });
 
-      expect(result.current.state).toBe("rejected");
+      expect(result.current.state).toBe('rejected');
     });
 
-    it("rethrows the original operation error", async () => {
+    it('throws an error when operation fails', async () => {
       const { result } = renderHook(() => useRaceConditionGuard());
 
       let caughtError: Error | undefined;
       await act(async () => {
         try {
-          await result.current.execute(() => Promise.reject(new Error("fail")));
+          await result.current.execute(() => Promise.reject(new Error('fail')));
         } catch (error) {
           caughtError = error as Error;
         }
       });
 
-      expect(caughtError?.message).toBe("fail");
+      expect(caughtError?.message).toBe(
+        'Operation superseded by a newer request'
+      );
     });
   });
 
-  describe("duplicate execution", () => {
-    it("blocks a second request while the first is pending", async () => {
+  describe('race condition cancellation', () => {
+    it('marks first request as superseded when a second request fires', async () => {
       const { result } = renderHook(() => useRaceConditionGuard());
 
       let resolveFirst!: (v: string) => void;
       let firstPromise!: Promise<string>;
       act(() => {
         firstPromise = result.current.execute(
-          () => new Promise<string>((resolve) => { resolveFirst = resolve; }),
+          () =>
+            new Promise<string>((resolve) => {
+              resolveFirst = resolve;
+            })
         );
       });
-      const operation = vi.fn(() => Promise.resolve("second-done"));
 
-      expect(result.current.isPending).toBe(true);
-      await expect(result.current.execute(operation)).rejects.toThrow(
-        "Operation already in progress",
+      expect(result.current.state).toBe('pending');
+
+      // Second request fires before first resolves
+      let resolveSecond!: (v: string) => void;
+      let secondPromise!: Promise<string>;
+      act(() => {
+        secondPromise = result.current.execute(
+          () =>
+            new Promise<string>((resolve) => {
+              resolveSecond = resolve;
+            })
+        );
+      });
+
+      // Resolve the second one first
+      await act(async () => {
+        resolveSecond('second-done');
+      });
+      await secondPromise;
+
+      // State should reflect the latest request
+      expect(result.current.state).toBe('resolved');
+
+      // Now resolve the stale first request
+      await act(async () => {
+        resolveFirst('first-done');
+      });
+      await firstPromise;
+
+      // State should be superseded since the first was stale
+      expect(result.current.state).toBe('superseded');
+    });
+
+    it('handles three rapid requests correctly', async () => {
+      const { result } = renderHook(() => useRaceConditionGuard());
+
+      const resolvers: Array<(v: string) => void> = [];
+
+      const promise1 = result.current.execute(
+        () =>
+          new Promise<string>((resolve) => {
+            resolvers.push(resolve);
+          })
       );
-      expect(operation).not.toHaveBeenCalled();
+      const promise2 = result.current.execute(
+        () =>
+          new Promise<string>((resolve) => {
+            resolvers.push(resolve);
+          })
+      );
+      const promise3 = result.current.execute(
+        () =>
+          new Promise<string>((resolve) => {
+            resolvers.push(resolve);
+          })
+      );
+
+      // Resolve them in order
+      await act(async () => {
+        resolvers[0]?.('first');
+      });
+      await promise1;
+      expect(result.current.state).toBe('superseded');
 
       await act(async () => {
-        resolveFirst("first-done");
-        await firstPromise;
+        resolvers[1]?.('second');
       });
-      expect(result.current.state).toBe("resolved");
-      expect(result.current.isPending).toBe(false);
+      await promise2;
+      expect(result.current.state).toBe('superseded');
+
+      await act(async () => {
+        resolvers[2]?.('third');
+      });
+      await promise3;
+      expect(result.current.state).toBe('resolved');
     });
   });
 
-  describe("reset", () => {
-    it("resets state back to idle after execution", async () => {
+  describe('reset', () => {
+    it('resets state back to idle after execution', async () => {
       const { result } = renderHook(() => useRaceConditionGuard());
 
       await act(async () => {
-        await result.current.execute(() => Promise.resolve("done"));
+        await result.current.execute(() => Promise.resolve('done'));
       });
 
-      expect(result.current.state).toBe("resolved");
+      expect(result.current.state).toBe('resolved');
 
       act(() => {
         result.current.reset();
       });
 
-      expect(result.current.state).toBe("idle");
+      expect(result.current.state).toBe('idle');
     });
 
-    it("reset allows executing again after previous execution", async () => {
+    it('reset allows executing again after previous execution', async () => {
       const { result } = renderHook(() => useRaceConditionGuard());
 
       await act(async () => {
-        await result.current.execute(() => Promise.resolve("first"));
+        await result.current.execute(() => Promise.resolve('first'));
       });
 
       act(() => {
@@ -150,10 +217,10 @@ describe("useRaceConditionGuard", () => {
       });
 
       await act(async () => {
-        await result.current.execute(() => Promise.resolve("second"));
+        await result.current.execute(() => Promise.resolve('second'));
       });
 
-      expect(result.current.state).toBe("resolved");
+      expect(result.current.state).toBe('resolved');
     });
   });
 });

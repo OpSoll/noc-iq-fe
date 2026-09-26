@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from 'react';
 
 // Closes #454: auto-refresh interval toggle for the dashboard header
 
@@ -12,10 +12,10 @@ export interface AutoRefreshOption {
 }
 
 export const AUTO_REFRESH_OPTIONS: AutoRefreshOption[] = [
-  { label: "Off", value: 0 },
-  { label: "10s", value: 10_000 },
-  { label: "30s", value: 30_000 },
-  { label: "60s", value: 60_000 },
+  { label: 'Off', value: 0 },
+  { label: '10s', value: 10_000 },
+  { label: '30s', value: 30_000 },
+  { label: '60s', value: 60_000 },
 ];
 
 export interface UseAutoRefreshResult {
@@ -43,22 +43,26 @@ export interface UseAutoRefreshResult {
  * regains focus.
  */
 export function useAutoRefresh(
-  defaultIntervalMs: AutoRefreshMs = 0,
+  defaultIntervalMs: AutoRefreshMs = 0
 ): UseAutoRefreshResult {
-  const [intervalMs, setIntervalMs] = useState<AutoRefreshMs>(defaultIntervalMs);
+  const [intervalMs, setIntervalMs] =
+    useState<AutoRefreshMs>(defaultIntervalMs);
   const [isTabVisible, setIsTabVisible] = useState(() =>
-    typeof document === "undefined" ? true : document.visibilityState === "visible",
+    typeof document === 'undefined'
+      ? true
+      : document.visibilityState === 'visible'
   );
 
   useEffect(() => {
-    if (typeof document === "undefined") return;
+    if (typeof document === 'undefined') return;
 
     function handleVisibilityChange() {
-      setIsTabVisible(document.visibilityState === "visible");
+      setIsTabVisible(document.visibilityState === 'visible');
     }
 
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () =>
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
 
   const setIntervalMsCallback = useCallback((value: AutoRefreshMs) => {

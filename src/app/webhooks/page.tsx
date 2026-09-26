@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useSearchParams } from "next/navigation";
-import { useState, useEffect, useMemo } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { FixedSizeList } from "react-window";
+import { useSearchParams } from 'next/navigation';
+import { useState, useEffect, useMemo } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { FixedSizeList } from 'react-window';
 import {
   fetchWebhooks,
   createWebhook,
@@ -13,21 +13,21 @@ import {
   retryDelivery,
   testWebhookConnection,
   rotateWebhookSecret,
-} from "@/services/webhookService";
-import { saveDraft, loadDraft, clearDraft } from "@/lib/drafts";
-import type { Webhook, WebhookDelivery } from "@/types/webhook";
-import { WebhookDeliveryChart } from "@/components/webhooks/WebhookDeliveryChart";
-import { JsonPayloadViewer } from "@/components/webhooks/JsonPayloadViewer";
-import { useToast } from "@/components/ui/toast";
-import { RotateSecretModal } from "@/components/webhooks/RotateSecretModal";
+} from '@/services/webhookService';
+import { saveDraft, loadDraft, clearDraft } from '@/lib/drafts';
+import type { Webhook, WebhookDelivery } from '@/types/webhook';
+import { WebhookDeliveryChart } from '@/components/webhooks/WebhookDeliveryChart';
+import { JsonPayloadViewer } from '@/components/webhooks/JsonPayloadViewer';
+import { useToast } from '@/components/ui/toast';
+import { RotateSecretModal } from '@/components/webhooks/RotateSecretModal';
 
 const AVAILABLE_EVENTS = [
-  "outage.created",
-  "outage.resolved",
-  "payment.processed",
-  "sla.breached",
+  'outage.created',
+  'outage.resolved',
+  'payment.processed',
+  'sla.breached',
 ];
-const DRAFT_KEY = "webhook-new";
+const DRAFT_KEY = 'webhook-new';
 
 export default function WebhooksPage() {
   const qc = useQueryClient();
@@ -36,10 +36,10 @@ export default function WebhooksPage() {
   const [inspectedDelivery, setInspectedDelivery] =
     useState<WebhookDelivery | null>(null);
   const [rotatingWebhookId, setRotatingWebhookId] = useState<string | null>(
-    null,
+    null
   );
   const [showForm, setShowForm] = useState(false);
-  const [formUrl, setFormUrl] = useState("");
+  const [formUrl, setFormUrl] = useState('');
   const [formEvents, setFormEvents] = useState<string[]>([]);
   const [formError, setFormError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -48,9 +48,9 @@ export default function WebhooksPage() {
   const [draftRestored, setDraftRestored] = useState(hasDraft);
 
   const searchParams = useSearchParams();
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState('all');
   const [eventFilter, setEventFilter] = useState(
-    searchParams.get("event") || "all",
+    searchParams.get('event') || 'all'
   );
 
   useEffect(() => {
@@ -67,9 +67,9 @@ export default function WebhooksPage() {
   function restoreWebhookDraft() {
     const draft = loadDraft(DRAFT_KEY);
     if (draft) {
-      setFormUrl(draft.values.url || "");
+      setFormUrl(draft.values.url || '');
       try {
-        setFormEvents(JSON.parse(draft.values.events || "[]"));
+        setFormEvents(JSON.parse(draft.values.events || '[]'));
       } catch {
         setFormEvents([]);
       }
@@ -83,49 +83,39 @@ export default function WebhooksPage() {
   }
 
   const { data: webhooks = [], isLoading } = useQuery({
-    queryKey: ["webhooks"],
+    queryKey: ['webhooks'],
     queryFn: fetchWebhooks,
   });
 
   const { data: deliveries = [], isLoading: deliveriesLoading } = useQuery({
-    queryKey: ["webhook-deliveries", selectedWebhook?.id],
+    queryKey: ['webhook-deliveries', selectedWebhook?.id],
     queryFn: () => fetchWebhookDeliveries(selectedWebhook!.id),
     enabled: !!selectedWebhook,
   });
 
   const filteredDeliveries = useMemo(() => {
-        <div className="flex gap-2 mb-4">
-          {["all", "success", "retrying", "failed"].map(s => (
-            <button
-              key={s}
-              type="button"
-              onClick={() => setStatusFilter(s)}
-              className={`px-3 py-1 rounded-full text-xs font-medium border capitalize ${
-                statusFilter === s ? "bg-slate-800 text-white" : "bg-white text-slate-600"
-              }`}
-            >
-              {s}
-            </button>
-          ))}
-        </div>
     return deliveries.filter((d) => {
       const code = d.response_code ?? -1;
       const statusMatch =
-        statusFilter === "all" ||
-        (statusFilter === "success" && code >= 200 && code < 300) ||
-        (statusFilter === "client_error" && code >= 400 && code < 500) ||
-        (statusFilter === "server_error" && code >= 500);
-      const eventMatch = eventFilter === "all" || d.event === eventFilter;
+        statusFilter === 'all' ||
+        (statusFilter === 'success' && code >= 200 && code < 300) ||
+        (statusFilter === 'client_error' && code >= 400 && code < 500) ||
+        (statusFilter === 'server_error' && code >= 500);
+      const eventMatch = eventFilter === 'all' || d.event === eventFilter;
       return statusMatch && eventMatch;
     });
   }, [deliveries, statusFilter, eventFilter]);
 
-  const [customHeaders, setCustomHeaders] = useState<Array<{ key: string; value: string }>>([]);
+  const [customHeaders, setCustomHeaders] = useState<
+    Array<{ key: string; value: string }>
+  >([]);
   const [retentionDays, setRetentionDays] = useState(30);
   const [disableThreshold, setDisableThreshold] = useState(5);
 
-  const addHeader = () => setCustomHeaders([...customHeaders, { key: "", value: "" }]);
-  const removeHeader = (index: number) => setCustomHeaders(customHeaders.filter((_, i) => i !== index));
+  const addHeader = () =>
+    setCustomHeaders([...customHeaders, { key: '', value: '' }]);
+  const removeHeader = (index: number) =>
+    setCustomHeaders(customHeaders.filter((_, i) => i !== index));
   const updateHeader = (index: number, k: string, v: string) => {
     const updated = [...customHeaders];
     updated[index] = { key: k, value: v };
@@ -133,26 +123,35 @@ export default function WebhooksPage() {
   };
 
   const handleExportCSV = () => {
-    const headers = ["ID", "Event", "Response Code", "Timestamp"];
-    const rows = filteredDeliveries.map(d => [d.id, d.event, d.response_code ?? "N/A", d.created_at]);
-    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
-    const link = document.createElement("a");
+    const headers = ['ID', 'Event', 'Response Code', 'Timestamp'];
+    const rows = filteredDeliveries.map((d) => [
+      d.id,
+      d.event,
+      d.response_code ?? 'N/A',
+      d.created_at,
+    ]);
+    const csvContent =
+      'data:text/csv;charset=utf-8,' +
+      [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+    const link = document.createElement('a');
     link.href = encodeURI(csvContent);
-    link.download = "webhook_deliveries.csv";
+    link.download = 'webhook_deliveries.csv';
     link.click();
   };
 
   const handleExportJSON = () => {
-    const blob = new Blob([JSON.stringify(filteredDeliveries, null, 2)], { type: "application/json" });
+    const blob = new Blob([JSON.stringify(filteredDeliveries, null, 2)], {
+      type: 'application/json',
+    });
     const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
+    const link = document.createElement('a');
     link.href = url;
-    link.download = "webhook_deliveries.json";
+    link.download = 'webhook_deliveries.json';
     link.click();
   };
   const [maxRetries, setMaxRetries] = useState(3);
   const [backoffSeconds, setBackoffSeconds] = useState(5);
-  const [payloadSearchQuery, setPayloadSearchQuery] = useState("");
+  const [payloadSearchQuery, setPayloadSearchQuery] = useState('');
 
   const verifySnippetNode = `const crypto = require('crypto');
 const signature = req.headers['x-signature'];
@@ -167,7 +166,7 @@ is_valid = hmac.compare_digest(signature, hash)`;
   const createMutation = useMutation({
     mutationFn: createWebhook,
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["webhooks"] });
+      qc.invalidateQueries({ queryKey: ['webhooks'] });
       clearDraft(DRAFT_KEY);
       resetForm();
     },
@@ -183,7 +182,7 @@ is_valid = hmac.compare_digest(signature, hash)`;
       payload: Parameters<typeof updateWebhook>[1];
     }) => updateWebhook(id, payload),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["webhooks"] });
+      qc.invalidateQueries({ queryKey: ['webhooks'] });
       resetForm();
     },
     onError: (err: Error) => setFormError(err.message),
@@ -192,7 +191,7 @@ is_valid = hmac.compare_digest(signature, hash)`;
   const deleteMutation = useMutation({
     mutationFn: deleteWebhook,
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["webhooks"] });
+      qc.invalidateQueries({ queryKey: ['webhooks'] });
       if (selectedWebhook) setSelectedWebhook(null);
     },
   });
@@ -204,10 +203,9 @@ is_valid = hmac.compare_digest(signature, hash)`;
     }: {
       webhookId: string;
       graceHours: number;
-    }) =>
-      rotateWebhookSecret(webhookId, { grace_period_hours: graceHours }),
+    }) => rotateWebhookSecret(webhookId, { grace_period_hours: graceHours }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["webhooks"] });
+      qc.invalidateQueries({ queryKey: ['webhooks'] });
       setRotatingWebhookId(null);
     },
   });
@@ -222,12 +220,12 @@ is_valid = hmac.compare_digest(signature, hash)`;
     }) => retryDelivery(webhookId, deliveryId),
     onSuccess: () => {
       qc.invalidateQueries({
-        queryKey: ["webhook-deliveries", selectedWebhook?.id],
+        queryKey: ['webhook-deliveries', selectedWebhook?.id],
       });
-      toast("Webhook redelivery triggered.", "success");
+      toast('Webhook redelivery triggered.', 'success');
     },
     onError: (err: Error) =>
-      toast(err.message || "Webhook redelivery failed.", "error"),
+      toast(err.message || 'Webhook redelivery failed.', 'error'),
   });
 
   const testConnectionMutation = useMutation({
@@ -236,7 +234,7 @@ is_valid = hmac.compare_digest(signature, hash)`;
 
   function resetForm() {
     setShowForm(false);
-    setFormUrl("");
+    setFormUrl('');
     setFormEvents([]);
     setFormError(null);
     setEditingId(null);
@@ -245,7 +243,7 @@ is_valid = hmac.compare_digest(signature, hash)`;
 
   function openCreate() {
     setEditingId(null);
-    setFormUrl("");
+    setFormUrl('');
     setFormEvents([]);
     setFormError(null);
     setShowForm(true);
@@ -259,17 +257,17 @@ is_valid = hmac.compare_digest(signature, hash)`;
     setShowForm(true);
   }
 
-  function handleFilterChange(type: "status" | "event", value: string) {
+  function handleFilterChange(type: 'status' | 'event', value: string) {
     const url = new URL(window.location.href);
     url.searchParams.set(type, value);
-    window.history.pushState({}, "", url);
-    if (type === "status") setStatusFilter(value);
-    if (type === "event") setEventFilter(value);
+    window.history.pushState({}, '', url);
+    if (type === 'status') setStatusFilter(value);
+    if (type === 'event') setEventFilter(value);
   }
 
   function toggleEvent(event: string) {
     setFormEvents((prev) =>
-      prev.includes(event) ? prev.filter((e) => e !== event) : [...prev, event],
+      prev.includes(event) ? prev.filter((e) => e !== event) : [...prev, event]
     );
   }
 
@@ -277,11 +275,11 @@ is_valid = hmac.compare_digest(signature, hash)`;
     e.preventDefault();
     setFormError(null);
     if (!formUrl) {
-      setFormError("URL is required.");
+      setFormError('URL is required.');
       return;
     }
     if (formEvents.length === 0) {
-      setFormError("Select at least one event.");
+      setFormError('Select at least one event.');
       return;
     }
 
@@ -320,7 +318,7 @@ is_valid = hmac.compare_digest(signature, hash)`;
           className="space-y-4 rounded-xl border bg-white p-5 shadow-sm"
         >
           <h2 className="text-base font-semibold text-gray-700">
-            {editingId ? "Edit webhook" : "New webhook"}
+            {editingId ? 'Edit webhook' : 'New webhook'}
           </h2>
 
           {draftRestoreShown && (
@@ -361,19 +359,21 @@ is_valid = hmac.compare_digest(signature, hash)`;
                 disabled={!formUrl || testConnectionMutation.isPending}
                 className="shrink-0 rounded-lg border px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-40"
               >
-                {testConnectionMutation.isPending ? "Testing…" : "Test Connection"}
+                {testConnectionMutation.isPending
+                  ? 'Testing…'
+                  : 'Test Connection'}
               </button>
             </div>
             {testConnectionMutation.data && (
               <p className="text-xs text-green-600">
-                HTTP {testConnectionMutation.data.statusCode} &middot;{" "}
+                HTTP {testConnectionMutation.data.statusCode} &middot;{' '}
                 {testConnectionMutation.data.latencyMs}ms
               </p>
             )}
             {testConnectionMutation.isError && (
               <p className="text-xs text-red-600">
                 {(testConnectionMutation.error as Error).message ||
-                  "Connection test failed."}
+                  'Connection test failed.'}
               </p>
             )}
           </div>
@@ -404,23 +404,33 @@ is_valid = hmac.compare_digest(signature, hash)`;
             </p>
           )}
 
-                      <div className="relative group">
-              <span className="text-xs text-blue-600 cursor-pointer underline">View Event Payload Schema</span>
-              <div className="hidden group-hover:block absolute left-0 bottom-6 bg-slate-900 text-white text-xs rounded p-3 w-64 shadow-lg z-50">
-                <p className="font-bold border-b pb-1 mb-1">Payload Fields:</p>
-                <p><strong>id:</strong> string (UUID)</p>
-                <p><strong>event:</strong> string (event name)</p>
-                <p><strong>timestamp:</strong> number (epoch millis)</p>
-                <p><strong>data:</strong> object (event content)</p>
-              </div>
+          <div className="relative group">
+            <span className="text-xs text-blue-600 cursor-pointer underline">
+              View Event Payload Schema
+            </span>
+            <div className="hidden group-hover:block absolute left-0 bottom-6 bg-slate-900 text-white text-xs rounded p-3 w-64 shadow-lg z-50">
+              <p className="font-bold border-b pb-1 mb-1">Payload Fields:</p>
+              <p>
+                <strong>id:</strong> string (UUID)
+              </p>
+              <p>
+                <strong>event:</strong> string (event name)
+              </p>
+              <p>
+                <strong>timestamp:</strong> number (epoch millis)
+              </p>
+              <p>
+                <strong>data:</strong> object (event content)
+              </p>
             </div>
+          </div>
           <div className="flex gap-2">
             <button
               type="submit"
               disabled={isSaving}
               className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-40"
             >
-              {isSaving ? "Saving…" : "Save"}
+              {isSaving ? 'Saving…' : 'Save'}
             </button>
             <button
               type="button"
@@ -450,11 +460,11 @@ is_valid = hmac.compare_digest(signature, hash)`;
                     {wh.url}
                   </p>
                   <p className="mt-0.5 text-xs text-gray-400">
-                    {wh.events.join(", ")} &middot;{" "}
+                    {wh.events.join(', ')} &middot;{' '}
                     <span
-                      className={wh.active ? "text-green-600" : "text-gray-400"}
+                      className={wh.active ? 'text-green-600' : 'text-gray-400'}
                     >
-                      {wh.active ? "Active" : "Inactive"}
+                      {wh.active ? 'Active' : 'Inactive'}
                     </span>
                   </p>
                 </div>
@@ -462,14 +472,14 @@ is_valid = hmac.compare_digest(signature, hash)`;
                   <button
                     onClick={() =>
                       setSelectedWebhook(
-                        selectedWebhook?.id === wh.id ? null : wh,
+                        selectedWebhook?.id === wh.id ? null : wh
                       )
                     }
                     className="rounded border px-2 py-1 text-xs text-gray-600 hover:bg-gray-50"
                   >
                     {selectedWebhook?.id === wh.id
-                      ? "Hide deliveries"
-                      : "Deliveries"}
+                      ? 'Hide deliveries'
+                      : 'Deliveries'}
                   </button>
                   <button
                     onClick={() => openEdit(wh)}
@@ -480,7 +490,7 @@ is_valid = hmac.compare_digest(signature, hash)`;
                   <button
                     onClick={() =>
                       setRotatingWebhookId(
-                        rotatingWebhookId === wh.id ? null : wh.id,
+                        rotatingWebhookId === wh.id ? null : wh.id
                       )
                     }
                     className="rounded border border-amber-200 px-2 py-1 text-xs text-amber-700 hover:bg-amber-50"
@@ -525,7 +535,7 @@ is_valid = hmac.compare_digest(signature, hash)`;
                         type="text"
                         placeholder="Search JSON payloads..."
                         value={payloadSearchQuery}
-                        onChange={e => setPayloadSearchQuery(e.target.value)}
+                        onChange={(e) => setPayloadSearchQuery(e.target.value)}
                         className="rounded border p-1 text-xs text-gray-800 max-w-xs"
                       />
                     </div>
@@ -533,7 +543,7 @@ is_valid = hmac.compare_digest(signature, hash)`;
                       <select
                         value={statusFilter}
                         onChange={(e) =>
-                          handleFilterChange("status", e.target.value)
+                          handleFilterChange('status', e.target.value)
                         }
                         className="rounded-md border-gray-300 py-1 text-xs focus:border-blue-500 focus:ring-blue-500"
                       >
@@ -545,7 +555,7 @@ is_valid = hmac.compare_digest(signature, hash)`;
                       <select
                         value={eventFilter}
                         onChange={(e) =>
-                          handleFilterChange("event", e.target.value)
+                          handleFilterChange('event', e.target.value)
                         }
                         className="rounded-md border-gray-300 py-1 text-xs focus:border-blue-500 focus:ring-blue-500"
                       >
@@ -567,7 +577,9 @@ is_valid = hmac.compare_digest(signature, hash)`;
                   ) : (
                     <div
                       className="rounded-lg"
-                      style={{ height: Math.min(filteredDeliveries.length, 15) * 44 }}
+                      style={{
+                        height: Math.min(filteredDeliveries.length, 15) * 44,
+                      }}
                     >
                       <FixedSizeList
                         height={Math.min(filteredDeliveries.length, 15) * 44}
@@ -586,11 +598,11 @@ is_valid = hmac.compare_digest(signature, hash)`;
                               <div className="flex items-center gap-3">
                                 <span
                                   className={
-                                    d.status === "success"
-                                      ? "text-green-600"
-                                      : d.status === "failed"
-                                        ? "text-red-600"
-                                        : "text-yellow-600"
+                                    d.status === 'success'
+                                      ? 'text-green-600'
+                                      : d.status === 'failed'
+                                        ? 'text-red-600'
+                                        : 'text-yellow-600'
                                   }
                                 >
                                   {d.status}
@@ -609,16 +621,16 @@ is_valid = hmac.compare_digest(signature, hash)`;
                                 <button
                                   onClick={() =>
                                     setInspectedDelivery(
-                                      inspectedDelivery?.id === d.id ? null : d,
+                                      inspectedDelivery?.id === d.id ? null : d
                                     )
                                   }
                                   className="rounded border border-gray-200 px-2 py-0.5 text-gray-600 hover:bg-white"
                                 >
                                   {inspectedDelivery?.id === d.id
-                                    ? "Hide Payload"
-                                    : "View Payload"}
+                                    ? 'Hide Payload'
+                                    : 'View Payload'}
                                 </button>
-                                {d.status === "failed" && (
+                                {d.status === 'failed' && (
                                   <button
                                     onClick={() =>
                                       retryMutation.mutate({
@@ -644,15 +656,19 @@ is_valid = hmac.compare_digest(signature, hash)`;
                     <div className="mt-3 space-y-3">
                       <JsonPayloadViewer
                         title="Request payload"
-                        payload={inspectedDelivery.request_body ?? {
-                          note: "No request body recorded for this delivery.",
-                        }}
+                        payload={
+                          inspectedDelivery.request_body ?? {
+                            note: 'No request body recorded for this delivery.',
+                          }
+                        }
                       />
                       <JsonPayloadViewer
                         title="Response body"
-                        payload={inspectedDelivery.response_body ?? {
-                          note: "No response body recorded for this delivery.",
-                        }}
+                        payload={
+                          inspectedDelivery.response_body ?? {
+                            note: 'No response body recorded for this delivery.',
+                          }
+                        }
                       />
                     </div>
                   )}

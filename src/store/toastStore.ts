@@ -9,5 +9,8 @@ interface ToastStoreState {
 }
 export const useToastStore = create<ToastStoreState>((set) => ({
   toasts: [],
-  addToast: (message) => set((state) => ({ toasts: [...state.toasts, { id: Math.random().toString(), message }] })),
+  addToast: (message) =>
+    set((state) => ({
+      toasts: [...state.toasts, { id: Math.random().toString(), message }],
+    })),
 }));
