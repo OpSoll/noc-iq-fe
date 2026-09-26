@@ -5,6 +5,7 @@ import { WifiOff } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useToast } from '@/components/ui/toast';
 import { downloadCsv } from '@/lib/urlSyncAndExport';
+import { useUrlSync } from '@/hooks/useUrlSync';
 import { deleteOutage } from '@/services/outages';
 import { SeverityBadge } from '@/components/shared/SeverityBadgeAndShortcuts';
 import type { Severity, OutageStatus } from '@/types/outages';
@@ -31,6 +32,13 @@ type Props = {
 // Stable identity — a `data = []` default would be a new array each render and
 // would retrigger the sync effect below forever.
 const EMPTY_OUTAGES: Outage[] = [];
+const FILTER_DEFAULTS = {
+  search: '',
+  severity: '',
+  date_from: '',
+  date_to: '',
+  sort: 'date',
+};
 
 export default function OutagesPageClient({
   data = EMPTY_OUTAGES,
@@ -41,8 +49,15 @@ export default function OutagesPageClient({
   // -----------------------------
   // State
   // -----------------------------
-  const [search, setSearch] = useState('');
-  const [sortBy, setSortBy] = useState<'date' | 'title'>('date');
+  const [filters, setFilters] = useUrlSync(FILTER_DEFAULTS);
+  const {
+    search,
+    severity,
+    date_from: dateFrom,
+    date_to: dateTo,
+    sort,
+  } = filters;
+  const sortBy = sort as 'date' | 'title';
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [rows, setRows] = useState<Outage[]>(data);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -67,6 +82,18 @@ export default function OutagesPageClient({
       );
     }
 
+    if (severity) {
+      result = result.filter((item) => item.severity === severity);
+    }
+
+    if (dateFrom) {
+      result = result.filter((item) => item.createdAt.slice(0, 10) >= dateFrom);
+    }
+
+    if (dateTo) {
+      result = result.filter((item) => item.createdAt.slice(0, 10) <= dateTo);
+    }
+
     // Sort
     if (sortBy === 'date') {
       result.sort(
@@ -80,7 +107,7 @@ export default function OutagesPageClient({
     }
 
     return result;
-  }, [rows, search, sortBy]);
+  }, [rows, search, severity, dateFrom, dateTo, sortBy]);
 
   // -----------------------------
   // Selection State (visible rows)
@@ -221,14 +248,49 @@ export default function OutagesPageClient({
           type="text"
           placeholder="Search outages..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => setFilters({ search: e.target.value })}
           className="border rounded-md px-3 py-2 w-full sm:max-w-sm"
         />
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <select
+            aria-label="Filter by severity"
+            value={severity}
+            onChange={(e) => setFilters({ severity: e.target.value })}
+            className="border rounded-md px-3 py-2"
+          >
+            <option value="">All severities</option>
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+            <option value="critical">Critical</option>
+          </select>
+          <label className="sr-only" htmlFor="outage-date-from">
+            From date
+          </label>
+          <input
+            id="outage-date-from"
+            aria-label="From date"
+            type="date"
+            value={dateFrom}
+            onChange={(e) => setFilters({ date_from: e.target.value })}
+            className="border rounded-md px-3 py-2"
+          />
+          <label className="sr-only" htmlFor="outage-date-to">
+            To date
+          </label>
+          <input
+            id="outage-date-to"
+            aria-label="To date"
+            type="date"
+            value={dateTo}
+            onChange={(e) => setFilters({ date_to: e.target.value })}
+            className="border rounded-md px-3 py-2"
+          />
+
           <select
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as 'date' | 'title')}
+            onChange={(e) => setFilters({ sort: e.target.value })}
             className="border rounded-md px-3 py-2"
           >
             <option value="date">Newest</option>
@@ -336,7 +398,7 @@ export default function OutagesPageClient({
                 search
                   ? {
                       label: 'Clear Search',
-                      onClick: () => setSearch(''),
+                      onClick: () => setFilters({ search: '' }),
                     }
                   : undefined
               }
