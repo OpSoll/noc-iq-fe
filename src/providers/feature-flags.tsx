@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { createContext, ReactNode, useContext } from "react";
-import { isFeatureEnabled, type FeatureFlag } from "@/lib/featureFlags";
+import { createContext, ReactNode, useContext } from 'react';
+import { isFeatureEnabled, type FeatureFlag } from '@/lib/featureFlags';
 
 interface FeatureFlagContextValue {
   isEnabled: (flag: FeatureFlag) => boolean;

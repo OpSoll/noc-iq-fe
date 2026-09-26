@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useState } from "react";
+import { useState } from 'react';
 
-import type { Webhook } from "@/types/webhook";
+import type { Webhook } from '@/types/webhook';
 
 interface Props {
   webhook: Webhook;
@@ -28,28 +28,31 @@ export function RotateSecretModal({
 
   return (
     <div className="mt-3 space-y-3 rounded-lg border border-amber-200 bg-amber-50 p-4">
-      <h3 className="text-sm font-semibold text-gray-800">Rotate signing secret</h3>
+      <h3 className="text-sm font-semibold text-gray-800">
+        Rotate signing secret
+      </h3>
       <p className="text-xs text-gray-500">
         Generates a new signing secret. The current secret keeps working
-        alongside the new one for the grace window below, so existing
-        receivers aren&apos;t broken mid-rotation.
+        alongside the new one for the grace window below, so existing receivers
+        aren&apos;t broken mid-rotation.
       </p>
 
       <div className="space-y-1">
         <p className="text-xs font-medium text-gray-600">Active secret</p>
         <code className="block rounded border bg-white px-2 py-1 text-xs text-gray-700">
-          {webhook.secret_preview ?? "whsec_••••••••"}
+          {webhook.secret_preview ?? 'whsec_••••••••'}
         </code>
       </div>
 
       {webhook.secondary_secret_preview && (
         <div className="space-y-1">
           <p className="text-xs font-medium text-gray-600">
-            Secondary secret{" "}
+            Secondary secret{' '}
             {webhook.secondary_secret_expires_at && (
               <span className="font-normal text-gray-400">
-                (expires{" "}
-                {new Date(webhook.secondary_secret_expires_at).toLocaleString()})
+                (expires{' '}
+                {new Date(webhook.secondary_secret_expires_at).toLocaleString()}
+                )
               </span>
             )}
           </p>
@@ -85,7 +88,7 @@ export function RotateSecretModal({
           disabled={isRotating || graceHours <= 0}
           className="rounded border border-amber-400 bg-amber-400 px-3 py-1 text-xs font-medium text-white hover:bg-amber-500 disabled:opacity-40"
         >
-          {isRotating ? "Rotating…" : "Rotate secret"}
+          {isRotating ? 'Rotating…' : 'Rotate secret'}
         </button>
       </div>
     </div>

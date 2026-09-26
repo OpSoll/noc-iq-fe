@@ -10,6 +10,7 @@ Versions align with [Semantic Versioning](https://semver.org/).
 ## [Unreleased] — 2026-08-31
 
 ### Features
+
 - **webhooks**: add delivery status and latency analytics chart (#510) ⚠️ **route-impacting** (`2585b64`)
 - **disputes**: add dispute statistics KPI cards and monthly trend (#503) (`1bcfa26`)
 - **disputes**: notify stakeholders on dispute resolution (#502) (`14f8378`)
@@ -121,6 +122,7 @@ Versions align with [Semantic Versioning](https://semver.org/).
 - create outage report model (`e53bc67`)
 
 ### Bug Fixes
+
 - **a11y**: update dark mode text contrast tokens and add visible focus rings (closes #433) ⚠️ **route-impacting** (`d152e69`)
 - add resolved_at to open outage fixture for consistent field shapes (`6b4b9f0`)
 - **outages**: remove duplicate declarations and JSX from merge artifacts ⚠️ **route-impacting** (`feddaa5`)
@@ -128,16 +130,19 @@ Versions align with [Semantic Versioning](https://semver.org/).
 - clean up imports, general errors ⚠️ **route-impacting** (`17bf446`)
 
 ### Performance
+
 - virtualize webhook delivery log list with react-window ⚠️ **route-impacting** (`b05ac32`)
 - add DNS prefetch and preconnect hints for Stellar endpoints ⚠️ **route-impacting** (`e6284bf`)
 
 ### Refactoring
+
 - **settings**: extract card sub-components and reduce page size (closes #431) ⚠️ **route-impacting** (`0db8896`)
 - **http**: migrate API services from axios to typed fetch client (`336a81b`)
 - **tests**: reorganize and enhance test cases for outage report functionality (`0cb56bf`)
 - **api**: streamline report handling and introduce RCA management logic (`f47df11`)
 
 ### Documentation
+
 - **contributing**: add UI guidelines, hook testing, and query key conventions (closes #432) (`1bd0ae9`)
 - add .env.local.example documenting frontend environment variables (`83aba34`)
 - add CODEOWNERS and escalation map for high-risk modules (`42198c4`)
@@ -145,10 +150,10 @@ Versions align with [Semantic Versioning](https://semver.org/).
 
 > **Rollout notes:** Review route-impacting changes above before deploying. Manual corrections can be made directly in CHANGELOG.md.
 
-
 ## [Unreleased] — 2026-08-31
 
 ### Features
+
 - **disputes**: add search, bulk actions, credit preview, and PDF audit export (`edfe682`)
 - **a11y**: announce outage status changes via aria-live region (#537) ⚠️ **route-impacting** (`70aff27`)
 - add preference import validation schema with error reporting (#533) (`5105a91`)
@@ -256,6 +261,7 @@ Versions align with [Semantic Versioning](https://semver.org/).
 - create outage report model (`e53bc67`)
 
 ### Bug Fixes
+
 - **a11y**: update dark mode text contrast tokens and add visible focus rings (closes #433) ⚠️ **route-impacting** (`d152e69`)
 - add resolved_at to open outage fixture for consistent field shapes (`6b4b9f0`)
 - **outages**: remove duplicate declarations and JSX from merge artifacts ⚠️ **route-impacting** (`feddaa5`)
@@ -263,16 +269,19 @@ Versions align with [Semantic Versioning](https://semver.org/).
 - clean up imports, general errors ⚠️ **route-impacting** (`17bf446`)
 
 ### Performance
+
 - virtualize webhook delivery log list with react-window ⚠️ **route-impacting** (`b05ac32`)
 - add DNS prefetch and preconnect hints for Stellar endpoints ⚠️ **route-impacting** (`e6284bf`)
 
 ### Refactoring
+
 - **settings**: extract card sub-components and reduce page size (closes #431) ⚠️ **route-impacting** (`0db8896`)
 - **http**: migrate API services from axios to typed fetch client (`336a81b`)
 - **tests**: reorganize and enhance test cases for outage report functionality (`0cb56bf`)
 - **api**: streamline report handling and introduce RCA management logic (`f47df11`)
 
 ### Documentation
+
 - **contributing**: add UI guidelines, hook testing, and query key conventions (closes #432) (`1bd0ae9`)
 - add .env.local.example documenting frontend environment variables (`83aba34`)
 - add CODEOWNERS and escalation map for high-risk modules (`42198c4`)
@@ -280,10 +289,10 @@ Versions align with [Semantic Versioning](https://semver.org/).
 
 > **Rollout notes:** Review route-impacting changes above before deploying. Manual corrections can be made directly in CHANGELOG.md.
 
-
 ## [Unreleased] — 2026-08-29
 
 ### Features
+
 - add SLA metrics summary PDF export to dashboard (#450) (`52e8477`)
 - add keyboard focus trap and ARIA labels to SLA trend chart (#447) (`5b97376`)
 - add SLA compliance target threshold indicator to trend chart (#449) (`6137077`)
@@ -388,6 +397,7 @@ Versions align with [Semantic Versioning](https://semver.org/).
 - create outage report model (`e53bc67`)
 
 ### Bug Fixes
+
 - **a11y**: update dark mode text contrast tokens and add visible focus rings (closes #433) ⚠️ **route-impacting** (`d152e69`)
 - add resolved_at to open outage fixture for consistent field shapes (`6b4b9f0`)
 - **outages**: remove duplicate declarations and JSX from merge artifacts ⚠️ **route-impacting** (`feddaa5`)
@@ -395,16 +405,19 @@ Versions align with [Semantic Versioning](https://semver.org/).
 - clean up imports, general errors ⚠️ **route-impacting** (`17bf446`)
 
 ### Performance
+
 - virtualize webhook delivery log list with react-window ⚠️ **route-impacting** (`b05ac32`)
 - add DNS prefetch and preconnect hints for Stellar endpoints ⚠️ **route-impacting** (`e6284bf`)
 
 ### Refactoring
+
 - **settings**: extract card sub-components and reduce page size (closes #431) ⚠️ **route-impacting** (`0db8896`)
 - **http**: migrate API services from axios to typed fetch client (`336a81b`)
 - **tests**: reorganize and enhance test cases for outage report functionality (`0cb56bf`)
 - **api**: streamline report handling and introduce RCA management logic (`f47df11`)
 
 ### Documentation
+
 - **contributing**: add UI guidelines, hook testing, and query key conventions (closes #432) (`1bd0ae9`)
 - add .env.local.example documenting frontend environment variables (`83aba34`)
 - add CODEOWNERS and escalation map for high-risk modules (`42198c4`)
@@ -412,10 +425,10 @@ Versions align with [Semantic Versioning](https://semver.org/).
 
 > **Rollout notes:** Review route-impacting changes above before deploying. Manual corrections can be made directly in CHANGELOG.md.
 
-
 ## [Unreleased] — 2026-08-29
 
 ### Features
+
 - add SLA metrics summary PDF export to dashboard (#450) (`52e8477`)
 - add keyboard focus trap and ARIA labels to SLA trend chart (#447) (`5b97376`)
 - add SLA compliance target threshold indicator to trend chart (#449) (`6137077`)
@@ -516,6 +529,7 @@ Versions align with [Semantic Versioning](https://semver.org/).
 - create outage report model (`e53bc67`)
 
 ### Bug Fixes
+
 - **a11y**: update dark mode text contrast tokens and add visible focus rings (closes #433) ⚠️ **route-impacting** (`d152e69`)
 - add resolved_at to open outage fixture for consistent field shapes (`6b4b9f0`)
 - **outages**: remove duplicate declarations and JSX from merge artifacts ⚠️ **route-impacting** (`feddaa5`)
@@ -523,16 +537,19 @@ Versions align with [Semantic Versioning](https://semver.org/).
 - clean up imports, general errors ⚠️ **route-impacting** (`17bf446`)
 
 ### Performance
+
 - virtualize webhook delivery log list with react-window ⚠️ **route-impacting** (`b05ac32`)
 - add DNS prefetch and preconnect hints for Stellar endpoints ⚠️ **route-impacting** (`e6284bf`)
 
 ### Refactoring
+
 - **settings**: extract card sub-components and reduce page size (closes #431) ⚠️ **route-impacting** (`0db8896`)
 - **http**: migrate API services from axios to typed fetch client (`336a81b`)
 - **tests**: reorganize and enhance test cases for outage report functionality (`0cb56bf`)
 - **api**: streamline report handling and introduce RCA management logic (`f47df11`)
 
 ### Documentation
+
 - **contributing**: add UI guidelines, hook testing, and query key conventions (closes #432) (`1bd0ae9`)
 - add .env.local.example documenting frontend environment variables (`83aba34`)
 - add CODEOWNERS and escalation map for high-risk modules (`42198c4`)
@@ -540,10 +557,10 @@ Versions align with [Semantic Versioning](https://semver.org/).
 
 > **Rollout notes:** Review route-impacting changes above before deploying. Manual corrections can be made directly in CHANGELOG.md.
 
-
 ## [Unreleased] — 2026-08-28
 
 ### Features
+
 - resolve outages severity/status badges and payments date validation/clear-filters ⚠️ **route-impacting** (`e61d5cb`)
 - **payments**: enable sorting on Amount and Status columns (`5f940d1`)
 - **outages**: add select-all header and wire up batch delete/CSV export ⚠️ **route-impacting** (`103e99e`)
@@ -640,6 +657,7 @@ Versions align with [Semantic Versioning](https://semver.org/).
 - create outage report model (`e53bc67`)
 
 ### Bug Fixes
+
 - **a11y**: update dark mode text contrast tokens and add visible focus rings (closes #433) ⚠️ **route-impacting** (`d152e69`)
 - add resolved_at to open outage fixture for consistent field shapes (`6b4b9f0`)
 - **outages**: remove duplicate declarations and JSX from merge artifacts ⚠️ **route-impacting** (`feddaa5`)
@@ -647,16 +665,19 @@ Versions align with [Semantic Versioning](https://semver.org/).
 - clean up imports, general errors ⚠️ **route-impacting** (`17bf446`)
 
 ### Performance
+
 - virtualize webhook delivery log list with react-window ⚠️ **route-impacting** (`b05ac32`)
 - add DNS prefetch and preconnect hints for Stellar endpoints ⚠️ **route-impacting** (`e6284bf`)
 
 ### Refactoring
+
 - **settings**: extract card sub-components and reduce page size (closes #431) ⚠️ **route-impacting** (`0db8896`)
 - **http**: migrate API services from axios to typed fetch client (`336a81b`)
 - **tests**: reorganize and enhance test cases for outage report functionality (`0cb56bf`)
 - **api**: streamline report handling and introduce RCA management logic (`f47df11`)
 
 ### Documentation
+
 - **contributing**: add UI guidelines, hook testing, and query key conventions (closes #432) (`1bd0ae9`)
 - add .env.local.example documenting frontend environment variables (`83aba34`)
 - add CODEOWNERS and escalation map for high-risk modules (`42198c4`)
@@ -664,10 +685,10 @@ Versions align with [Semantic Versioning](https://semver.org/).
 
 > **Rollout notes:** Review route-impacting changes above before deploying. Manual corrections can be made directly in CHANGELOG.md.
 
-
 ## [Unreleased] — 2026-08-28
 
 ### Features
+
 - resolve outages severity/status badges and payments date validation/clear-filters ⚠️ **route-impacting** (`e61d5cb`)
 - **payments**: enable sorting on Amount and Status columns (`5f940d1`)
 - **outages**: add select-all header and wire up batch delete/CSV export ⚠️ **route-impacting** (`103e99e`)
@@ -764,6 +785,7 @@ Versions align with [Semantic Versioning](https://semver.org/).
 - create outage report model (`e53bc67`)
 
 ### Bug Fixes
+
 - **a11y**: update dark mode text contrast tokens and add visible focus rings (closes #433) ⚠️ **route-impacting** (`d152e69`)
 - add resolved_at to open outage fixture for consistent field shapes (`6b4b9f0`)
 - **outages**: remove duplicate declarations and JSX from merge artifacts ⚠️ **route-impacting** (`feddaa5`)
@@ -771,16 +793,19 @@ Versions align with [Semantic Versioning](https://semver.org/).
 - clean up imports, general errors ⚠️ **route-impacting** (`17bf446`)
 
 ### Performance
+
 - virtualize webhook delivery log list with react-window ⚠️ **route-impacting** (`b05ac32`)
 - add DNS prefetch and preconnect hints for Stellar endpoints ⚠️ **route-impacting** (`e6284bf`)
 
 ### Refactoring
+
 - **settings**: extract card sub-components and reduce page size (closes #431) ⚠️ **route-impacting** (`0db8896`)
 - **http**: migrate API services from axios to typed fetch client (`336a81b`)
 - **tests**: reorganize and enhance test cases for outage report functionality (`0cb56bf`)
 - **api**: streamline report handling and introduce RCA management logic (`f47df11`)
 
 ### Documentation
+
 - **contributing**: add UI guidelines, hook testing, and query key conventions (closes #432) (`1bd0ae9`)
 - add .env.local.example documenting frontend environment variables (`83aba34`)
 - add CODEOWNERS and escalation map for high-risk modules (`42198c4`)
@@ -788,10 +813,10 @@ Versions align with [Semantic Versioning](https://semver.org/).
 
 > **Rollout notes:** Review route-impacting changes above before deploying. Manual corrections can be made directly in CHANGELOG.md.
 
-
 ## [Unreleased] — 2026-08-28
 
 ### Features
+
 - resolve outages severity/status badges and payments date validation/clear-filters ⚠️ **route-impacting** (`e61d5cb`)
 - **payments**: enable sorting on Amount and Status columns (`5f940d1`)
 - **outages**: add select-all header and wire up batch delete/CSV export ⚠️ **route-impacting** (`103e99e`)
@@ -888,6 +913,7 @@ Versions align with [Semantic Versioning](https://semver.org/).
 - create outage report model (`e53bc67`)
 
 ### Bug Fixes
+
 - **a11y**: update dark mode text contrast tokens and add visible focus rings (closes #433) ⚠️ **route-impacting** (`d152e69`)
 - add resolved_at to open outage fixture for consistent field shapes (`6b4b9f0`)
 - **outages**: remove duplicate declarations and JSX from merge artifacts ⚠️ **route-impacting** (`feddaa5`)
@@ -895,27 +921,30 @@ Versions align with [Semantic Versioning](https://semver.org/).
 - clean up imports, general errors ⚠️ **route-impacting** (`17bf446`)
 
 ### Performance
+
 - virtualize webhook delivery log list with react-window ⚠️ **route-impacting** (`b05ac32`)
 - add DNS prefetch and preconnect hints for Stellar endpoints ⚠️ **route-impacting** (`e6284bf`)
 
 ### Refactoring
+
 - **settings**: extract card sub-components and reduce page size (closes #431) ⚠️ **route-impacting** (`0db8896`)
 - **http**: migrate API services from axios to typed fetch client (`336a81b`)
 - **tests**: reorganize and enhance test cases for outage report functionality (`0cb56bf`)
 - **api**: streamline report handling and introduce RCA management logic (`f47df11`)
 
 ### Documentation
+
 - **contributing**: add UI guidelines, hook testing, and query key conventions (closes #432) (`1bd0ae9`)
 - add .env.local.example documenting frontend environment variables (`83aba34`)
 - add CODEOWNERS and escalation map for high-risk modules (`42198c4`)
 - add route-level ADR templates and baseline ADR entries (`9312375`)
 
 > **Rollout notes:** Review route-impacting changes above before deploying. Manual corrections can be made directly in CHANGELOG.md.
-
 
 ## [Unreleased] — 2026-08-13
 
 ### Features
+
 - resolve outages severity/status badges and payments date validation/clear-filters ⚠️ **route-impacting** (`e61d5cb`)
 - **payments**: enable sorting on Amount and Status columns (`5f940d1`)
 - **outages**: add select-all header and wire up batch delete/CSV export ⚠️ **route-impacting** (`103e99e`)
@@ -1012,6 +1041,7 @@ Versions align with [Semantic Versioning](https://semver.org/).
 - create outage report model (`e53bc67`)
 
 ### Bug Fixes
+
 - **a11y**: update dark mode text contrast tokens and add visible focus rings (closes #433) ⚠️ **route-impacting** (`d152e69`)
 - add resolved_at to open outage fixture for consistent field shapes (`6b4b9f0`)
 - **outages**: remove duplicate declarations and JSX from merge artifacts ⚠️ **route-impacting** (`feddaa5`)
@@ -1019,12 +1049,14 @@ Versions align with [Semantic Versioning](https://semver.org/).
 - clean up imports, general errors ⚠️ **route-impacting** (`17bf446`)
 
 ### Refactoring
+
 - **settings**: extract card sub-components and reduce page size (closes #431) ⚠️ **route-impacting** (`0db8896`)
 - **http**: migrate API services from axios to typed fetch client (`336a81b`)
 - **tests**: reorganize and enhance test cases for outage report functionality (`0cb56bf`)
 - **api**: streamline report handling and introduce RCA management logic (`f47df11`)
 
 ### Documentation
+
 - **contributing**: add UI guidelines, hook testing, and query key conventions (closes #432) (`1bd0ae9`)
 - add .env.local.example documenting frontend environment variables (`83aba34`)
 - add CODEOWNERS and escalation map for high-risk modules (`42198c4`)
@@ -1032,10 +1064,10 @@ Versions align with [Semantic Versioning](https://semver.org/).
 
 > **Rollout notes:** Review route-impacting changes above before deploying. Manual corrections can be made directly in CHANGELOG.md.
 
-
 ## [Unreleased] — 2026-07-29
 
 ### Features
+
 - **cli**: add OpenAPI schema drift validation CLI script (closes #430) (`acf1427`)
 - add dashboard snapshot workflows and payment ops controls (`926be6a`)
 - **#192,#193,#194,#195**: wallet utilities, React Query migration, toast, stale guards ⚠️ **route-impacting** (`6d838e8`)
@@ -1128,6 +1160,7 @@ Versions align with [Semantic Versioning](https://semver.org/).
 - create outage report model (`e53bc67`)
 
 ### Bug Fixes
+
 - **a11y**: update dark mode text contrast tokens and add visible focus rings (closes #433) ⚠️ **route-impacting** (`d152e69`)
 - add resolved_at to open outage fixture for consistent field shapes (`6b4b9f0`)
 - **outages**: remove duplicate declarations and JSX from merge artifacts ⚠️ **route-impacting** (`feddaa5`)
@@ -1135,12 +1168,14 @@ Versions align with [Semantic Versioning](https://semver.org/).
 - clean up imports, general errors ⚠️ **route-impacting** (`17bf446`)
 
 ### Refactoring
+
 - **settings**: extract card sub-components and reduce page size (closes #431) ⚠️ **route-impacting** (`0db8896`)
 - **http**: migrate API services from axios to typed fetch client (`336a81b`)
 - **tests**: reorganize and enhance test cases for outage report functionality (`0cb56bf`)
 - **api**: streamline report handling and introduce RCA management logic (`f47df11`)
 
 ### Documentation
+
 - **contributing**: add UI guidelines, hook testing, and query key conventions (closes #432) (`1bd0ae9`)
 - add .env.local.example documenting frontend environment variables (`83aba34`)
 - add CODEOWNERS and escalation map for high-risk modules (`42198c4`)
@@ -1148,10 +1183,10 @@ Versions align with [Semantic Versioning](https://semver.org/).
 
 > **Rollout notes:** Review route-impacting changes above before deploying. Manual corrections can be made directly in CHANGELOG.md.
 
-
 ## [Unreleased] — 2026-07-29
 
 ### Features
+
 - **cli**: add OpenAPI schema drift validation CLI script (closes #430) (`acf1427`)
 - add dashboard snapshot workflows and payment ops controls (`926be6a`)
 - **#192,#193,#194,#195**: wallet utilities, React Query migration, toast, stale guards ⚠️ **route-impacting** (`6d838e8`)
@@ -1244,6 +1279,7 @@ Versions align with [Semantic Versioning](https://semver.org/).
 - create outage report model (`e53bc67`)
 
 ### Bug Fixes
+
 - **a11y**: update dark mode text contrast tokens and add visible focus rings (closes #433) ⚠️ **route-impacting** (`d152e69`)
 - add resolved_at to open outage fixture for consistent field shapes (`6b4b9f0`)
 - **outages**: remove duplicate declarations and JSX from merge artifacts ⚠️ **route-impacting** (`feddaa5`)
@@ -1251,12 +1287,14 @@ Versions align with [Semantic Versioning](https://semver.org/).
 - clean up imports, general errors ⚠️ **route-impacting** (`17bf446`)
 
 ### Refactoring
+
 - **settings**: extract card sub-components and reduce page size (closes #431) ⚠️ **route-impacting** (`0db8896`)
 - **http**: migrate API services from axios to typed fetch client (`336a81b`)
 - **tests**: reorganize and enhance test cases for outage report functionality (`0cb56bf`)
 - **api**: streamline report handling and introduce RCA management logic (`f47df11`)
 
 ### Documentation
+
 - **contributing**: add UI guidelines, hook testing, and query key conventions (closes #432) (`1bd0ae9`)
 - add .env.local.example documenting frontend environment variables (`83aba34`)
 - add CODEOWNERS and escalation map for high-risk modules (`42198c4`)
@@ -1264,10 +1302,10 @@ Versions align with [Semantic Versioning](https://semver.org/).
 
 > **Rollout notes:** Review route-impacting changes above before deploying. Manual corrections can be made directly in CHANGELOG.md.
 
-
 ## [Unreleased] — 2026-07-29
 
 ### Features
+
 - **cli**: add OpenAPI schema drift validation CLI script (closes #430) (`acf1427`)
 - add dashboard snapshot workflows and payment ops controls (`926be6a`)
 - **#192,#193,#194,#195**: wallet utilities, React Query migration, toast, stale guards ⚠️ **route-impacting** (`6d838e8`)
@@ -1360,6 +1398,7 @@ Versions align with [Semantic Versioning](https://semver.org/).
 - create outage report model (`e53bc67`)
 
 ### Bug Fixes
+
 - **a11y**: update dark mode text contrast tokens and add visible focus rings (closes #433) ⚠️ **route-impacting** (`d152e69`)
 - add resolved_at to open outage fixture for consistent field shapes (`6b4b9f0`)
 - **outages**: remove duplicate declarations and JSX from merge artifacts ⚠️ **route-impacting** (`feddaa5`)
@@ -1367,12 +1406,14 @@ Versions align with [Semantic Versioning](https://semver.org/).
 - clean up imports, general errors ⚠️ **route-impacting** (`17bf446`)
 
 ### Refactoring
+
 - **settings**: extract card sub-components and reduce page size (closes #431) ⚠️ **route-impacting** (`0db8896`)
 - **http**: migrate API services from axios to typed fetch client (`336a81b`)
 - **tests**: reorganize and enhance test cases for outage report functionality (`0cb56bf`)
 - **api**: streamline report handling and introduce RCA management logic (`f47df11`)
 
 ### Documentation
+
 - **contributing**: add UI guidelines, hook testing, and query key conventions (closes #432) (`1bd0ae9`)
 - add .env.local.example documenting frontend environment variables (`83aba34`)
 - add CODEOWNERS and escalation map for high-risk modules (`42198c4`)
@@ -1380,10 +1421,10 @@ Versions align with [Semantic Versioning](https://semver.org/).
 
 > **Rollout notes:** Review route-impacting changes above before deploying. Manual corrections can be made directly in CHANGELOG.md.
 
-
 ## [Unreleased] — 2026-07-29
 
 ### Features
+
 - add dashboard snapshot workflows and payment ops controls (`926be6a`)
 - **#192,#193,#194,#195**: wallet utilities, React Query migration, toast, stale guards ⚠️ **route-impacting** (`6d838e8`)
 - sync payment filters and pagination with URL search params (#183) (`31b05d4`)
@@ -1475,27 +1516,30 @@ Versions align with [Semantic Versioning](https://semver.org/).
 - create outage report model (`e53bc67`)
 
 ### Bug Fixes
+
 - add resolved_at to open outage fixture for consistent field shapes (`6b4b9f0`)
 - **outages**: remove duplicate declarations and JSX from merge artifacts ⚠️ **route-impacting** (`feddaa5`)
 - resolve FE-001/005/007/008 issues (#159 #163 #165 #166) ⚠️ **route-impacting** (`2a8b8db`)
 - clean up imports, general errors ⚠️ **route-impacting** (`17bf446`)
 
 ### Refactoring
+
 - **http**: migrate API services from axios to typed fetch client (`336a81b`)
 - **tests**: reorganize and enhance test cases for outage report functionality (`0cb56bf`)
 - **api**: streamline report handling and introduce RCA management logic (`f47df11`)
 
 ### Documentation
+
 - add .env.local.example documenting frontend environment variables (`83aba34`)
 - add CODEOWNERS and escalation map for high-risk modules (`42198c4`)
 - add route-level ADR templates and baseline ADR entries (`9312375`)
 
 > **Rollout notes:** Review route-impacting changes above before deploying. Manual corrections can be made directly in CHANGELOG.md.
-
 
 ## [Unreleased] — 2026-07-28
 
 ### Features
+
 - **#192,#193,#194,#195**: wallet utilities, React Query migration, toast, stale guards ⚠️ **route-impacting** (`6d838e8`)
 - sync payment filters and pagination with URL search params (#183) (`31b05d4`)
 - add responsive wrapper and keyboard nav to outages table (#197) ⚠️ **route-impacting** (`3a6753e`)
@@ -1586,27 +1630,30 @@ Versions align with [Semantic Versioning](https://semver.org/).
 - create outage report model (`e53bc67`)
 
 ### Bug Fixes
+
 - add resolved_at to open outage fixture for consistent field shapes (`6b4b9f0`)
 - **outages**: remove duplicate declarations and JSX from merge artifacts ⚠️ **route-impacting** (`feddaa5`)
 - resolve FE-001/005/007/008 issues (#159 #163 #165 #166) ⚠️ **route-impacting** (`2a8b8db`)
 - clean up imports, general errors ⚠️ **route-impacting** (`17bf446`)
 
 ### Refactoring
+
 - **http**: migrate API services from axios to typed fetch client (`336a81b`)
 - **tests**: reorganize and enhance test cases for outage report functionality (`0cb56bf`)
 - **api**: streamline report handling and introduce RCA management logic (`f47df11`)
 
 ### Documentation
+
 - add .env.local.example documenting frontend environment variables (`83aba34`)
 - add CODEOWNERS and escalation map for high-risk modules (`42198c4`)
 - add route-level ADR templates and baseline ADR entries (`9312375`)
 
 > **Rollout notes:** Review route-impacting changes above before deploying. Manual corrections can be made directly in CHANGELOG.md.
 
-
 ## [Unreleased] — 2026-07-28
 
 ### Features
+
 - add invalidation registry, request coalescing, retry policy, cache hydration (`b716d04`)
 - add compare drift detection, memoization budget, query key factory, SWR policies (`2bdf62b`)
 - add chart fallback, consistency checks, query recovery, and schema gate (`23d957f`)
@@ -1690,27 +1737,30 @@ Versions align with [Semantic Versioning](https://semver.org/).
 - create outage report model (`e53bc67`)
 
 ### Bug Fixes
+
 - add resolved_at to open outage fixture for consistent field shapes (`6b4b9f0`)
 - **outages**: remove duplicate declarations and JSX from merge artifacts ⚠️ **route-impacting** (`feddaa5`)
 - resolve FE-001/005/007/008 issues (#159 #163 #165 #166) ⚠️ **route-impacting** (`2a8b8db`)
 - clean up imports, general errors ⚠️ **route-impacting** (`17bf446`)
 
 ### Refactoring
+
 - **http**: migrate API services from axios to typed fetch client (`336a81b`)
 - **tests**: reorganize and enhance test cases for outage report functionality (`0cb56bf`)
 - **api**: streamline report handling and introduce RCA management logic (`f47df11`)
 
 ### Documentation
+
 - add .env.local.example documenting frontend environment variables (`83aba34`)
 - add CODEOWNERS and escalation map for high-risk modules (`42198c4`)
 - add route-level ADR templates and baseline ADR entries (`9312375`)
 
 > **Rollout notes:** Review route-impacting changes above before deploying. Manual corrections can be made directly in CHANGELOG.md.
 
-
 ## [Unreleased] — 2026-07-27
 
 ### Features
+
 - add bundle hygiene, feature flags, OpenTelemetry spans, and error budget dashboard ⚠️ **route-impacting** (`b8e9d4e`)
 - add event taxonomy, jank metrics, API latency tracking, and privacy guard (`3306093`)
 - **frontend**: implement security, fetch, webhook, and form improvements (`04b6c60`)
@@ -1790,27 +1840,30 @@ Versions align with [Semantic Versioning](https://semver.org/).
 - create outage report model (`e53bc67`)
 
 ### Bug Fixes
+
 - add resolved_at to open outage fixture for consistent field shapes (`6b4b9f0`)
 - **outages**: remove duplicate declarations and JSX from merge artifacts ⚠️ **route-impacting** (`feddaa5`)
 - resolve FE-001/005/007/008 issues (#159 #163 #165 #166) ⚠️ **route-impacting** (`2a8b8db`)
 - clean up imports, general errors ⚠️ **route-impacting** (`17bf446`)
 
 ### Refactoring
+
 - **http**: migrate API services from axios to typed fetch client (`336a81b`)
 - **tests**: reorganize and enhance test cases for outage report functionality (`0cb56bf`)
 - **api**: streamline report handling and introduce RCA management logic (`f47df11`)
 
 ### Documentation
+
 - add .env.local.example documenting frontend environment variables (`83aba34`)
 - add CODEOWNERS and escalation map for high-risk modules (`42198c4`)
 - add route-level ADR templates and baseline ADR entries (`9312375`)
 
 > **Rollout notes:** Review route-impacting changes above before deploying. Manual corrections can be made directly in CHANGELOG.md.
 
-
 ## [Unreleased] — 2026-07-27
 
 ### Features
+
 - add bundle hygiene, feature flags, OpenTelemetry spans, and error budget dashboard ⚠️ **route-impacting** (`b8e9d4e`)
 - add event taxonomy, jank metrics, API latency tracking, and privacy guard (`3306093`)
 - **frontend**: implement security, fetch, webhook, and form improvements (`04b6c60`)
@@ -1890,27 +1943,30 @@ Versions align with [Semantic Versioning](https://semver.org/).
 - create outage report model (`e53bc67`)
 
 ### Bug Fixes
+
 - add resolved_at to open outage fixture for consistent field shapes (`6b4b9f0`)
 - **outages**: remove duplicate declarations and JSX from merge artifacts ⚠️ **route-impacting** (`feddaa5`)
 - resolve FE-001/005/007/008 issues (#159 #163 #165 #166) ⚠️ **route-impacting** (`2a8b8db`)
 - clean up imports, general errors ⚠️ **route-impacting** (`17bf446`)
 
 ### Refactoring
+
 - **http**: migrate API services from axios to typed fetch client (`336a81b`)
 - **tests**: reorganize and enhance test cases for outage report functionality (`0cb56bf`)
 - **api**: streamline report handling and introduce RCA management logic (`f47df11`)
 
 ### Documentation
+
 - add .env.local.example documenting frontend environment variables (`83aba34`)
 - add CODEOWNERS and escalation map for high-risk modules (`42198c4`)
 - add route-level ADR templates and baseline ADR entries (`9312375`)
 
 > **Rollout notes:** Review route-impacting changes above before deploying. Manual corrections can be made directly in CHANGELOG.md.
 
-
 ## [Unreleased] — 2026-07-27
 
 ### Features
+
 - **frontend**: implement security, fetch, webhook, and form improvements (`04b6c60`)
 - **webhooks**: scaffold delivery replay and payload inspection UI (`24efb95`)
 - **security**: add nonce-based CSP and security headers ⚠️ **route-impacting** (`5d4d8be`)
@@ -1988,27 +2044,30 @@ Versions align with [Semantic Versioning](https://semver.org/).
 - create outage report model (`e53bc67`)
 
 ### Bug Fixes
+
 - add resolved_at to open outage fixture for consistent field shapes (`6b4b9f0`)
 - **outages**: remove duplicate declarations and JSX from merge artifacts ⚠️ **route-impacting** (`feddaa5`)
 - resolve FE-001/005/007/008 issues (#159 #163 #165 #166) ⚠️ **route-impacting** (`2a8b8db`)
 - clean up imports, general errors ⚠️ **route-impacting** (`17bf446`)
 
 ### Refactoring
+
 - **http**: migrate API services from axios to typed fetch client (`336a81b`)
 - **tests**: reorganize and enhance test cases for outage report functionality (`0cb56bf`)
 - **api**: streamline report handling and introduce RCA management logic (`f47df11`)
 
 ### Documentation
+
 - add .env.local.example documenting frontend environment variables (`83aba34`)
 - add CODEOWNERS and escalation map for high-risk modules (`42198c4`)
 - add route-level ADR templates and baseline ADR entries (`9312375`)
 
 > **Rollout notes:** Review route-impacting changes above before deploying. Manual corrections can be made directly in CHANGELOG.md.
-
 
 ## [Unreleased] — 2026-07-23
 
 ### Features
+
 - **governance**: implement backend reliability scorecard pipeline and CI gates (#386) ⚠️ **route-impacting** (`92847c4`)
 - **analytics**: implement transactional payment reconciliation task and runtime health checks (#369) ⚠️ **route-impacting** (`d6de65c`)
 - add live delivery stream, payload diff, destination safety, schema tester (#257-#260) (`80d2582`)
@@ -2079,25 +2138,28 @@ Versions align with [Semantic Versioning](https://semver.org/).
 - create outage report model (`e53bc67`)
 
 ### Bug Fixes
+
 - **outages**: remove duplicate declarations and JSX from merge artifacts ⚠️ **route-impacting** (`feddaa5`)
 - resolve FE-001/005/007/008 issues (#159 #163 #165 #166) ⚠️ **route-impacting** (`2a8b8db`)
 - clean up imports, general errors ⚠️ **route-impacting** (`17bf446`)
 
 ### Refactoring
+
 - **tests**: reorganize and enhance test cases for outage report functionality (`0cb56bf`)
 - **api**: streamline report handling and introduce RCA management logic (`f47df11`)
 
 ### Documentation
+
 - add .env.local.example documenting frontend environment variables (`83aba34`)
 - add CODEOWNERS and escalation map for high-risk modules (`42198c4`)
 - add route-level ADR templates and baseline ADR entries (`9312375`)
 
 > **Rollout notes:** Review route-impacting changes above before deploying. Manual corrections can be made directly in CHANGELOG.md.
 
-
 ## [Unreleased] — 2026-07-02
 
 ### Features
+
 - **governance**: implement backend reliability scorecard pipeline and CI gates (#386) ⚠️ **route-impacting** (`92847c4`)
 - **analytics**: implement transactional payment reconciliation task and runtime health checks (#369) ⚠️ **route-impacting** (`d6de65c`)
 - add live delivery stream, payload diff, destination safety, schema tester (#257-#260) (`80d2582`)
@@ -2168,24 +2230,27 @@ Versions align with [Semantic Versioning](https://semver.org/).
 - create outage report model (`e53bc67`)
 
 ### Bug Fixes
+
 - **outages**: remove duplicate declarations and JSX from merge artifacts ⚠️ **route-impacting** (`feddaa5`)
 - resolve FE-001/005/007/008 issues (#159 #163 #165 #166) ⚠️ **route-impacting** (`2a8b8db`)
 - clean up imports, general errors ⚠️ **route-impacting** (`17bf446`)
 
 ### Refactoring
+
 - **tests**: reorganize and enhance test cases for outage report functionality (`0cb56bf`)
 - **api**: streamline report handling and introduce RCA management logic (`f47df11`)
 
 ### Documentation
+
 - add CODEOWNERS and escalation map for high-risk modules (`42198c4`)
 - add route-level ADR templates and baseline ADR entries (`9312375`)
 
 > **Rollout notes:** Review route-impacting changes above before deploying. Manual corrections can be made directly in CHANGELOG.md.
 
-
 ## [Unreleased] — 2026-07-02
 
 ### Features
+
 - **analytics**: implement transactional payment reconciliation task and runtime health checks (#369) ⚠️ **route-impacting** (`d6de65c`)
 - add live delivery stream, payload diff, destination safety, schema tester (#257-#260) (`80d2582`)
 - add SLA recalculation, bulk-action safety, import reconciliation, chain-of-custody (#249-#252) (`3e0566d`)
@@ -2255,24 +2320,27 @@ Versions align with [Semantic Versioning](https://semver.org/).
 - create outage report model (`e53bc67`)
 
 ### Bug Fixes
+
 - **outages**: remove duplicate declarations and JSX from merge artifacts ⚠️ **route-impacting** (`feddaa5`)
 - resolve FE-001/005/007/008 issues (#159 #163 #165 #166) ⚠️ **route-impacting** (`2a8b8db`)
 - clean up imports, general errors ⚠️ **route-impacting** (`17bf446`)
 
 ### Refactoring
+
 - **tests**: reorganize and enhance test cases for outage report functionality (`0cb56bf`)
 - **api**: streamline report handling and introduce RCA management logic (`f47df11`)
 
 ### Documentation
+
 - add CODEOWNERS and escalation map for high-risk modules (`42198c4`)
 - add route-level ADR templates and baseline ADR entries (`9312375`)
 
 > **Rollout notes:** Review route-impacting changes above before deploying. Manual corrections can be made directly in CHANGELOG.md.
 
-
 ## [Unreleased] — 2026-06-29
 
 ### Features
+
 - add live delivery stream, payload diff, destination safety, schema tester (#257-#260) (`80d2582`)
 - add SLA recalculation, bulk-action safety, import reconciliation, chain-of-custody (#249-#252) (`3e0566d`)
 - add contract drift, normalizers, compatibility matrix, webhook signature (#241-#244) (`92ca860`)
@@ -2341,24 +2409,27 @@ Versions align with [Semantic Versioning](https://semver.org/).
 - create outage report model (`e53bc67`)
 
 ### Bug Fixes
+
 - **outages**: remove duplicate declarations and JSX from merge artifacts ⚠️ **route-impacting** (`feddaa5`)
 - resolve FE-001/005/007/008 issues (#159 #163 #165 #166) ⚠️ **route-impacting** (`2a8b8db`)
 - clean up imports, general errors ⚠️ **route-impacting** (`17bf446`)
 
 ### Refactoring
+
 - **tests**: reorganize and enhance test cases for outage report functionality (`0cb56bf`)
 - **api**: streamline report handling and introduce RCA management logic (`f47df11`)
 
 ### Documentation
+
 - add CODEOWNERS and escalation map for high-risk modules (`42198c4`)
 - add route-level ADR templates and baseline ADR entries (`9312375`)
 
 > **Rollout notes:** Review route-impacting changes above before deploying. Manual corrections can be made directly in CHANGELOG.md.
 
-
 ## [Unreleased] — 2026-06-29
 
 ### Features
+
 - add query consistency, validation, discovery, error envelope (#237-#240) (`fd25997`)
 - build Wave 5 closure dashboard for FE issue and quality signal tracking ⚠️ **route-impacting** (`b78f660`)
 - add frontend dependency policy checks for risky package additions ⚠️ **route-impacting** (`5c46364`)
@@ -2422,24 +2493,27 @@ Versions align with [Semantic Versioning](https://semver.org/).
 - create outage report model (`e53bc67`)
 
 ### Bug Fixes
+
 - **outages**: remove duplicate declarations and JSX from merge artifacts ⚠️ **route-impacting** (`feddaa5`)
 - resolve FE-001/005/007/008 issues (#159 #163 #165 #166) ⚠️ **route-impacting** (`2a8b8db`)
 - clean up imports, general errors ⚠️ **route-impacting** (`17bf446`)
 
 ### Refactoring
+
 - **tests**: reorganize and enhance test cases for outage report functionality (`0cb56bf`)
 - **api**: streamline report handling and introduce RCA management logic (`f47df11`)
 
 ### Documentation
+
 - add CODEOWNERS and escalation map for high-risk modules (`42198c4`)
 - add route-level ADR templates and baseline ADR entries (`9312375`)
 
 > **Rollout notes:** Review route-impacting changes above before deploying. Manual corrections can be made directly in CHANGELOG.md.
-
 
 ## [Unreleased] — 2026-06-25
 
 ### Features
+
 - build Wave 5 closure dashboard for FE issue and quality signal tracking ⚠️ **route-impacting** (`b78f660`)
 - add frontend dependency policy checks for risky package additions ⚠️ **route-impacting** (`5c46364`)
 - add frontend-backend compatibility release gate before production tags ⚠️ **route-impacting** (`36d6a5c`)
@@ -2502,24 +2576,27 @@ Versions align with [Semantic Versioning](https://semver.org/).
 - create outage report model (`e53bc67`)
 
 ### Bug Fixes
+
 - **outages**: remove duplicate declarations and JSX from merge artifacts ⚠️ **route-impacting** (`feddaa5`)
 - resolve FE-001/005/007/008 issues (#159 #163 #165 #166) ⚠️ **route-impacting** (`2a8b8db`)
 - clean up imports, general errors ⚠️ **route-impacting** (`17bf446`)
 
 ### Refactoring
+
 - **tests**: reorganize and enhance test cases for outage report functionality (`0cb56bf`)
 - **api**: streamline report handling and introduce RCA management logic (`f47df11`)
 
 ### Documentation
+
 - add CODEOWNERS and escalation map for high-risk modules (`42198c4`)
 - add route-level ADR templates and baseline ADR entries (`9312375`)
 
 > **Rollout notes:** Review route-impacting changes above before deploying. Manual corrections can be made directly in CHANGELOG.md.
-
 
 ## [Unreleased] — 2026-06-25
 
 ### Features
+
 - build Wave 5 closure dashboard for FE issue and quality signal tracking ⚠️ **route-impacting** (`b78f660`)
 - add frontend dependency policy checks for risky package additions ⚠️ **route-impacting** (`5c46364`)
 - add frontend-backend compatibility release gate before production tags ⚠️ **route-impacting** (`36d6a5c`)
@@ -2582,24 +2659,27 @@ Versions align with [Semantic Versioning](https://semver.org/).
 - create outage report model (`e53bc67`)
 
 ### Bug Fixes
+
 - **outages**: remove duplicate declarations and JSX from merge artifacts ⚠️ **route-impacting** (`feddaa5`)
 - resolve FE-001/005/007/008 issues (#159 #163 #165 #166) ⚠️ **route-impacting** (`2a8b8db`)
 - clean up imports, general errors ⚠️ **route-impacting** (`17bf446`)
 
 ### Refactoring
+
 - **tests**: reorganize and enhance test cases for outage report functionality (`0cb56bf`)
 - **api**: streamline report handling and introduce RCA management logic (`f47df11`)
 
 ### Documentation
+
 - add CODEOWNERS and escalation map for high-risk modules (`42198c4`)
 - add route-level ADR templates and baseline ADR entries (`9312375`)
 
 > **Rollout notes:** Review route-impacting changes above before deploying. Manual corrections can be made directly in CHANGELOG.md.
-
 
 ## [Unreleased] — 2026-06-25
 
 ### Features
+
 - build Wave 5 closure dashboard for FE issue and quality signal tracking ⚠️ **route-impacting** (`b78f660`)
 - add frontend dependency policy checks for risky package additions ⚠️ **route-impacting** (`5c46364`)
 - add frontend-backend compatibility release gate before production tags ⚠️ **route-impacting** (`36d6a5c`)
@@ -2662,24 +2742,27 @@ Versions align with [Semantic Versioning](https://semver.org/).
 - create outage report model (`e53bc67`)
 
 ### Bug Fixes
+
 - **outages**: remove duplicate declarations and JSX from merge artifacts ⚠️ **route-impacting** (`feddaa5`)
 - resolve FE-001/005/007/008 issues (#159 #163 #165 #166) ⚠️ **route-impacting** (`2a8b8db`)
 - clean up imports, general errors ⚠️ **route-impacting** (`17bf446`)
 
 ### Refactoring
+
 - **tests**: reorganize and enhance test cases for outage report functionality (`0cb56bf`)
 - **api**: streamline report handling and introduce RCA management logic (`f47df11`)
 
 ### Documentation
+
 - add CODEOWNERS and escalation map for high-risk modules (`42198c4`)
 - add route-level ADR templates and baseline ADR entries (`9312375`)
 
 > **Rollout notes:** Review route-impacting changes above before deploying. Manual corrections can be made directly in CHANGELOG.md.
 
-
 ## [Unreleased] — 2026-06-24
 
 ### Features
+
 - build Wave 5 closure dashboard for FE issue and quality signal tracking ⚠️ **route-impacting** (`b78f660`)
 - add frontend dependency policy checks for risky package additions ⚠️ **route-impacting** (`5c46364`)
 - add frontend-backend compatibility release gate before production tags ⚠️ **route-impacting** (`36d6a5c`)
@@ -2742,24 +2825,27 @@ Versions align with [Semantic Versioning](https://semver.org/).
 - create outage report model (`e53bc67`)
 
 ### Bug Fixes
+
 - **outages**: remove duplicate declarations and JSX from merge artifacts ⚠️ **route-impacting** (`feddaa5`)
 - resolve FE-001/005/007/008 issues (#159 #163 #165 #166) ⚠️ **route-impacting** (`2a8b8db`)
 - clean up imports, general errors ⚠️ **route-impacting** (`17bf446`)
 
 ### Refactoring
+
 - **tests**: reorganize and enhance test cases for outage report functionality (`0cb56bf`)
 - **api**: streamline report handling and introduce RCA management logic (`f47df11`)
 
 ### Documentation
+
 - add CODEOWNERS and escalation map for high-risk modules (`42198c4`)
 - add route-level ADR templates and baseline ADR entries (`9312375`)
 
 > **Rollout notes:** Review route-impacting changes above before deploying. Manual corrections can be made directly in CHANGELOG.md.
 
-
 ## [Unreleased] — 2026-06-24
 
 ### Features
+
 - add frontend-backend compatibility release gate before production tags ⚠️ **route-impacting** (`36d6a5c`)
 - add frontend dependency policy checks for risky package additions ⚠️ **route-impacting** (`021de2b`)
 - implement changelog automation for frontend operational surfaces (`212a7a4`)
@@ -2820,24 +2906,27 @@ Versions align with [Semantic Versioning](https://semver.org/).
 - create outage report model (`e53bc67`)
 
 ### Bug Fixes
+
 - **outages**: remove duplicate declarations and JSX from merge artifacts ⚠️ **route-impacting** (`feddaa5`)
 - resolve FE-001/005/007/008 issues (#159 #163 #165 #166) ⚠️ **route-impacting** (`2a8b8db`)
 - clean up imports, general errors ⚠️ **route-impacting** (`17bf446`)
 
 ### Refactoring
+
 - **tests**: reorganize and enhance test cases for outage report functionality (`0cb56bf`)
 - **api**: streamline report handling and introduce RCA management logic (`f47df11`)
 
 ### Documentation
+
 - add CODEOWNERS and escalation map for high-risk modules (`42198c4`)
 - add route-level ADR templates and baseline ADR entries (`9312375`)
 
 > **Rollout notes:** Review route-impacting changes above before deploying. Manual corrections can be made directly in CHANGELOG.md.
 
-
 ## [Unreleased] — 2026-06-24
 
 ### Features
+
 - add frontend dependency policy checks for risky package additions ⚠️ **route-impacting** (`021de2b`)
 - implement changelog automation for frontend operational surfaces (`212a7a4`)
 - implement W5 issues — draft preservation, architecture map, quality gate, seed data packs ⚠️ **route-impacting** (`77e7649`)
@@ -2897,24 +2986,27 @@ Versions align with [Semantic Versioning](https://semver.org/).
 - create outage report model (`e53bc67`)
 
 ### Bug Fixes
+
 - **outages**: remove duplicate declarations and JSX from merge artifacts ⚠️ **route-impacting** (`feddaa5`)
 - resolve FE-001/005/007/008 issues (#159 #163 #165 #166) ⚠️ **route-impacting** (`2a8b8db`)
 - clean up imports, general errors ⚠️ **route-impacting** (`17bf446`)
 
 ### Refactoring
+
 - **tests**: reorganize and enhance test cases for outage report functionality (`0cb56bf`)
 - **api**: streamline report handling and introduce RCA management logic (`f47df11`)
 
 ### Documentation
+
 - add CODEOWNERS and escalation map for high-risk modules (`42198c4`)
 - add route-level ADR templates and baseline ADR entries (`9312375`)
 
 > **Rollout notes:** Review route-impacting changes above before deploying. Manual corrections can be made directly in CHANGELOG.md.
 
-
 ## [Unreleased] — 2026-06-24
 
 ### Features
+
 - implement changelog automation for frontend operational surfaces (`212a7a4`)
 - implement W5 issues — draft preservation, architecture map, quality gate, seed data packs ⚠️ **route-impacting** (`77e7649`)
 - add reliability scorecard CI workflow and docs ⚠️ **route-impacting** (`3e470fa`)
@@ -2973,24 +3065,27 @@ Versions align with [Semantic Versioning](https://semver.org/).
 - create outage report model (`e53bc67`)
 
 ### Bug Fixes
+
 - **outages**: remove duplicate declarations and JSX from merge artifacts ⚠️ **route-impacting** (`feddaa5`)
 - resolve FE-001/005/007/008 issues (#159 #163 #165 #166) ⚠️ **route-impacting** (`2a8b8db`)
 - clean up imports, general errors ⚠️ **route-impacting** (`17bf446`)
 
 ### Refactoring
+
 - **tests**: reorganize and enhance test cases for outage report functionality (`0cb56bf`)
 - **api**: streamline report handling and introduce RCA management logic (`f47df11`)
 
 ### Documentation
+
 - add CODEOWNERS and escalation map for high-risk modules (`42198c4`)
 - add route-level ADR templates and baseline ADR entries (`9312375`)
 
 > **Rollout notes:** Review route-impacting changes above before deploying. Manual corrections can be made directly in CHANGELOG.md.
 
-
 ## [Unreleased] — 2026-06-24
 
 ### Features
+
 - implement changelog automation for frontend operational surfaces (`212a7a4`)
 - add reliability scorecard CI workflow and docs ⚠️ **route-impacting** (`3e470fa`)
 - add contributor contract-change checklist with auto hints (`9f0308a`)
@@ -3048,24 +3143,27 @@ Versions align with [Semantic Versioning](https://semver.org/).
 - create outage report model (`e53bc67`)
 
 ### Bug Fixes
+
 - **outages**: remove duplicate declarations and JSX from merge artifacts ⚠️ **route-impacting** (`feddaa5`)
 - resolve FE-001/005/007/008 issues (#159 #163 #165 #166) ⚠️ **route-impacting** (`2a8b8db`)
 - clean up imports, general errors ⚠️ **route-impacting** (`17bf446`)
 
 ### Refactoring
+
 - **tests**: reorganize and enhance test cases for outage report functionality (`0cb56bf`)
 - **api**: streamline report handling and introduce RCA management logic (`f47df11`)
 
 ### Documentation
+
 - add CODEOWNERS and escalation map for high-risk modules (`42198c4`)
 - add route-level ADR templates and baseline ADR entries (`9312375`)
 
 > **Rollout notes:** Review route-impacting changes above before deploying. Manual corrections can be made directly in CHANGELOG.md.
 
-
 ## [Unreleased] — 2026-06-24
 
 ### Features
+
 - **changelog**: implement changelog automation for frontend operational surfaces ⚠️ **route-impacting** (`placeholder`)
 
 > **Rollout notes:** This entry is a placeholder for the current work on issue #294 [FE-W5-123].  

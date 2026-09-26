@@ -14,22 +14,36 @@
   --font-mono: var(--font-roboto-mono);
 }
 
+/* Explicit preferences override the OS; before hydration, follow the OS. */
+:root.light {
+  --background: #ffffff;
+  --foreground: #171717;
+  color-scheme: light;
+}
+
+:root.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  color-scheme: dark;
+}
+
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not(.light):not(.dark) {
     --background: #0a0a0a;
     --foreground: #ededed;
+    color-scheme: dark;
   }
+}
 
-  /* WCAG 2.1 AA Compliant Dark Mode Text Contrast Ratios (>= 4.5:1 against dark backgrounds) */
-  .text-slate-400,
-  .text-gray-400 {
-    color: #cbd5e1 !important; /* slate-300: contrast ratio > 7.2:1 */
-  }
+/* Keep dark-mode contrast adjustments tied to the selected theme. */
+html.dark .text-slate-400,
+html.dark .text-gray-400 {
+  color: #cbd5e1 !important;
+}
 
-  .text-slate-500,
-  .text-gray-500 {
-    color: #94a3b8 !important; /* slate-400: contrast ratio > 4.8:1 */
-  }
+html.dark .text-slate-500,
+html.dark .text-gray-500 {
+  color: #94a3b8 !important;
 }
 
 body {
@@ -44,7 +58,7 @@ input:focus-visible,
 select:focus-visible,
 textarea:focus-visible,
 a:focus-visible,
-[role="button"]:focus-visible {
+[role='button']:focus-visible {
   outline: 2px solid #6366f1 !important;
   outline-offset: 2px !important;
   box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.4) !important;
@@ -65,13 +79,13 @@ html.a11y-high-contrast a {
 }
 
 html.a11y-high-contrast button,
-html.a11y-high-contrast [role="button"] {
+html.a11y-high-contrast [role='button'] {
   outline: 2px solid transparent;
   outline-offset: 2px;
 }
 
 html.a11y-high-contrast button:focus-visible,
-html.a11y-high-contrast [role="button"]:focus-visible,
+html.a11y-high-contrast [role='button']:focus-visible,
 html.a11y-high-contrast a:focus-visible,
 html.a11y-high-contrast input:focus-visible,
 html.a11y-high-contrast select:focus-visible {
@@ -194,7 +208,7 @@ html.a11y-reduced-motion .transition-transform {
 
   .animate-spin,
   .animate-pulse,
-  [role="status"],
+  [role='status'],
   .spinner {
     display: none !important;
   }

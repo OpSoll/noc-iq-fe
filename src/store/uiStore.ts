@@ -1,5 +1,10 @@
 import { create } from 'zustand';
-import { getCapabilitiesForRole, hasCapability, type Capability, type Role } from '@/services/capabilities';
+import {
+  getCapabilitiesForRole,
+  hasCapability,
+  type Capability,
+  type Role,
+} from '@/services/capabilities';
 
 interface UIStoreState {
   role: Role | null;

@@ -8,7 +8,9 @@ export function useUrlSync<T extends Record<string, string>>(defaults: T) {
 
   const state = Object.keys(defaults).reduce((acc, key) => {
     const value = searchParams.get(key);
-    acc[key as keyof T] = (value !== null ? value : defaults[key]) as T[keyof T];
+    acc[key as keyof T] = (
+      value !== null ? value : defaults[key]
+    ) as T[keyof T];
     return acc;
   }, {} as T);
 
@@ -22,10 +24,12 @@ export function useUrlSync<T extends Record<string, string>>(defaults: T) {
           params.set(key, String(value));
         }
       }
-      const newUrl = params.toString() ? `?${params.toString()}` : window.location.pathname;
+      const newUrl = params.toString()
+        ? `?${params.toString()}`
+        : window.location.pathname;
       window.history.replaceState(null, '', newUrl);
     },
-    [searchParams, defaults],
+    [searchParams, defaults]
   );
 
   return [state, setState] as const;

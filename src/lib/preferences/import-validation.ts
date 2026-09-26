@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 /**
  * Schema for a single exported/imported preference payload.
@@ -6,9 +6,9 @@ import { z } from "zod";
  */
 export const preferenceSchema = z.object({
   accessibilityMode: z
-    .enum(["default", "high-contrast", "reduced-motion"])
+    .enum(['default', 'high-contrast', 'reduced-motion'])
     .optional(),
-  theme: z.enum(["light", "dark", "system"]).optional(),
+  theme: z.enum(['light', 'dark', 'system']).optional(),
   notificationsEnabled: z.boolean().optional(),
   locale: z.string().min(2).max(10).optional(),
 });
@@ -32,11 +32,11 @@ export interface PreferenceValidationResult {
  * reported as structured errors instead of crashing app store initialization.
  */
 export function validatePreferenceImport(
-  raw: string | unknown,
+  raw: string | unknown
 ): PreferenceValidationResult {
   let parsed: unknown;
 
-  if (typeof raw === "string") {
+  if (typeof raw === 'string') {
     try {
       parsed = JSON.parse(raw);
     } catch {
@@ -45,8 +45,8 @@ export function validatePreferenceImport(
         data: null,
         errors: [
           {
-            key: "__root__",
-            message: "File is not valid JSON and could not be parsed.",
+            key: '__root__',
+            message: 'File is not valid JSON and could not be parsed.',
           },
         ],
       };
@@ -63,9 +63,9 @@ export function validatePreferenceImport(
 
   const errors: PreferenceValidationError[] = result.error.issues.map(
     (issue) => ({
-      key: issue.path.length > 0 ? issue.path.join(".") : "__root__",
+      key: issue.path.length > 0 ? issue.path.join('.') : '__root__',
       message: issue.message,
-    }),
+    })
   );
 
   return { success: false, data: null, errors };

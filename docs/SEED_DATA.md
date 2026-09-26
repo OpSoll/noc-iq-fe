@@ -4,10 +4,10 @@ Deterministic preview data packs allow UI reviewers to validate complex states a
 
 ## Available Packs
 
-| Pack | Description |
-|---|---|
-| `normal` | All systems operational, minimal activity |
-| `degraded` | Several low-to-medium severity outages in progress |
+| Pack             | Description                                                        |
+| ---------------- | ------------------------------------------------------------------ |
+| `normal`         | All systems operational, minimal activity                          |
+| `degraded`       | Several low-to-medium severity outages in progress                 |
 | `incident-heavy` | Multiple critical outages with SLA violations and delivery history |
 
 ## Usage
@@ -21,9 +21,9 @@ npx tsx scripts/load-seed-pack.ts <pack-name>
 ### In tests / preview setup
 
 ```ts
-import { getSeedPack, listSeedPacks } from "@/tests/fixtures/seed-packs";
+import { getSeedPack, listSeedPacks } from '@/tests/fixtures/seed-packs';
 
-const pack = getSeedPack("incident-heavy");
+const pack = getSeedPack('incident-heavy');
 console.log(pack.outages.length); // 3
 ```
 

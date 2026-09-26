@@ -1,21 +1,21 @@
-"use client";
+'use client';
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState, useCallback } from "react";
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState, useCallback } from 'react';
 
 import {
   batchAcknowledgeOutages,
   batchRecalculateSLA,
   batchResolveOutages,
-} from "@/services/outages";
+} from '@/services/outages';
 
-import { outageKeys } from "./useOutageMutations";
+import { outageKeys } from './useOutageMutations';
 
 /* -------------------------------------------------------------------------- */
 /*                                    Types                                   */
 /* -------------------------------------------------------------------------- */
 
-export type BatchOperation = "acknowledge" | "resolve" | "recalculate-sla";
+export type BatchOperation = 'acknowledge' | 'resolve' | 'recalculate-sla';
 
 export interface BatchProgress {
   total: number;
@@ -66,7 +66,7 @@ export function useBatchOperations(): UseBatchOperationsReturn {
         success_count: number;
         failure_count: number;
         errors?: Array<{ id: string; error: string }>;
-      },
+      }
     ): BatchResult => ({
       total,
       success: response.success_count,
@@ -74,7 +74,7 @@ export function useBatchOperations(): UseBatchOperationsReturn {
       errors: response.errors ?? [],
       operation,
     }),
-    [],
+    []
   );
 
   const executeWithProgress = useCallback(
@@ -82,7 +82,7 @@ export function useBatchOperations(): UseBatchOperationsReturn {
       operation: BatchOperation,
       ids: string[],
       apiCall: () => Promise<T>,
-      onSuccess: (data: T) => void,
+      onSuccess: (data: T) => void
     ): Promise<BatchResult> => {
       const total = ids.length;
       setProgress({ total, processed: 0, operation });
@@ -98,7 +98,7 @@ export function useBatchOperations(): UseBatchOperationsReturn {
             success_count: number;
             failure_count: number;
             errors?: Array<{ id: string; error: string }>;
-          },
+          }
         );
         setResult(res);
         onSuccess(data);
@@ -111,7 +111,7 @@ export function useBatchOperations(): UseBatchOperationsReturn {
           errors: ids.map((id) => ({
             id,
             error:
-              error instanceof Error ? error.message : "Batch operation failed",
+              error instanceof Error ? error.message : 'Batch operation failed',
           })),
           operation,
         };
@@ -121,18 +121,18 @@ export function useBatchOperations(): UseBatchOperationsReturn {
         setProgress(null);
       }
     },
-    [buildResult],
+    [buildResult]
   );
 
   const acknowledgeMutation = useMutation({
     mutationFn: async (ids: string[]) => {
       return executeWithProgress(
-        "acknowledge",
+        'acknowledge',
         ids,
         () => batchAcknowledgeOutages(ids),
         () => {
           void queryClient.invalidateQueries({ queryKey: outageKeys.all });
-        },
+        }
       );
     },
   });
@@ -146,12 +146,12 @@ export function useBatchOperations(): UseBatchOperationsReturn {
       mttrMinutes?: number;
     }) => {
       return executeWithProgress(
-        "resolve",
+        'resolve',
         ids,
         () => batchResolveOutages(ids, { mttr_minutes: mttrMinutes }),
         () => {
           void queryClient.invalidateQueries({ queryKey: outageKeys.all });
-        },
+        }
       );
     },
   });
@@ -159,12 +159,12 @@ export function useBatchOperations(): UseBatchOperationsReturn {
   const recalculateSLAMutation = useMutation({
     mutationFn: async (ids: string[]) => {
       return executeWithProgress(
-        "recalculate-sla",
+        'recalculate-sla',
         ids,
         () => batchRecalculateSLA(ids),
         () => {
           void queryClient.invalidateQueries({ queryKey: outageKeys.all });
-        },
+        }
       );
     },
   });

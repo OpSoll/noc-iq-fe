@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { Printer } from "lucide-react";
+import { Printer } from 'lucide-react';
 
 interface PrintButtonProps {
   ariaLabel?: string;
@@ -8,8 +8,8 @@ interface PrintButtonProps {
 }
 
 export const PrintButton = ({
-  ariaLabel = "Print page",
-  className = "",
+  ariaLabel = 'Print page',
+  className = '',
 }: PrintButtonProps) => {
   const handlePrint = () => {
     window.print();

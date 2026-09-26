@@ -21,7 +21,7 @@ export interface WebhookDelivery {
   id: string;
   webhook_id: string;
   event: string;
-  status: "success" | "failed" | "pending";
+  status: 'success' | 'failed' | 'pending';
   response_code: number | null;
   created_at: string;
   /** The JSON payload sent to the endpoint. */

@@ -3,7 +3,7 @@
  * Tracks p50/p90/p99 for key endpoint groups with outlier linkability.
  */
 
-export type EndpointGroup = "outages" | "payments" | "sla" | "webhooks";
+export type EndpointGroup = 'outages' | 'payments' | 'sla' | 'webhooks';
 
 export interface LatencyEntry {
   durationMs: number;
@@ -29,10 +29,10 @@ export interface EnvironmentTag {
 // ── Group mapping ────────────────────────────────────────────────────────────
 
 const GROUP_PREFIXES: [string, EndpointGroup][] = [
-  ["/outages", "outages"],
-  ["/payments", "payments"],
-  ["/sla", "sla"],
-  ["/webhooks", "webhooks"],
+  ['/outages', 'outages'],
+  ['/payments', 'payments'],
+  ['/sla', 'sla'],
+  ['/webhooks', 'webhooks'],
 ];
 
 export function classifyEndpoint(path: string): EndpointGroup | null {
@@ -50,7 +50,7 @@ const MAX_ENTRIES = 1000;
 export function recordLatency(
   durationMs: number,
   route: string,
-  correlationId?: string,
+  correlationId?: string
 ): void {
   const group = classifyEndpoint(route);
   if (!group) return;
@@ -99,7 +99,10 @@ export function computePercentiles(group: EndpointGroup): LatencyPercentiles {
 
 // ── Outlier detection ────────────────────────────────────────────────────────
 
-export function findOutliers(group: EndpointGroup, thresholdP99 = true): LatencyEntry[] {
+export function findOutliers(
+  group: EndpointGroup,
+  thresholdP99 = true
+): LatencyEntry[] {
   const groupEntries = entries.filter((e) => e.group === group);
   if (groupEntries.length < 10) return [];
 
@@ -118,10 +121,10 @@ export function findOutliers(group: EndpointGroup, thresholdP99 = true): Latency
 export function tagEnvironment(
   group: EndpointGroup,
   route: string,
-  requestClass: string,
+  requestClass: string
 ): EnvironmentTag {
   return {
-    env: process.env.NODE_ENV ?? "unknown",
+    env: process.env.NODE_ENV ?? 'unknown',
     route,
     requestClass,
   };

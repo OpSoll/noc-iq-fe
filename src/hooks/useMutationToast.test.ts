@@ -10,39 +10,45 @@
  *  - Caller-supplied onSuccess / onError callbacks still fire
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook, act, waitFor } from "@testing-library/react";
-import type { ReactNode } from "react";
-import { createElement } from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { renderHook, act, waitFor } from '@testing-library/react';
+import type { ReactNode } from 'react';
+import { createElement } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // ── Toast mock ────────────────────────────────────────────────────────────────
 // We stub the toast infrastructure so we can inspect calls without a DOM tree.
 const mockToast = vi.fn<[string, string], void>();
-vi.mock("@/components/ui/toast", () => ({
+vi.mock('@/components/ui/toast', () => ({
   useToast: () => mockToast,
 }));
 
 // ── API normalizer mock ───────────────────────────────────────────────────────
-vi.mock("@/lib/api", () => ({
+vi.mock('@/lib/api', () => ({
   normalizeApiError: (err: unknown) => {
-    const e = err as { response?: { data?: { detail?: string }; status?: number } };
+    const e = err as {
+      response?: { data?: { detail?: string }; status?: number };
+    };
     const detail = e?.response?.data?.detail;
     return {
-      message: detail ?? "Unexpected API error",
-      kind: "unknown",
+      message: detail ?? 'Unexpected API error',
+      kind: 'unknown',
       status: e?.response?.status,
     };
   },
 }));
 
-import { useMutationToast } from "./useMutationToast";
+import { useMutationToast } from './useMutationToast';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function makeWrapper(queryClient: QueryClient) {
   return function Wrapper({ children }: { children: ReactNode }) {
-    return createElement(QueryClientProvider, { client: queryClient }, children);
+    return createElement(
+      QueryClientProvider,
+      { client: queryClient },
+      children
+    );
   };
 }
 
@@ -55,32 +61,32 @@ function freshClient() {
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
-describe("useMutationToast", () => {
+describe('useMutationToast', () => {
   beforeEach(() => {
     mockToast.mockClear();
   });
 
   // ── Success path ─────────────────────────────────────────────────────────
 
-  it("triggers green success toast with static message on mutation success", async () => {
+  it('triggers green success toast with static message on mutation success', async () => {
     const client = freshClient();
     const { result } = renderHook(
       () =>
         useMutationToast({
-          mutationFn: async () => ({ id: "123" }),
-          successMessage: "Outage resolved",
+          mutationFn: async () => ({ id: '123' }),
+          successMessage: 'Outage resolved',
         }),
-      { wrapper: makeWrapper(client) },
+      { wrapper: makeWrapper(client) }
     );
 
     act(() => result.current.mutate(undefined));
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(mockToast).toHaveBeenCalledWith("Outage resolved", "success");
+    expect(mockToast).toHaveBeenCalledWith('Outage resolved', 'success');
   });
 
-  it("accepts a factory function for the success message", async () => {
+  it('accepts a factory function for the success message', async () => {
     const client = freshClient();
     const { result } = renderHook(
       () =>
@@ -88,26 +94,26 @@ describe("useMutationToast", () => {
           mutationFn: async (name: string) => ({ name }),
           successMessage: (data) => `Created: ${data.name}`,
         }),
-      { wrapper: makeWrapper(client) },
+      { wrapper: makeWrapper(client) }
     );
 
-    act(() => result.current.mutate("Outage-42"));
+    act(() => result.current.mutate('Outage-42'));
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(mockToast).toHaveBeenCalledWith("Created: Outage-42", "success");
+    expect(mockToast).toHaveBeenCalledWith('Created: Outage-42', 'success');
   });
 
-  it("appends action link label to success toast message when successAction is provided", async () => {
+  it('appends action link label to success toast message when successAction is provided', async () => {
     const client = freshClient();
     const { result } = renderHook(
       () =>
         useMutationToast({
-          mutationFn: async () => ({ id: "abc" }),
-          successMessage: "Record saved",
-          successAction: { label: "View record", href: "/outages/abc" },
+          mutationFn: async () => ({ id: 'abc' }),
+          successMessage: 'Record saved',
+          successAction: { label: 'View record', href: '/outages/abc' },
         }),
-      { wrapper: makeWrapper(client) },
+      { wrapper: makeWrapper(client) }
     );
 
     act(() => result.current.mutate(undefined));
@@ -115,21 +121,24 @@ describe("useMutationToast", () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
     const [msg, variant] = mockToast.mock.calls[0];
-    expect(variant).toBe("success");
-    expect(msg).toContain("View record");
-    expect(msg).toContain("/outages/abc");
+    expect(variant).toBe('success');
+    expect(msg).toContain('View record');
+    expect(msg).toContain('/outages/abc');
   });
 
-  it("resolves successAction from a factory when data is available", async () => {
+  it('resolves successAction from a factory when data is available', async () => {
     const client = freshClient();
     const { result } = renderHook(
       () =>
         useMutationToast({
-          mutationFn: async () => ({ id: "xyz" }),
-          successMessage: "Done",
-          successAction: (data) => ({ label: "Open", href: `/outages/${data.id}` }),
+          mutationFn: async () => ({ id: 'xyz' }),
+          successMessage: 'Done',
+          successAction: (data) => ({
+            label: 'Open',
+            href: `/outages/${data.id}`,
+          }),
         }),
-      { wrapper: makeWrapper(client) },
+      { wrapper: makeWrapper(client) }
     );
 
     act(() => result.current.mutate(undefined));
@@ -137,19 +146,19 @@ describe("useMutationToast", () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
     const [msg] = mockToast.mock.calls[0];
-    expect(msg).toContain("/outages/xyz");
+    expect(msg).toContain('/outages/xyz');
   });
 
-  it("still calls caller-supplied onSuccess callback", async () => {
+  it('still calls caller-supplied onSuccess callback', async () => {
     const client = freshClient();
     const spy = vi.fn();
     const { result } = renderHook(
       () =>
         useMutationToast({
-          mutationFn: async () => "ok",
+          mutationFn: async () => 'ok',
           onSuccess: spy,
         }),
-      { wrapper: makeWrapper(client) },
+      { wrapper: makeWrapper(client) }
     );
 
     act(() => result.current.mutate(undefined));
@@ -157,14 +166,16 @@ describe("useMutationToast", () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
     expect(spy).toHaveBeenCalledOnce();
+    expect(spy.mock.calls[0]).toHaveLength(4);
+    expect(spy.mock.calls[0][3]).toEqual(expect.objectContaining({ client }));
   });
 
   // ── Error path ───────────────────────────────────────────────────────────
 
-  it("triggers red error toast with parsed API error message on failure", async () => {
+  it('triggers red error toast with parsed API error message on failure', async () => {
     const client = freshClient();
     const apiErr = {
-      response: { status: 422, data: { detail: "Site ID already exists" } },
+      response: { status: 422, data: { detail: 'Site ID already exists' } },
     };
 
     const { result } = renderHook(
@@ -174,7 +185,7 @@ describe("useMutationToast", () => {
             throw apiErr;
           },
         }),
-      { wrapper: makeWrapper(client) },
+      { wrapper: makeWrapper(client) }
     );
 
     act(() => result.current.mutate(undefined));
@@ -182,20 +193,20 @@ describe("useMutationToast", () => {
     await waitFor(() => expect(result.current.isError).toBe(true));
 
     const [msg, variant] = mockToast.mock.calls[0];
-    expect(variant).toBe("error");
-    expect(msg).toContain("Site ID already exists");
+    expect(variant).toBe('error');
+    expect(msg).toContain('Site ID already exists');
   });
 
-  it("includes retry hint in error toast by default", async () => {
+  it('includes retry hint in error toast by default', async () => {
     const client = freshClient();
     const { result } = renderHook(
       () =>
         useMutationToast({
           mutationFn: async () => {
-            throw new Error("Network down");
+            throw new Error('Network down');
           },
         }),
-      { wrapper: makeWrapper(client) },
+      { wrapper: makeWrapper(client) }
     );
 
     act(() => result.current.mutate(undefined));
@@ -203,20 +214,20 @@ describe("useMutationToast", () => {
     await waitFor(() => expect(result.current.isError).toBe(true));
 
     const [msg] = mockToast.mock.calls[0];
-    expect(msg.toLowerCase()).toContain("retry");
+    expect(msg.toLowerCase()).toContain('retry');
   });
 
-  it("suppresses retry hint when showRetry=false", async () => {
+  it('suppresses retry hint when showRetry=false', async () => {
     const client = freshClient();
     const { result } = renderHook(
       () =>
         useMutationToast({
           mutationFn: async () => {
-            throw new Error("Not allowed");
+            throw new Error('Not allowed');
           },
           showRetry: false,
         }),
-      { wrapper: makeWrapper(client) },
+      { wrapper: makeWrapper(client) }
     );
 
     act(() => result.current.mutate(undefined));
@@ -224,65 +235,68 @@ describe("useMutationToast", () => {
     await waitFor(() => expect(result.current.isError).toBe(true));
 
     const [msg] = mockToast.mock.calls[0];
-    expect(msg.toLowerCase()).not.toContain("retry");
+    expect(msg.toLowerCase()).not.toContain('retry');
   });
 
-  it("uses static errorMessage when provided instead of parsed API error", async () => {
+  it('uses static errorMessage when provided instead of parsed API error', async () => {
     const client = freshClient();
     const { result } = renderHook(
       () =>
         useMutationToast({
           mutationFn: async () => {
-            throw new Error("raw error");
+            throw new Error('raw error');
           },
-          errorMessage: "Custom error message",
+          errorMessage: 'Custom error message',
           showRetry: false,
         }),
-      { wrapper: makeWrapper(client) },
+      { wrapper: makeWrapper(client) }
     );
 
     act(() => result.current.mutate(undefined));
 
     await waitFor(() => expect(result.current.isError).toBe(true));
 
-    expect(mockToast).toHaveBeenCalledWith("Custom error message", "error");
+    expect(mockToast).toHaveBeenCalledWith('Custom error message', 'error');
   });
 
-  it("uses factory errorMessage when provided", async () => {
+  it('uses factory errorMessage when provided', async () => {
     const client = freshClient();
     const { result } = renderHook(
       () =>
         useMutationToast({
           mutationFn: async () => {
-            throw new Error("detail from server");
+            throw new Error('detail from server');
           },
           errorMessage: (err) =>
-            `Wrapped: ${err instanceof Error ? err.message : "unknown"}`,
+            `Wrapped: ${err instanceof Error ? err.message : 'unknown'}`,
           showRetry: false,
         }),
-      { wrapper: makeWrapper(client) },
+      { wrapper: makeWrapper(client) }
     );
 
     act(() => result.current.mutate(undefined));
 
     await waitFor(() => expect(result.current.isError).toBe(true));
 
-    expect(mockToast).toHaveBeenCalledWith("Wrapped: detail from server", "error");
+    expect(mockToast).toHaveBeenCalledWith(
+      'Wrapped: detail from server',
+      'error'
+    );
   });
 
-  it("still calls caller-supplied onError callback", async () => {
+  it('still calls caller-supplied onError callback', async () => {
     const client = freshClient();
     const spy = vi.fn();
     const { result } = renderHook(
       () =>
         useMutationToast({
           mutationFn: async () => {
-            throw new Error("boom");
+            throw new Error('boom');
           },
           onError: spy,
           showRetry: false,
         }),
-      { wrapper: makeWrapper(client) },
+      { wrapper: makeWrapper(client) }
     );
 
     act(() => result.current.mutate(undefined));
@@ -290,18 +304,20 @@ describe("useMutationToast", () => {
     await waitFor(() => expect(result.current.isError).toBe(true));
 
     expect(spy).toHaveBeenCalledOnce();
+    expect(spy.mock.calls[0]).toHaveLength(4);
+    expect(spy.mock.calls[0][3]).toEqual(expect.objectContaining({ client }));
   });
 
   // ── Default message fallback ─────────────────────────────────────────────
 
-  it("falls back to default success message when none is provided", async () => {
+  it('falls back to default success message when none is provided', async () => {
     const client = freshClient();
     const { result } = renderHook(
       () =>
         useMutationToast({
           mutationFn: async () => null,
         }),
-      { wrapper: makeWrapper(client) },
+      { wrapper: makeWrapper(client) }
     );
 
     act(() => result.current.mutate(undefined));
@@ -309,6 +325,6 @@ describe("useMutationToast", () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
     const [msg] = mockToast.mock.calls[0];
-    expect(msg).toBe("Action completed successfully");
+    expect(msg).toBe('Action completed successfully');
   });
 });

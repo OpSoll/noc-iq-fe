@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 /**
  * Evidence document previewer (opsoll/noc-iq-fe#495).
@@ -8,11 +8,11 @@
  * longer need to download files locally just to inspect them.
  */
 
-import { useState } from "react";
+import { useState } from 'react';
 
-import Modal from "@/components/ui/modal";
-import { Button } from "@/components/ui/button";
-import type { DisputeAttachment } from "@/types/sla";
+import Modal from '@/components/ui/modal';
+import { Button } from '@/components/ui/button';
+import type { DisputeAttachment } from '@/types/sla';
 
 interface EvidencePreviewModalProps {
   /** Attachment currently being previewed; null closes the modal. */
@@ -34,8 +34,8 @@ export default function EvidencePreviewModal({
 
   if (!attachment) return null;
 
-  const isPdf = attachment.content_type === "application/pdf";
-  const isImage = attachment.content_type.startsWith("image/");
+  const isPdf = attachment.content_type === 'application/pdf';
+  const isImage = attachment.content_type.startsWith('image/');
 
   return (
     <Modal
@@ -51,9 +51,7 @@ export default function EvidencePreviewModal({
             <Button
               size="sm"
               variant="outline"
-              onClick={() =>
-                setZoom((z) => Math.max(MIN_ZOOM, z - ZOOM_STEP))
-              }
+              onClick={() => setZoom((z) => Math.max(MIN_ZOOM, z - ZOOM_STEP))}
               aria-label="Zoom out"
               disabled={zoom <= MIN_ZOOM}
             >
@@ -68,9 +66,7 @@ export default function EvidencePreviewModal({
             <Button
               size="sm"
               variant="outline"
-              onClick={() =>
-                setZoom((z) => Math.min(MAX_ZOOM, z + ZOOM_STEP))
-              }
+              onClick={() => setZoom((z) => Math.min(MAX_ZOOM, z + ZOOM_STEP))}
               aria-label="Zoom in"
               disabled={zoom >= MAX_ZOOM}
             >
@@ -110,9 +106,9 @@ export default function EvidencePreviewModal({
               alt={attachment.filename}
               style={{
                 transform: `scale(${zoom}) rotate(${rotation}deg)`,
-                transformOrigin: "center center",
-                maxWidth: "100%",
-                height: "auto",
+                transformOrigin: 'center center',
+                maxWidth: '100%',
+                height: 'auto',
               }}
               className="mx-auto block p-4"
             />
@@ -141,8 +137,8 @@ export default function EvidencePreviewModal({
             </object>
           ) : (
             <div className="p-6 text-center text-sm text-slate-600">
-              This file type ({" "}
-              <span className="font-mono">{attachment.content_type}</span>){" "}
+              This file type ({' '}
+              <span className="font-mono">{attachment.content_type}</span>){' '}
               cannot be previewed in-browser.
               <div className="mt-2">
                 <a

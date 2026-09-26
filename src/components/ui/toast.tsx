@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {
   createContext,
@@ -7,7 +7,7 @@ import {
   useRef,
   useState,
   useEffect,
-} from "react";
+} from 'react';
 
 const DURATION = 4000;
 
@@ -33,9 +33,9 @@ const ToastWithProgress = ({
   const start = useRef(0);
 
   const variantClass: Record<ToastVariant, string> = {
-    success: "border-emerald-200 bg-emerald-50 text-emerald-800",
-    error: "border-red-200 bg-red-50 text-red-700",
-    info: "border-slate-200 bg-white text-slate-800",
+    success: 'border-emerald-200 bg-emerald-50 text-emerald-800',
+    error: 'border-red-200 bg-red-50 text-red-700',
+    info: 'border-slate-200 bg-white text-slate-800',
   };
 
   const resume = useCallback(() => {
@@ -105,13 +105,13 @@ const ToastWithProgress = ({
       </button>
       <div
         style={{ width: `${width}%` }}
-        className="absolute bottom-0 left-0 h-1 bg-black/20 transition-[width] duration-75 ease-linear motion-reduce:transition-none"
+        className="absolute bottom-0 left-0 h-1 bg-black/20 motion-reduce:hidden transition-[width] duration-75 ease-linear motion-reduce:transition-none"
       />
     </div>
   );
 };
 
-type ToastVariant = "success" | "error" | "info";
+type ToastVariant = 'success' | 'error' | 'info';
 
 interface Toast {
   id: number;
@@ -119,7 +119,13 @@ interface Toast {
   variant: ToastVariant;
 }
 
+export interface Notification extends Toast {
+  read: boolean;
+}
+
 interface ToastContextValue {
+  notifications: Notification[];
+  markAllAsRead: () => void;
   toast: (message: string, variant?: ToastVariant) => void;
 }
 
@@ -128,13 +134,29 @@ const ToastContext = createContext<ToastContextValue | null>(null);
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const counter = useRef(0);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const markAllAsRead = useCallback(() => {
+    setNotifications((items) => items.map((item) => ({ ...item, read: true })));
+  }, []);
+
+  useEffect(() => {
+    const clear = () => {
+      setNotifications([]);
+      setToasts([]);
+    };
+    window.addEventListener('auth:logout', clear);
+    return () => window.removeEventListener('auth:logout', clear);
+  }, []);
 
   const toast = useCallback(
-    (message: string, variant: ToastVariant = "info") => {
+    (message: string, variant: ToastVariant = 'info') => {
       const id = ++counter.current;
       setToasts((prev) => [...prev, { id, message, variant }]);
+      setNotifications((prev) =>
+        [{ id, message, variant, read: false }, ...prev].slice(0, 50)
+      );
     },
-    [],
+    []
   );
 
   const onDismiss = useCallback((id: number) => {
@@ -142,7 +164,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <ToastContext.Provider value={{ toast }}>
+    <ToastContext.Provider value={{ toast, notifications, markAllAsRead }}>
       {children}
       <div
         role="region"
@@ -164,6 +186,13 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 
 export function useToast() {
   const ctx = useContext(ToastContext);
-  if (!ctx) throw new Error("useToast must be used within ToastProvider");
+  if (!ctx) throw new Error('useToast must be used within ToastProvider');
   return ctx.toast;
+}
+
+export function useNotifications() {
+  const ctx = useContext(ToastContext);
+  if (!ctx)
+    throw new Error('useNotifications must be used within ToastProvider');
+  return { notifications: ctx.notifications, markAllAsRead: ctx.markAllAsRead };
 }

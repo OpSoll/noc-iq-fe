@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {
   createContext,
@@ -8,9 +8,9 @@ import {
   useMemo,
   useState,
   type ReactNode,
-} from "react";
+} from 'react';
 
-export type AccessibilityMode = "default" | "high-contrast" | "reduced-motion";
+export type AccessibilityMode = 'default' | 'high-contrast' | 'reduced-motion';
 
 interface AccessibilityContextValue {
   mode: AccessibilityMode;
@@ -19,36 +19,36 @@ interface AccessibilityContextValue {
   isReducedMotion: boolean;
 }
 
-const STORAGE_KEY = "noc_a11y_mode";
+const STORAGE_KEY = 'noc_a11y_mode';
 
 const AccessibilityContext = createContext<AccessibilityContextValue | null>(
-  null,
+  null
 );
 
 function getStoredMode(): AccessibilityMode {
-  if (typeof window === "undefined") return "default";
+  if (typeof window === 'undefined') return 'default';
   const stored = localStorage.getItem(STORAGE_KEY) as AccessibilityMode | null;
 
-  if (stored === "high-contrast" || stored === "reduced-motion") {
+  if (stored === 'high-contrast' || stored === 'reduced-motion') {
     return stored;
   }
   // Check system preference for reduced motion
   const prefersReducedMotion = window.matchMedia(
-    "(prefers-reduced-motion: reduce)",
+    '(prefers-reduced-motion: reduce)'
   ).matches;
-  if (prefersReducedMotion) return "reduced-motion";
+  if (prefersReducedMotion) return 'reduced-motion';
 
-  return "default";
+  return 'default';
 }
 
 export function AccessibilityProvider({ children }: { children: ReactNode }) {
   const [mode, setModeState] = useState<AccessibilityMode>(() =>
-    getStoredMode(),
+    getStoredMode()
   );
 
   const setMode = useCallback((newMode: AccessibilityMode) => {
     setModeState(newMode);
-    if (typeof window !== "undefined") {
+    if (typeof window !== 'undefined') {
       localStorage.setItem(STORAGE_KEY, newMode);
     }
   }, []);
@@ -56,45 +56,45 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
   // Apply mode classes to <html>
   useEffect(() => {
     const root = document.documentElement;
-    root.classList.remove("a11y-high-contrast", "a11y-reduced-motion");
-    if (mode === "high-contrast") {
-      root.classList.add("a11y-high-contrast");
-    } else if (mode === "reduced-motion") {
-      root.classList.add("a11y-reduced-motion");
+    root.classList.remove('a11y-high-contrast', 'a11y-reduced-motion');
+    if (mode === 'high-contrast') {
+      root.classList.add('a11y-high-contrast');
+    } else if (mode === 'reduced-motion') {
+      root.classList.add('a11y-reduced-motion');
     }
   }, [mode]);
 
-    // Listen for storage events across tabs to sync theme preference
+  // Listen for storage events across tabs to sync theme preference
   useEffect(() => {
     function handleStorage(e: StorageEvent) {
       if (e.key === STORAGE_KEY && e.newValue) {
         setModeState(e.newValue as AccessibilityMode);
       }
     }
-    window.addEventListener("storage", handleStorage);
-    return () => window.removeEventListener("storage", handleStorage);
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
   }, []);
 
   // Listen for system preference changes
   useEffect(() => {
-    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     function handleChange() {
-      if (mediaQuery.matches && mode === "default") {
-        setModeState("reduced-motion");
+      if (mediaQuery.matches && mode === 'default') {
+        setModeState('reduced-motion');
       }
     }
-    mediaQuery.addEventListener("change", handleChange);
-    return () => mediaQuery.removeEventListener("change", handleChange);
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
   }, [mode]);
 
   const value = useMemo<AccessibilityContextValue>(
     () => ({
       mode,
       setMode,
-      isHighContrast: mode === "high-contrast",
-      isReducedMotion: mode === "reduced-motion",
+      isHighContrast: mode === 'high-contrast',
+      isReducedMotion: mode === 'reduced-motion',
     }),
-    [mode, setMode],
+    [mode, setMode]
   );
 
   return (
@@ -108,7 +108,7 @@ export function useAccessibility(): AccessibilityContextValue {
   const context = useContext(AccessibilityContext);
   if (!context) {
     throw new Error(
-      "useAccessibility must be used within AccessibilityProvider",
+      'useAccessibility must be used within AccessibilityProvider'
     );
   }
   return context;
