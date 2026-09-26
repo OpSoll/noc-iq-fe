@@ -12,6 +12,7 @@ import AutoRefreshControl from '@/components/dashboard/AutoRefreshControl';
 import FinancialSummaryWidget from '@/components/dashboard/FinancialSummaryWidget';
 import MTTRHistogramChart from '@/components/dashboard/MTTRHistogramChart';
 import SLABreachCountdownCard from '@/components/dashboard/SLABreachCountdownCard';
+import BreachToast from '@/components/notifications/BreachToast';
 import { useToast } from '@/components/ui/toast';
 import {
   RouteErrorState,
@@ -352,6 +353,9 @@ export default function SLADashboardView() {
     <div className="space-y-6 p-6">
       {/* Closes #604: sticky critical-outage alert, pinned above the header. */}
       <OutageAlertBanner />
+
+      {/* Closes #605: SLA breach alert with an Open Remediation action. */}
+      <BreachToast />
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-1">
