@@ -26,7 +26,7 @@ const Navigation = () => {
   const pathname = usePathname();
 
   const linkClass =
-    'rounded px-1.5 py-0.5 hover:underline focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none';
+    'inline-flex min-h-11 items-center rounded px-2.5 py-2 hover:underline focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none';
 
   const getLinkClass = (path: string) => {
     return pathname === path ? `${linkClass} font-bold` : linkClass;
@@ -105,7 +105,7 @@ const Navigation = () => {
         <select
           value={mode}
           onChange={(e) => setMode(e.target.value as AccessibilityMode)}
-          className="rounded border border-slate-200 bg-white px-2 py-1 text-xs text-slate-500 focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none"
+          className="min-h-11 rounded border border-slate-200 bg-white px-2.5 py-2 text-sm text-slate-700 focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none"
           aria-label="Accessibility mode"
         >
           {A11Y_MODES.map((m) => (
@@ -128,7 +128,7 @@ const Navigation = () => {
             )}
             <button
               onClick={() => void logout()}
-              className="rounded border border-slate-200 px-2 py-0.5 text-xs hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none"
+              className="min-h-11 rounded border border-slate-200 px-2.5 py-2 text-sm hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none"
             >
               Sign out
             </button>
@@ -137,7 +137,7 @@ const Navigation = () => {
         {state === 'unauthenticated' && (
           <Link
             href="/login"
-            className="rounded border border-slate-200 px-2 py-0.5 text-xs hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none"
+            className="inline-flex min-h-11 items-center rounded border border-slate-200 px-2.5 py-2 text-sm hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none"
           >
             Sign in
           </Link>

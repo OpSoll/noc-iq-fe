@@ -4,7 +4,6 @@ import { TextArea } from '@/components/ui/TextArea';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createOutage } from '@/services/outages';
-import { saveDraft, clearDraft, loadDraft } from '@/lib/drafts';
 import {
   SITE_ID_ERROR,
   SITE_ID_PATTERN,

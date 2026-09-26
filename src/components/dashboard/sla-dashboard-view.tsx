@@ -266,17 +266,26 @@ export default function SLADashboardView() {
     refetchInterval: autoRefresh.refetchInterval,
   });
 
-  const onTrendClick = useCallback((point: TrendPoint) => {
-    pushOutageDrilldown(point);
-  }, [pushOutageDrilldown]);
+  const onTrendClick = useCallback(
+    (point: TrendPoint) => {
+      pushOutageDrilldown(point);
+    },
+    [pushOutageDrilldown]
+  );
 
-  const onPenaltyClick = useCallback((point: TrendPoint) => {
-    pushPaymentDrilldown("penalty", point);
-  }, [pushPaymentDrilldown]);
+  const onPenaltyClick = useCallback(
+    (point: TrendPoint) => {
+      pushPaymentDrilldown('penalty', point);
+    },
+    [pushPaymentDrilldown]
+  );
 
-  const onRewardClick = useCallback((point: TrendPoint) => {
-    pushPaymentDrilldown("reward", point);
-  }, [pushPaymentDrilldown]);
+  const onRewardClick = useCallback(
+    (point: TrendPoint) => {
+      pushPaymentDrilldown('reward', point);
+    },
+    [pushPaymentDrilldown]
+  );
 
   if (primary.isLoading) {
     return (
