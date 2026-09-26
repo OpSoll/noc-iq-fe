@@ -1,13 +1,13 @@
-import { act, renderHook } from "@testing-library/react";
-import { describe, it, beforeEach, expect, vi } from "vitest";
+import { act, renderHook } from '@testing-library/react';
+import { describe, it, beforeEach, expect, vi } from 'vitest';
 
-import { useStaleGuard } from "@/hooks/useStaleGuard";
-import { api } from "@/lib/api";
+import { useStaleGuard } from '@/hooks/useStaleGuard';
+import { api } from '@/lib/api';
 
 // ---------------------------------------------------------------------------
 // Mock the API module so we can control GET responses in tests.
 // ---------------------------------------------------------------------------
-vi.mock("@/lib/api", () => ({
+vi.mock('@/lib/api', () => ({
   api: {
     get: vi.fn(),
   },
@@ -19,13 +19,13 @@ const mockedGet = vi.mocked(api.get);
 /*  Test helpers                                                               */
 /* -------------------------------------------------------------------------- */
 
-const FORM_UPDATED_AT = "2026-09-25T10:00:00Z";
-const SERVER_SAME = "2026-09-25T10:00:00Z";
-const SERVER_NEWER = "2026-09-25T10:05:00Z";
-const SERVER_OLDER = "2026-09-25T09:55:00Z";
+const FORM_UPDATED_AT = '2026-09-25T10:00:00Z';
+const SERVER_SAME = '2026-09-25T10:00:00Z';
+const SERVER_NEWER = '2026-09-25T10:05:00Z';
+const SERVER_OLDER = '2026-09-25T09:55:00Z';
 
 const defaultOpts = () => ({
-  endpoint: "/outages/abc-123",
+  endpoint: '/outages/abc-123',
   formUpdatedAt: FORM_UPDATED_AT,
 });
 
@@ -33,14 +33,14 @@ const defaultOpts = () => ({
 /*  Tests                                                                      */
 /* -------------------------------------------------------------------------- */
 
-describe("useStaleGuard", () => {
+describe('useStaleGuard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   // ─── initial state ──────────────────────────────────────────────────────
-  describe("initial state", () => {
-    it("starts with no conflict, no error, and not checking", () => {
+  describe('initial state', () => {
+    it('starts with no conflict, no error, and not checking', () => {
       const { result } = renderHook(() => useStaleGuard(defaultOpts()));
 
       expect(result.current.conflict).toBeNull();
@@ -50,8 +50,8 @@ describe("useStaleGuard", () => {
   });
 
   // ─── guardedSubmit: server version matches form ─────────────────────────
-  describe("server version matches form version", () => {
-    it("calls onSubmit when timestamps are equal", async () => {
+  describe('server version matches form version', () => {
+    it('calls onSubmit when timestamps are equal', async () => {
       mockedGet.mockResolvedValueOnce({
         data: { updated_at: SERVER_SAME },
       });
@@ -63,13 +63,13 @@ describe("useStaleGuard", () => {
         await result.current.guardedSubmit(onSubmit);
       });
 
-      expect(mockedGet).toHaveBeenCalledWith("/outages/abc-123");
+      expect(mockedGet).toHaveBeenCalledWith('/outages/abc-123');
       expect(onSubmit).toHaveBeenCalledOnce();
       expect(result.current.conflict).toBeNull();
       expect(result.current.checkError).toBeNull();
     });
 
-    it("calls onSubmit when server version is older", async () => {
+    it('calls onSubmit when server version is older', async () => {
       mockedGet.mockResolvedValueOnce({
         data: { updated_at: SERVER_OLDER },
       });
@@ -87,8 +87,8 @@ describe("useStaleGuard", () => {
   });
 
   // ─── guardedSubmit: server version is newer (conflict) ──────────────────
-  describe("server version is newer than form version", () => {
-    it("sets conflict and does NOT call onSubmit", async () => {
+  describe('server version is newer than form version', () => {
+    it('sets conflict and does NOT call onSubmit', async () => {
       mockedGet.mockResolvedValueOnce({
         data: { updated_at: SERVER_NEWER },
       });
@@ -107,7 +107,7 @@ describe("useStaleGuard", () => {
       });
     });
 
-    it("exposes correct timestamps in conflict object", async () => {
+    it('exposes correct timestamps in conflict object', async () => {
       mockedGet.mockResolvedValueOnce({
         data: { updated_at: SERVER_NEWER },
       });
@@ -124,9 +124,9 @@ describe("useStaleGuard", () => {
   });
 
   // ─── guardedSubmit: API error ───────────────────────────────────────────
-  describe("API error during freshness check", () => {
-    it("sets checkError and does NOT call onSubmit", async () => {
-      mockedGet.mockRejectedValueOnce(new Error("Network failure"));
+  describe('API error during freshness check', () => {
+    it('sets checkError and does NOT call onSubmit', async () => {
+      mockedGet.mockRejectedValueOnce(new Error('Network failure'));
       const onSubmit = vi.fn();
 
       const { result } = renderHook(() => useStaleGuard(defaultOpts()));
@@ -136,12 +136,12 @@ describe("useStaleGuard", () => {
       });
 
       expect(onSubmit).not.toHaveBeenCalled();
-      expect(result.current.checkError).toBe("Network failure");
+      expect(result.current.checkError).toBe('Network failure');
       expect(result.current.conflict).toBeNull();
     });
 
-    it("uses fallback message for non-Error throws", async () => {
-      mockedGet.mockRejectedValueOnce("string-error");
+    it('uses fallback message for non-Error throws', async () => {
+      mockedGet.mockRejectedValueOnce('string-error');
 
       const { result } = renderHook(() => useStaleGuard(defaultOpts()));
 
@@ -150,14 +150,14 @@ describe("useStaleGuard", () => {
       });
 
       expect(result.current.checkError).toBe(
-        "Failed to verify record freshness",
+        'Failed to verify record freshness'
       );
     });
   });
 
   // ─── dismissConflict ────────────────────────────────────────────────────
-  describe("dismissConflict", () => {
-    it("clears the conflict state", async () => {
+  describe('dismissConflict', () => {
+    it('clears the conflict state', async () => {
       mockedGet.mockResolvedValueOnce({
         data: { updated_at: SERVER_NEWER },
       });
@@ -178,8 +178,8 @@ describe("useStaleGuard", () => {
   });
 
   // ─── forceSubmit ────────────────────────────────────────────────────────
-  describe("forceSubmit", () => {
-    it("invokes the original onSubmit after a conflict", async () => {
+  describe('forceSubmit', () => {
+    it('invokes the original onSubmit after a conflict', async () => {
       mockedGet.mockResolvedValueOnce({
         data: { updated_at: SERVER_NEWER },
       });
@@ -202,7 +202,7 @@ describe("useStaleGuard", () => {
       expect(result.current.conflict).toBeNull();
     });
 
-    it("is a no-op when called without a pending submit", async () => {
+    it('is a no-op when called without a pending submit', async () => {
       const { result } = renderHook(() => useStaleGuard(defaultOpts()));
 
       // Should not throw
@@ -213,7 +213,7 @@ describe("useStaleGuard", () => {
       expect(result.current.conflict).toBeNull();
     });
 
-    it("clears the pending callback after invocation", async () => {
+    it('clears the pending callback after invocation', async () => {
       mockedGet.mockResolvedValueOnce({
         data: { updated_at: SERVER_NEWER },
       });
@@ -239,13 +239,13 @@ describe("useStaleGuard", () => {
   });
 
   // ─── isChecking lifecycle ───────────────────────────────────────────────
-  describe("isChecking", () => {
-    it("is true while the freshness check is in-flight", async () => {
+  describe('isChecking', () => {
+    it('is true while the freshness check is in-flight', async () => {
       let resolveGet!: (v: { data: { updated_at: string } }) => void;
       mockedGet.mockReturnValueOnce(
         new Promise((resolve) => {
           resolveGet = resolve;
-        }),
+        })
       );
 
       const { result } = renderHook(() => useStaleGuard(defaultOpts()));
@@ -268,17 +268,17 @@ describe("useStaleGuard", () => {
   });
 
   // ─── successive calls reset state properly ──────────────────────────────
-  describe("successive calls", () => {
-    it("clears previous error when a new check succeeds", async () => {
+  describe('successive calls', () => {
+    it('clears previous error when a new check succeeds', async () => {
       // First call fails
-      mockedGet.mockRejectedValueOnce(new Error("timeout"));
+      mockedGet.mockRejectedValueOnce(new Error('timeout'));
 
       const { result } = renderHook(() => useStaleGuard(defaultOpts()));
 
       await act(async () => {
         await result.current.guardedSubmit(vi.fn());
       });
-      expect(result.current.checkError).toBe("timeout");
+      expect(result.current.checkError).toBe('timeout');
 
       // Second call succeeds
       mockedGet.mockResolvedValueOnce({
@@ -294,7 +294,7 @@ describe("useStaleGuard", () => {
       expect(onSubmit).toHaveBeenCalledOnce();
     });
 
-    it("clears previous conflict when a new check proceeds", async () => {
+    it('clears previous conflict when a new check proceeds', async () => {
       // First call: conflict
       mockedGet.mockResolvedValueOnce({
         data: { updated_at: SERVER_NEWER },
@@ -323,24 +323,24 @@ describe("useStaleGuard", () => {
   });
 
   // ─── endpoint correctness ──────────────────────────────────────────────
-  describe("endpoint usage", () => {
-    it("calls the correct endpoint", async () => {
+  describe('endpoint usage', () => {
+    it('calls the correct endpoint', async () => {
       mockedGet.mockResolvedValueOnce({
         data: { updated_at: SERVER_SAME },
       });
 
       const { result } = renderHook(() =>
         useStaleGuard({
-          endpoint: "/outages/custom-id-456",
+          endpoint: '/outages/custom-id-456',
           formUpdatedAt: FORM_UPDATED_AT,
-        }),
+        })
       );
 
       await act(async () => {
         await result.current.guardedSubmit(vi.fn());
       });
 
-      expect(mockedGet).toHaveBeenCalledWith("/outages/custom-id-456");
+      expect(mockedGet).toHaveBeenCalledWith('/outages/custom-id-456');
     });
   });
 });
