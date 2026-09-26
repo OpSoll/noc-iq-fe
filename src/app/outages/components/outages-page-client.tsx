@@ -8,9 +8,9 @@ import {
   OutageSearchBar,
   matchesSearchTerm,
 } from '@/components/outages/OutageSearchBar';
+import { ExportButton } from '@/components/outages/ExportButton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useToast } from '@/components/ui/toast';
-import { downloadCsv } from '@/lib/urlSyncAndExport';
 import { useUrlSync } from '@/hooks/useUrlSync';
 import { deleteOutage, resolveOutage } from '@/services/outages';
 import { RowActions } from '@/components/tables/RowActions';
@@ -234,35 +234,6 @@ export default function OutagesPageClient({
     }
   }
 
-  function handleExport() {
-    if (!filteredData.length) {
-      toast('There are no outages to export.', 'info');
-      return;
-    }
-
-    try {
-      downloadCsv(
-        'outages.csv',
-        filteredData.map((item) => ({
-          ID: item.id,
-          Title: item.title,
-          Severity: item.severity,
-          Status: item.status,
-          'Created At': new Date(item.createdAt).toISOString(),
-        }))
-      );
-      toast(
-        `Exported ${filteredData.length} outage${filteredData.length === 1 ? '' : 's'} to outages.csv.`,
-        'success'
-      );
-    } catch (err) {
-      toast(
-        err instanceof Error ? err.message : 'Failed to export outages.',
-        'error'
-      );
-    }
-  }
-
   // -----------------------------
   // Row actions (#617)
   // -----------------------------
@@ -360,12 +331,12 @@ export default function OutagesPageClient({
             <option value="title">Title</option>
           </select>
 
-          <button
-            onClick={handleExport}
-            className="px-4 py-2 border rounded-md"
-          >
-            Export
-          </button>
+          <ExportButton
+            rows={filteredData}
+            onExported={({ rowCount, filename }) =>
+              toast(`Exported ${rowCount} to ${filename}.`, 'success')
+            }
+          />
 
           <button
             onClick={() => {
