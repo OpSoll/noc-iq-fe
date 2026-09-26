@@ -59,15 +59,14 @@ export default function OutagesPageClient({
   } = filters;
   const sortBy = sort as 'date' | 'title';
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [rows, setRows] = useState<Outage[]>(data);
+  const [removedIds, setRemovedIds] = useState<string[]>([]);
+  const rows = useMemo(
+    () => data.filter((item) => !removedIds.includes(item.id)),
+    [data, removedIds]
+  );
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-
-  // Keep local rows in step with refreshed props.
-  useEffect(() => {
-    setRows(data);
-  }, [data]);
 
   // -----------------------------
   // Derived Data (Search + Sort)
@@ -170,7 +169,7 @@ export default function OutagesPageClient({
 
     // Drop what actually went through, keep failures selected for a retry.
     if (deletedIds.length) {
-      setRows((prev) => prev.filter((item) => !deletedIds.includes(item.id)));
+      setRemovedIds((prev) => [...new Set([...prev, ...deletedIds])]);
     }
     setSelectedIds((prev) => prev.filter((id) => !deletedIds.includes(id)));
 

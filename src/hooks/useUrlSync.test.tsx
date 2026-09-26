@@ -54,11 +54,15 @@ describe('useUrlSync', () => {
     expect(updatedParams.get('search')).toBe('db');
     expect(updatedParams.get('severity')).toBe('critical');
 
-    mockSearchParamsToString.mockReturnValue('keep=1&search=db&severity=critical');
+    mockSearchParamsToString.mockReturnValue(
+      'keep=1&search=db&severity=critical'
+    );
     act(() => {
       result.current[1]({ search: '' });
     });
 
-    expect(new URLSearchParams(window.location.search).has('search')).toBe(false);
+    expect(new URLSearchParams(window.location.search).has('search')).toBe(
+      false
+    );
   });
 });
