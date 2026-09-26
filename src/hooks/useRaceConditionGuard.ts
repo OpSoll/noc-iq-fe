@@ -4,8 +4,9 @@ export type RaceGuardState =
   'idle' | 'pending' | 'resolved' | 'rejected' | 'superseded';
 
 export type RaceGuardResult<T> = {
-  execute: (...args: unknown[]) => Promise<T>;
+  execute: (operation: () => Promise<T>) => Promise<T>;
   state: RaceGuardState;
+  isPending: boolean;
   reset: () => void;
 };
 
@@ -40,5 +41,5 @@ export function useRaceConditionGuard<T = unknown>(): RaceGuardResult<T> {
     setState('idle');
   }, []);
 
-  return { execute, state, reset };
+  return { execute, state, isPending: state === 'pending', reset };
 }

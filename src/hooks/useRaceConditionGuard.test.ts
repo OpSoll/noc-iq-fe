@@ -99,7 +99,6 @@ describe('useRaceConditionGuard', () => {
     it('marks first request as superseded when a second request fires', async () => {
       const { result } = renderHook(() => useRaceConditionGuard());
 
-      // First request that never resolves
       let resolveFirst!: (v: string) => void;
       let firstPromise!: Promise<string>;
       act(() => {

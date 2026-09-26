@@ -1,7 +1,7 @@
 'use client';
 
 import { TextArea } from '@/components/ui/TextArea';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createOutage } from '@/services/outages';
 import {
@@ -10,6 +10,7 @@ import {
   validateSiteId,
 } from '@/lib/siteIdValidation';
 import { clearDraft, loadDraft, useAutoSaveDraft } from '@/lib/drafts';
+import { useRaceConditionGuard } from '@/hooks/useRaceConditionGuard';
 import type { OutageCreate, Severity, OutageStatus } from '@/types/outages';
 
 const DRAFT_KEY = 'outage-new';
@@ -43,8 +44,9 @@ export default function NewOutagePage() {
   });
   const [isDirty, setIsDirty] = useState(false);
   const [draftRestored] = useState(() => !!loadDraft(DRAFT_KEY));
-  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { execute, isPending } = useRaceConditionGuard();
+  const submissionLock = useRef(false);
 
   useAutoSaveDraft(DRAFT_KEY, form, isDirty);
   function discardDraft() {
@@ -60,6 +62,7 @@ export default function NewOutagePage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (submissionLock.current) return;
     if (!form.site_name.trim() || !form.description.trim()) {
       setError('Site name and description are required.');
       return;
@@ -69,8 +72,8 @@ export default function NewOutagePage() {
       return;
     }
 
-    setSubmitting(true);
     setError(null);
+    submissionLock.current = true;
 
     const payload: OutageCreate = {
       id: generateId(),
@@ -93,12 +96,15 @@ export default function NewOutagePage() {
     };
 
     try {
-      const outage = await createOutage(payload);
-      clearDraft(DRAFT_KEY);
-      router.push(`/outages/${outage.id}`);
+      await execute(async () => {
+        const outage = await createOutage(payload);
+        clearDraft(DRAFT_KEY);
+        router.push(`/outages/${outage.id}`);
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create outage.');
-      setSubmitting(false);
+    } finally {
+      submissionLock.current = false;
     }
   }
 
@@ -279,10 +285,16 @@ export default function NewOutagePage() {
           </button>
           <button
             type="submit"
-            disabled={submitting}
+            disabled={isPending}
             className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60"
           >
-            {submitting ? 'Creating…' : 'Create Outage'}
+            {isPending && (
+              <span
+                aria-hidden="true"
+                className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent align-[-2px]"
+              />
+            )}
+            {isPending ? 'Creating…' : 'Create Outage'}
           </button>
         </div>
       </form>

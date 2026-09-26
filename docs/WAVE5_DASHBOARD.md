@@ -4,6 +4,12 @@
 
 ## Issue Completion
 
+| Metric              | Value |
+| ------------------- | ----- |
+| Total Wave 5 issues | 105   |
+| Closed              | 100   |
+| Open                | 5     |
+| Completion          | 95%   |
 | Metric | Value |
 |--------|-------|
 | Total Wave 5 issues | 128 |
