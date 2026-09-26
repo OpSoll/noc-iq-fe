@@ -172,7 +172,7 @@ describe('fetchWithTimeoutAndRetry', () => {
   it('throws RetryPolicyError with correct attempts count after all retries exhausted', async () => {
     vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('fail'));
 
-    const promise = fetchWithTimeoutAndRetry("/api/test", { maxRetries: 2 });
+    const promise = fetchWithTimeoutAndRetry('/api/test', { maxRetries: 2 });
     const result = promise.catch((error) => error as RetryPolicyError);
     await vi.runAllTimersAsync();
 

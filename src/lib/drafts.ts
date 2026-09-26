@@ -1,6 +1,6 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef } from 'react';
 
-const DRAFT_PREFIX = "noc_draft_";
+const DRAFT_PREFIX = 'noc_draft_';
 const DEFAULT_TTL_MS = 24 * 60 * 60 * 1000;
 const AUTO_SAVE_INTERVAL_MS = 5_000;
 
@@ -78,7 +78,7 @@ export function clearDraft(key: string): void {
 export function useAutoSaveDraft<T extends Record<string, string>>(
   draftKey: string,
   values: T,
-  dirty: boolean,
+  dirty: boolean
 ): void {
   const latestValues = useRef(values);
 

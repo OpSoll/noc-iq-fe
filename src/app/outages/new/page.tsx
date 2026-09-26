@@ -1,7 +1,7 @@
 'use client';
 
 import { TextArea } from '@/components/ui/TextArea';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createOutage } from '@/services/outages';
 import { clearDraft, loadDraft, useAutoSaveDraft } from '@/lib/drafts';
@@ -41,6 +41,7 @@ export default function NewOutagePage() {
   const [draftRestored] = useState(() => !!loadDraft(DRAFT_KEY));
   const [error, setError] = useState<string | null>(null);
   const { execute, isPending } = useRaceConditionGuard();
+  const submissionLock = useRef(false);
 
   useAutoSaveDraft(DRAFT_KEY, form, isDirty);
   function discardDraft() {
@@ -56,12 +57,14 @@ export default function NewOutagePage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (submissionLock.current) return;
     if (!form.site_name.trim() || !form.description.trim()) {
       setError('Site name and description are required.');
       return;
     }
 
     setError(null);
+    submissionLock.current = true;
 
     const payload: OutageCreate = {
       id: generateId(),
@@ -91,6 +94,8 @@ export default function NewOutagePage() {
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create outage.');
+    } finally {
+      submissionLock.current = false;
     }
   }
 

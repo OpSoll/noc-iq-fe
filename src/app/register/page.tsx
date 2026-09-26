@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { api } from '@/lib/api';
@@ -15,6 +15,7 @@ export default function RegisterPage() {
   const [confirm, setConfirm] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const submitting = useRef(false);
   const { password_strength, validation_result, isStrong } =
     usePasswordValidation(password);
   const passwordsMatch = password === confirm;
@@ -23,6 +24,7 @@ export default function RegisterPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (submitting.current) return;
     setError(null);
 
     if (password !== confirm) {
@@ -34,6 +36,7 @@ export default function RegisterPage() {
       return;
     }
 
+    submitting.current = true;
     setLoading(true);
     try {
       await api.post('/auth/register', { email, password });
@@ -48,6 +51,7 @@ export default function RegisterPage() {
           : 'Registration failed. Please try again.'
       );
     } finally {
+      submitting.current = false;
       setLoading(false);
     }
   }

@@ -7,7 +7,7 @@
  * being routed to, then escalates via the SLA disputes service.
  */
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 import Modal from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
@@ -33,10 +33,12 @@ export default function EscalateDisputeModal({
   const [managerTag, setManagerTag] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const submissionLock = useRef(false);
 
   if (!dispute) return null;
 
   const handleSubmit = async () => {
+    if (submissionLock.current) return;
     setError(null);
 
     if (!managerTag.trim()) {
@@ -44,6 +46,7 @@ export default function EscalateDisputeModal({
       return;
     }
 
+    submissionLock.current = true;
     setSubmitting(true);
     try {
       const escalated = await escalateDispute(dispute.id, {
@@ -55,6 +58,7 @@ export default function EscalateDisputeModal({
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Escalation failed.');
     } finally {
+      submissionLock.current = false;
       setSubmitting(false);
     }
   };

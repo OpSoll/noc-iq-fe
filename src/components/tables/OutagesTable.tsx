@@ -255,7 +255,7 @@ export function OutagesTable({
                     aria-sort={toAriaSortValue(isSorted)}
                     aria-label={
                       canSort
-                        ? `Sort by ${typeof h.column.columnDef.header === "string" ? h.column.columnDef.header : h.id}, currently ${toAriaSortValue(isSorted)}`
+                        ? `Sort by ${typeof h.column.columnDef.header === 'string' ? h.column.columnDef.header : h.id}, currently ${toAriaSortValue(isSorted)}`
                         : undefined
                     }
                     className={`px-4 py-3 text-left text-xs font-semibold text-slate-700 whitespace-nowrap ${
