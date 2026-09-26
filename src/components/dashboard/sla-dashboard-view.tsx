@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 
@@ -266,17 +266,17 @@ export default function SLADashboardView() {
     refetchInterval: autoRefresh.refetchInterval,
   });
 
-  const onTrendClick = (point: TrendPoint) => {
+  const onTrendClick = useCallback((point: TrendPoint) => {
     pushOutageDrilldown(point);
-  };
+  }, [pushOutageDrilldown]);
 
-  const onPenaltyClick = (point: TrendPoint) => {
-    pushPaymentDrilldown('penalty', point);
-  };
+  const onPenaltyClick = useCallback((point: TrendPoint) => {
+    pushPaymentDrilldown("penalty", point);
+  }, [pushPaymentDrilldown]);
 
-  const onRewardClick = (point: TrendPoint) => {
-    pushPaymentDrilldown('reward', point);
-  };
+  const onRewardClick = useCallback((point: TrendPoint) => {
+    pushPaymentDrilldown("reward", point);
+  }, [pushPaymentDrilldown]);
 
   if (primary.isLoading) {
     return (

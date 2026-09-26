@@ -1,10 +1,10 @@
 'use client';
 
 import { TextArea } from '@/components/ui/TextArea';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createOutage } from '@/services/outages';
-import { saveDraft, clearDraft, loadDraft } from '@/lib/drafts';
+import { clearDraft, loadDraft, useAutoSaveDraft } from '@/lib/drafts';
 import type { OutageCreate, Severity, OutageStatus } from '@/types/outages';
 
 const DRAFT_KEY = 'outage-new';
@@ -27,43 +27,29 @@ const INITIAL_FORM = {
 
 export default function NewOutagePage() {
   const router = useRouter();
-  const [hasDraft] = useState(() => !!loadDraft(DRAFT_KEY));
+  const [form, setForm] = useState(() => {
+    const draft = loadDraft(DRAFT_KEY);
+    if (!draft) return INITIAL_FORM;
+
+    return {
+      ...INITIAL_FORM,
+      ...draft.values,
+    };
+  });
+  const [isDirty, setIsDirty] = useState(false);
+  const [draftRestored] = useState(() => !!loadDraft(DRAFT_KEY));
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [draftRestoreShown, setDraftRestoreShown] = useState(hasDraft);
 
-  const [form, setForm] = useState(INITIAL_FORM);
-
-  useEffect(() => {
-    if (hasDraft) {
-      const timer = setInterval(
-        () => saveDraft(DRAFT_KEY, form as unknown as Record<string, string>),
-        3000
-      );
-      return () => clearInterval(timer);
-    }
-  }, [hasDraft, form]);
-
-  function restoreDraft() {
-    const draft = loadDraft(DRAFT_KEY);
-    if (draft) {
-      const merged = { ...INITIAL_FORM };
-      for (const k of Object.keys(INITIAL_FORM)) {
-        if (draft.values[k] !== undefined) {
-          (merged as Record<string, string>)[k] = draft.values[k];
-        }
-      }
-      setForm(merged);
-    }
-    setDraftRestoreShown(false);
-  }
-
-  function dismissDraft() {
+  useAutoSaveDraft(DRAFT_KEY, form, isDirty);
+  function discardDraft() {
     clearDraft(DRAFT_KEY);
-    setDraftRestoreShown(false);
+    setForm(INITIAL_FORM);
+    setIsDirty(false);
   }
 
   function set(field: string, value: string) {
+    setIsDirty(true);
     setForm((f) => ({ ...f, [field]: value }));
   }
 
@@ -119,18 +105,12 @@ export default function NewOutagePage() {
         <h1 className="text-2xl font-semibold text-slate-900">Create Outage</h1>
       </div>
 
-      {draftRestoreShown && (
-        <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-          <span>You have an unsaved draft. </span>
+      {draftRestored && (
+        <div className="mb-4 flex items-center justify-between rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          <span>Draft restored</span>
           <button
-            onClick={restoreDraft}
-            className="font-medium underline hover:text-amber-900"
-          >
-            Restore
-          </button>
-          <span> | </span>
-          <button
-            onClick={dismissDraft}
+            type="button"
+            onClick={discardDraft}
             className="font-medium underline hover:text-amber-900"
           >
             Discard

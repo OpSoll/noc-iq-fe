@@ -21,9 +21,9 @@ import type {
   SLAResult,
 } from '@/types/sla';
 
-import { DisputeStats } from './DisputeStatsPanel';
 import DisputeDeadlineBadge from './DisputeDeadlineBadge';
 import DisputeAuditTrail from './DisputeAuditTrail';
+import { DisputeStats } from './DisputeStatsPanel';
 import EvidencePreviewModal from './EvidencePreviewModal';
 import EscalateDisputeModal from './EscalateDisputeModal';
 import SLAReSimulateModal from './SLAReSimulateModal';
