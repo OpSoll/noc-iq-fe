@@ -103,6 +103,46 @@ export async function bulkImportOutages(
 }
 
 /**
+ * Validate an outages file without writing any rows (issue #637).
+ *
+ * Posts to the validate-only endpoint so a user can confirm the backend accepts a
+ * file before it touches the database. Deliberately a separate function rather
+ * than a flag on {@link bulkImportOutages}: a boolean that decides whether a call
+ * mutates production data is the kind of parameter that gets defaulted wrongly,
+ * and a distinct function cannot be reached by accident.
+ *
+ * @param file - The file to validate.
+ * @param options - Abort signal and progress callback.
+ * @returns The validation report, where counts mean "would have been".
+ */
+export async function dryRunImportOutages(
+  file: File,
+  options?: BulkImportOptions
+): Promise<BulkImportDryRunResult> {
+  if (!file) {
+    throw new Error("No file provided for validation.");
+  }
+
+  try {
+    const formData = createFormData(file);
+
+    const response = await api.post<BulkImportDryRunResult>(
+      BULK_IMPORT_VALIDATE_ENDPOINT,
+      formData,
+      buildUploadConfig(options)
+    );
+
+    return response.data;
+  } catch (error: unknown) {
+    if ((error as { name?: string }).name === "CanceledError") {
+      throw error;
+    }
+
+    throw new Error(extractErrorMessage(error));
+  }
+}
+
+/**
  * Fetch bulk import history records.
  */
 export async function fetchBulkImportHistory(): Promise<BulkImportRecord[]> {
