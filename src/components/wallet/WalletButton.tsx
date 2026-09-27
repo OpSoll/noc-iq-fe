@@ -1,18 +1,44 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { getAddress, isConnected, requestAccess } from '@stellar/freighter-api';
+
+import QrCodeModal from '@/components/wallet/QrCodeModal';
+import { useToast } from '@/components/ui/toast';
+import { useWalletStore } from '@/store/walletStore';
 
 interface WalletButtonProps {
   network?: string;
   onConnect?: (publicKey: string) => void;
+  onDisconnect?: () => void;
+  /** Network id used to build the `stellar:` URI inside the QR modal. */
+  qrNetwork?: 'mainnet' | 'testnet';
 }
 
 export const WalletButton: React.FC<WalletButtonProps> = ({
   network = 'TESTNET',
   onConnect,
+  onDisconnect,
+  qrNetwork = 'testnet',
 }) => {
+  const toast = useToast();
+
+  // Connection state lives in the store, so a disconnect genuinely resets the
+  // app-wide wallet context rather than just this component's local state.
+  // (Closes #657)
+  const storePublicKey = useWalletStore((state) => state.publicKey);
+  const connect = useWalletStore((state) => state.connect);
+  const disconnect = useWalletStore((state) => state.disconnect);
+
   const [publicKey, setPublicKey] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState<boolean>(false);
   const [hasFreighter, setHasFreighter] = useState<boolean>(true);
+  const [isQrOpen, setIsQrOpen] = useState<boolean>(false);
+
+  // Reflect store changes (e.g. a disconnect triggered elsewhere) locally.
+  useEffect(() => {
+    if (storePublicKey === null) setPublicKey(null);
+  }, [storePublicKey]);
 
   // Auto-connect check on mount if previously authorized
   useEffect(() => {
@@ -23,6 +49,7 @@ export const WalletButton: React.FC<WalletButtonProps> = ({
           const { address } = await getAddress();
           if (address) {
             setPublicKey(address);
+            connect({ publicKey: address, network });
             if (onConnect) onConnect(address);
           }
         }
@@ -32,7 +59,7 @@ export const WalletButton: React.FC<WalletButtonProps> = ({
     };
 
     checkAutoConnect();
-  }, [onConnect]);
+  }, [connect, network, onConnect]);
 
   const handleConnect = async () => {
     setIsConnecting(true);
@@ -46,6 +73,7 @@ export const WalletButton: React.FC<WalletButtonProps> = ({
       const { address } = await requestAccess();
       if (address) {
         setPublicKey(address);
+        connect({ publicKey: address, network });
         if (onConnect) onConnect(address);
       }
     } catch (error) {
@@ -54,6 +82,19 @@ export const WalletButton: React.FC<WalletButtonProps> = ({
     } finally {
       setIsConnecting(false);
     }
+  };
+
+  /**
+   * Disconnecting clears the store *and* every wallet key we put in
+   * `sessionStorage`, so no keypair reference survives in the page.
+   * (Closes #657)
+   */
+  const handleDisconnect = () => {
+    disconnect();
+    setPublicKey(null);
+    setIsQrOpen(false);
+    toast('Wallet disconnected', 'success');
+    onDisconnect?.();
   };
 
   const truncateKey = (key: string) => `${key.slice(0, 4)}...${key.slice(-4)}`;
@@ -80,6 +121,25 @@ export const WalletButton: React.FC<WalletButtonProps> = ({
           <span className="rounded-lg bg-slate-800 px-2.5 py-1 text-[10px] font-mono text-indigo-400 uppercase border border-slate-700/50">
             {network}
           </span>
+          {/* Share the key with a mobile wallet as a QR code. (Closes #658) */}
+          <button
+            type="button"
+            onClick={() => setIsQrOpen(true)}
+            aria-label="Show public key QR code"
+            data-testid="wallet-qr-button"
+            className="rounded-lg bg-slate-800 px-2 py-1 text-[10px] font-medium text-slate-200 hover:bg-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+          >
+            QR
+          </button>
+          <button
+            type="button"
+            onClick={handleDisconnect}
+            aria-label="Disconnect wallet"
+            data-testid="wallet-disconnect-button"
+            className="rounded-lg bg-slate-800 px-2 py-1 text-[10px] font-medium text-slate-200 hover:bg-red-900/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+          >
+            Disconnect
+          </button>
         </div>
       ) : (
         <button
@@ -90,6 +150,13 @@ export const WalletButton: React.FC<WalletButtonProps> = ({
           {isConnecting ? 'Connecting...' : 'Connect Freighter'}
         </button>
       )}
+
+      <QrCodeModal
+        isOpen={isQrOpen}
+        publicKey={publicKey ?? ''}
+        network={qrNetwork}
+        onClose={() => setIsQrOpen(false)}
+      />
     </div>
   );
 };
