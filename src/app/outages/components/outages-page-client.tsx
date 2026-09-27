@@ -98,6 +98,47 @@ export default function OutagesPageClient({
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   // -----------------------------
+  // Refresh status
+  // -----------------------------
+  // The rows the parent handed us are as fresh as this render, so the pill
+  // starts at mount and only moves when something actually refetches.
+  const [lastUpdatedAt, setLastUpdatedAt] = useState(() => new Date());
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  // Polling is off until a caller opts in, and it pauses itself whenever the
+  // tab is hidden (Page Visibility API, handled by the hook).
+  const { refetchInterval, isPolling } = useAutoRefresh();
+
+  const handleRefresh = useCallback(async () => {
+    // No parent fetch wired up: there is nothing to refetch, so leave the
+    // timestamp alone rather than pretending the data changed.
+    if (!onRefresh) return;
+
+    setIsRefreshing(true);
+
+    try {
+      await onRefresh();
+      setLastUpdatedAt(new Date());
+    } catch (err) {
+      toast(
+        err instanceof Error ? err.message : 'Failed to refresh outages.',
+        'error'
+      );
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [onRefresh, toast]);
+
+  useEffect(() => {
+    if (!isPolling || refetchInterval === false) return;
+
+    const id = setInterval(() => {
+      void handleRefresh();
+    }, refetchInterval);
+
+    return () => clearInterval(id);
+  }, [isPolling, refetchInterval, handleRefresh]);
+
+  // -----------------------------
   // Derived Data (Search + Sort)
   // -----------------------------
   const filteredData = useMemo(() => {
@@ -224,14 +265,9 @@ export default function OutagesPageClient({
     setShowDeleteConfirm(false);
     setDeleting(false);
 
-    try {
-      await onRefresh?.();
-    } catch (err) {
-      toast(
-        err instanceof Error ? err.message : 'Failed to refresh outages.',
-        'error'
-      );
-    }
+    // Same path as the status pill, so both the rows and the "updated" age
+    // move together (it also reports a failed refetch).
+    await handleRefresh();
   }
 
   // -----------------------------
@@ -286,7 +322,13 @@ export default function OutagesPageClient({
           totalCount={rows.length}
         />
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <TableStatusPill
+            updatedAt={lastUpdatedAt}
+            isRefreshing={isRefreshing}
+            onRefresh={onRefresh ? () => void handleRefresh() : undefined}
+          />
+
           <select
             aria-label="Filter by severity"
             value={severity}
