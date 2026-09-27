@@ -5,11 +5,13 @@ import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 
 import KPICard from '@/components/dashboard/KPICard';
+import OutageAlertBanner from '@/components/dashboard/OutageAlertBanner';
 import PenaltiesRewardsChart from '@/components/dashboard/PenaltiesRewardsChart';
 import SLATrendChart from '@/components/dashboard/SLATrendChart';
 import AutoRefreshControl from '@/components/dashboard/AutoRefreshControl';
 import ExportModal from '@/components/dashboard/ExportModal';
 import FinancialSummaryWidget from '@/components/dashboard/FinancialSummaryWidget';
+import PenaltyCreditsWidget from '@/components/dashboard/PenaltyCreditsWidget';
 import MTTRHistogramChart from '@/components/dashboard/MTTRHistogramChart';
 import SLABreachCountdownCard from '@/components/dashboard/SLABreachCountdownCard';
 import SystemStatusWidget from '@/components/dashboard/SystemStatusWidget';
@@ -396,8 +398,173 @@ export default function SLADashboardView() {
     }
   }
 
+  // Closes #606: every dashboard card is described once here and handed to
+  // DashboardGrid, so it can be reordered, hidden, and restored from
+  // localStorage. Only the widget list and the ids change; the markup each
+  // widget renders is exactly what this view rendered before.
+  const kpiCards = (
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <KPICard
+        title="SLA Compliance"
+        value={`${metrics.sla_compliance_percentage.toFixed(1)}%`}
+        subtitle={
+          cmp
+            ? `vs ${cmp.sla_compliance_percentage.toFixed(1)}% (${delta(metrics.sla_compliance_percentage, cmp.sla_compliance_percentage)}pp)`
+            : 'Overall compliance rate'
+        }
+        highlight={metrics.sla_compliance_percentage >= 90 ? 'green' : 'red'}
+        onClick={() => pushOutageDrilldown()}
+        actionLabel="Open filtered outages"
+      />
+      <KPICard
+        title="Total Penalties"
+        value={`$${metrics.penalties.total.toLocaleString()}`}
+        subtitle={
+          cmp
+            ? `vs $${cmp.penalties.total.toLocaleString()} (${delta(metrics.penalties.total, cmp.penalties.total)})`
+            : `${metrics.penalties.count} incidents`
+        }
+        highlight="red"
+        onClick={() => pushPaymentDrilldown('penalty')}
+        actionLabel="Open filtered penalty payments"
+      />
+      <KPICard
+        title="Total Rewards"
+        value={`$${metrics.rewards.total.toLocaleString()}`}
+        subtitle={
+          cmp
+            ? `vs $${cmp.rewards.total.toLocaleString()} (${delta(metrics.rewards.total, cmp.rewards.total)})`
+            : `${metrics.rewards.count} achievements`
+        }
+        highlight="green"
+        onClick={() => pushPaymentDrilldown('reward')}
+        actionLabel="Open filtered reward payments"
+      />
+      <KPICard
+        title="Net Balance"
+        value={`${netBalance >= 0 ? '+' : ''}$${netBalance.toLocaleString()}`}
+        subtitle={(() => {
+          if (!cmp) return 'Rewards minus penalties';
+          const cmpNet = cmp.rewards.total - cmp.penalties.total;
+          return `vs ${cmpNet >= 0 ? '+' : ''}$${cmpNet.toLocaleString()} (${delta(netBalance, cmpNet)})`;
+        })()}
+        highlight={netBalance >= 0 ? 'green' : 'red'}
+        onClick={() =>
+          pushPaymentDrilldown(netBalance >= 0 ? 'reward' : 'penalty')
+        }
+        actionLabel="Open filtered payment drilldown"
+      />
+    </div>
+  );
+
+  const trendCharts = (
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <SLATrendChart
+        data={metrics.trends}
+        onPointClick={onTrendClick}
+        dateRangeLabel={primaryRangeLabel}
+      />
+      <PenaltiesRewardsChart
+        data={metrics.trends}
+        onPenaltyClick={onPenaltyClick}
+        onRewardClick={onRewardClick}
+      />
+    </div>
+  );
+
+  const comparisonSection = (
+    <>
+      {cmp && cmp.trends.length > 0 ? (
+        <div>
+          <p className="mb-3 text-sm font-semibold text-gray-500 uppercase tracking-wide">
+            Comparison Window — {compareLabel}
+          </p>
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <SLATrendChart data={cmp.trends} dateRangeLabel={compareLabel} />
+            <PenaltiesRewardsChart data={cmp.trends} />
+          </div>
+        </div>
+      ) : null}
+
+      {compareMode && secondary.isLoading ? (
+        <div className="rounded-lg border border-dashed border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-600">
+          Loading comparison data for {compareLabel}…
+        </div>
+      ) : null}
+
+      {compareMode && cmp && cmp.trends.length === 0 && !secondary.isLoading ? (
+        <div className="rounded-lg border border-dashed border-yellow-200 bg-yellow-50 px-4 py-3 text-sm text-yellow-700">
+          No data available for the comparison window ({compareLabel}). Adjust
+          the comparison dates or disable compare mode.
+        </div>
+      ) : null}
+
+      {compareMode && secondary.isError ? (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          Failed to load comparison data.{' '}
+          <button
+            type="button"
+            onClick={() => void secondary.refetch()}
+            className="font-medium hover:underline"
+          >
+            Retry
+          </button>
+        </div>
+      ) : null}
+    </>
+  );
+
+  const widgets: DashboardWidget[] = [
+    {
+      id: 'breach-countdown',
+      title: 'SLA Breach Countdown',
+      render: () => <SLABreachCountdownCard />,
+    },
+    { id: 'kpi-cards', title: 'KPI Summary', render: () => kpiCards },
+    {
+      id: 'financial-summary',
+      title: 'Penalty and Reward Settlement',
+      render: () => <FinancialSummaryWidget metrics={metrics} />,
+    },
+    {
+      id: 'trend-charts',
+      title: 'Compliance and Payout Trends',
+      render: () => trendCharts,
+    },
+{
+      id: 'mttr-histogram',
+      title: 'MTTR Distribution',
+      render: (
+        <MTTRHistogramChart
+          dateFrom={filters.date_from}
+          dateTo={filters.date_to}
+        />
+      ),
+    },
+    {
+      id: 'penalty-credits',
+      title: 'Penalty Credits',
+      render: () => <PenaltyCreditsWidget metrics={metrics} />,
+    },
+    ...(compareMode
+      ? [
+          {
+            id: 'comparison',
+            title: `Comparison Window (${compareLabel})`,
+            render: () => comparisonSection,
+          },
+        ]
+      : []),
+  ];
+
   return (
     <div className="space-y-6 p-6">
+      {/* Closes #604: sticky critical-outage alert, pinned above the header. */}
+      <OutageAlertBanner />
+
+      {/* Closes #605: SLA breach alert with an Open Remediation action. */}
+      <BreachToast />
+
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-1">
           <h1 className="text-2xl font-bold text-gray-800">
@@ -462,8 +629,6 @@ export default function SLADashboardView() {
           </button>
         </div>
       </div>
-
-      <SLABreachCountdownCard />
 
       {compareMode && secondary.isLoading ? (
         <p className="text-sm text-gray-400">Loading comparison window…</p>
