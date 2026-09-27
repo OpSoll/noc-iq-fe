@@ -44,3 +44,49 @@ export interface PaginatedDisputes {
   page: number;
   page_size: number;
 }
+
+/**
+ * A file attached to a dispute as evidence (issue #640).
+ *
+ * TODO(#640): there is no backend contract for dispute evidence yet. `SLADispute`
+ * carries no evidence field, so the manager takes its list as a prop rather than
+ * fetching — which also means evidence links sent when a dispute is filed cannot
+ * currently be read back. Migration: add `evidence: DisputeEvidence[]` to
+ * `SLADispute`, plus an upload endpoint, then give the manager a default loader
+ * and drop the prop requirement.
+ */
+export interface DisputeEvidence {
+  id: string;
+  filename: string;
+  /** MIME type as reported by the server. */
+  content_type: string;
+  /** Location to preview or download from. */
+  url: string;
+  size_bytes?: number;
+  uploaded_at?: string;
+}
+
+/** An arbitrator's decision on a dispute (issue #641). */
+export type ArbitrationVote = "upheld" | "dismissed";
+
+/**
+ * Running count of arbitration votes (issue #641).
+ *
+ * TODO(#641): no backend contract exists for arbitration votes. The panel takes
+ * the tally as a prop and reports a decision through a callback. Migration: add a
+ * votes endpoint returning this shape, then let the panel load and submit itself.
+ */
+export interface ArbitrationTally {
+  /** Votes cast so far. */
+  cast: number;
+  /** Votes needed to reach a decision. */
+  required: number;
+  upheld: number;
+  dismissed: number;
+}
+
+/** One arbitrator's submitted vote (issue #641). */
+export interface ArbitrationVoteSubmission {
+  vote: ArbitrationVote;
+  rationale: string;
+}
