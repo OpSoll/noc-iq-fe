@@ -1,38 +1,19 @@
 # Wave 5 Closure Dashboard
 
-> Last updated: 2026-09-26
+> Last updated: 2026-09-27
 
 ## Issue Completion
 
 | Metric | Value |
 |--------|-------|
-| Total Wave 5 issues | 173 |
+| Total Wave 5 issues | 142 |
 | Closed | 100 |
-| Open | 73 |
-| Completion | 58% |
+| Open | 42 |
+| Completion | 70% |
 
 ## Open Issues
 
 - [ ] #689 Form Validation: Add debounced live input validation feedback
-- [ ] #679 Navigation: Add active route focus indicator for screen readers
-- [ ] #678 Navigation: Implement global keyboard shortcuts helper modal (Shift+?)
-- [ ] #677 Navigation: Add breadcrumb navigation bar with dynamic route labels
-- [ ] #676 Navigation: Implement sidebar navigation auto-collapse state persistence
-- [ ] #675 Navigation: Add Cmd+K / Ctrl+K global command palette search modal
-- [ ] #673 Webhooks UI: Add delivery latency performance line chart
-- [ ] #672 Webhooks UI: Implement webhook endpoint deletion confirmation modal
-- [ ] #671 Webhooks UI: Add outbound rate limit configuration slider
-- [ ] #670 Webhooks UI: Implement webhook payload JSON schema viewer modal
-- [ ] #669 Webhooks UI: Add topic subscription selector checklist component
-- [ ] #668 Webhooks UI: Implement manual test ping button in webhook list
-- [ ] #667 Webhooks UI: Add webhook endpoint health status pill indicator
-- [ ] #666 Webhooks UI: Implement webhook secret key rotation modal with grace window options
-- [ ] #665 Webhooks UI: Add dead-letter queue management table with batch replay
-- [ ] #664 Webhooks UI: Implement webhook delivery history log inspector drawer
-- [ ] #663 Webhooks UI: Add webhook endpoint registration modal component
-- [ ] #662 Wallet: Implement minimum XLM reserve balance alert badge
-- [ ] #661 Wallet: Add transaction simulation error explainer component
-- [ ] #660 Wallet: Implement payment disbursement transaction history table
 - [ ] #659 Wallet: Add custom SAC token contract address tracker modal
 - [ ] #658 Wallet: Implement QR code modal for public key sharing
 - [ ] #657 Wallet: Add wallet disconnect button with session state cleanup
@@ -45,10 +26,6 @@
 - [ ] #642 Dispute View: Add dispute SLA metric impact calculator component
 - [ ] #641 Dispute View: Implement dispute arbitration vote decision panel for admins
 - [ ] #640 Dispute View: Add arbitration evidence attachment manager
-- [ ] #639 Dispute View: Implement dispute status timeline visualizer component
-- [ ] #638 Dispute View: Add formal dispute filing modal component
-- [ ] #637 Bulk Import: Add bulk import dry-run simulation mode toggle
-- [ ] #636 Bulk Import: Implement multi-file bulk import queue manager
 - [ ] #635 Bulk Import: Add import history log drawer
 - [ ] #634 Bulk Import: Implement timezone offset converter in import wizard
 - [ ] #633 Bulk Import: Add client-side CSV parsing worker thread
@@ -65,18 +42,10 @@
 - [ ] #622 Outage Table: Add status tab filter pills (All, Active, Resolved, Closed)
 - [ ] #621 Outage Table: Implement bulk selection checkboxes with batch actions bar
 - [ ] #620 Outage Table: Add expandable row details summary drawer
-- [ ] #619 Outage Table: Implement column visibility toggle drawer
-- [ ] #618 Outage Table: Add CSV export button for filtered table rows
-- [ ] #617 Outage Table: Implement row action dropdown menu (Edit, Resolve, Delete)
-- [ ] #616 Outage Table: Add full-text search filter input across outage descriptions
 - [ ] #615 Outage Table: Implement severity badge color status indicators
 - [ ] #614 Outage Table: Add date range calendar filter picker
 - [ ] #613 Outage Table: Implement multi-column sorting controls
 - [ ] #612 Outage Table: Add virtualized scrolling for high-volume outage lists
-- [ ] #611 Dashboard: Add live system health status indicator widget
-- [ ] #610 Dashboard: Implement skeleton loading state placeholders for metric cards
-- [ ] #609 Dashboard: Add dashboard data export summary modal
-- [ ] #608 Dashboard: Implement dark mode color contrast optimization for charts
 - [ ] #607 Dashboard: Add SLA penalty credit summary widget
 - [ ] #606 Dashboard: Implement dashboard layout customization state persistence
 - [ ] #605 Dashboard: Add SLA target breach toast notification handler
@@ -132,7 +101,26 @@
 - [x] #682 Navigation: Implement un-saved form changes prompt before route navigation
 - [x] #681 Navigation: Add recently visited pages history dropdown in search bar
 - [x] #680 Navigation: Implement quick action floating action button (FAB) for mobile viewport
+- [x] #679 Navigation: Add active route focus indicator for screen readers
+- [x] #678 Navigation: Implement global keyboard shortcuts helper modal (Shift+?)
+- [x] #677 Navigation: Add breadcrumb navigation bar with dynamic route labels
+- [x] #676 Navigation: Implement sidebar navigation auto-collapse state persistence
+- [x] #675 Navigation: Add Cmd+K / Ctrl+K global command palette search modal
 - [x] #674 Webhooks UI: Implement webhook delivery search and filter controls
+- [x] #673 Webhooks UI: Add delivery latency performance line chart
+- [x] #672 Webhooks UI: Implement webhook endpoint deletion confirmation modal
+- [x] #671 Webhooks UI: Add outbound rate limit configuration slider
+- [x] #670 Webhooks UI: Implement webhook payload JSON schema viewer modal
+- [x] #669 Webhooks UI: Add topic subscription selector checklist component
+- [x] #668 Webhooks UI: Implement manual test ping button in webhook list
+- [x] #667 Webhooks UI: Add webhook endpoint health status pill indicator
+- [x] #666 Webhooks UI: Implement webhook secret key rotation modal with grace window options
+- [x] #665 Webhooks UI: Add dead-letter queue management table with batch replay
+- [x] #664 Webhooks UI: Implement webhook delivery history log inspector drawer
+- [x] #663 Webhooks UI: Add webhook endpoint registration modal component
+- [x] #662 Wallet: Implement minimum XLM reserve balance alert badge
+- [x] #661 Wallet: Add transaction simulation error explainer component
+- [x] #660 Wallet: Implement payment disbursement transaction history table
 - [x] #654 Wallet: Implement multi-sig signature collection progress meter for disbursements
 - [x] #651 Wallet: Add Freighter wallet connection status indicator and auto-connect prompt
 - [x] #650 Dispute View: Add dispute submission rate limit warning toast
@@ -141,6 +129,18 @@
 - [x] #646 Dispute View: Add dispute countdown timer to arbitration deadline
 - [x] #645 Dispute View: Implement dispute resolution confirmation modal
 - [x] #644 Dispute View: Add dispute bond collateral summary card
+- [x] #639 Dispute View: Implement dispute status timeline visualizer component
+- [x] #638 Dispute View: Add formal dispute filing modal component
+- [x] #637 Bulk Import: Add bulk import dry-run simulation mode toggle
+- [x] #636 Bulk Import: Implement multi-file bulk import queue manager
+- [x] #619 Outage Table: Implement column visibility toggle drawer
+- [x] #618 Outage Table: Add CSV export button for filtered table rows
+- [x] #617 Outage Table: Implement row action dropdown menu (Edit, Resolve, Delete)
+- [x] #616 Outage Table: Add full-text search filter input across outage descriptions
+- [x] #611 Dashboard: Add live system health status indicator widget
+- [x] #610 Dashboard: Implement skeleton loading state placeholders for metric cards
+- [x] #609 Dashboard: Add dashboard data export summary modal
+- [x] #608 Dashboard: Implement dark mode color contrast optimization for charts
 - [x] #571 CI: Add automated release evidence package builder script
 - [x] #570 CI: Add automated Visual Regression Testing via Playwright screenshots
 - [x] #569 CI: Add Mock Service Worker (MSW) integration for offline Vitest component tests
@@ -158,37 +158,6 @@
 - [x] #557 Perf: Add Service Worker PWA offline caching for static assets and UI shell
 - [x] #556 Perf: Add virtualized windowing list for large webhook delivery logs (react-window)
 - [x] #555 Perf: Add Lucide Icon bundle tree-shaking optimization
-- [x] #554 Perf: Add Next.js font optimization for Google Fonts (Inter, Roboto Mono)
-- [x] #553 Perf: Add Dynamic Component Imports for heavy modal dialogs (React.lazy)
-- [x] #552 Perf: Add React.memo and useMemo optimizations to SLA analytics chart renders
-- [x] #551 A11y: Add interactive tooltip keyboard toggle support (Escape key dismiss)
-- [x] #550 A11y: Add screen reader table summaries via caption element
-- [x] #549 A11y: Add motion reduction preference support (prefers-reduced-motion)
-- [x] #548 A11y: Add keyboard accessible sorting controls on table column headers
-- [x] #547 A11y: Add responsive text scaling support without horizontal scrollbars
-- [x] #546 A11y: Add high contrast theme option for visually impaired users
-- [x] #545 A11y: Add form field error association via aria-describedby
-- [x] #544 A11y: Add screen reader accessible alt text to all status icons and SVG graphics
-- [x] #543 A11y: Add ARIA modal dialog labels and focus traps to all popover forms
-- [x] #542 A11y: Add keyboard shortcuts modal for table navigation (J / K next / previous row)
-- [x] #541 A11y: Add accessible color contrast compliance check for severity badges
-- [x] #540 A11y: Add proper ARIA role and expanded attributes to collapsible navigation sidebars
-- [x] #539 A11y: Add skip-to-main-content accessibility link for screen reader navigation
-- [x] #538 A11y: Add visible keyboard focus rings across all interactive buttons and inputs
-- [x] #537 A11y: Add screen reader live region notifications for status changes
-- [x] #536 State: Add automated local storage quota cleanup utility
-- [x] #535 State: Add developer debug panel showing live Zustand store state trees
-- [x] #534 State: Add cross-tab broadcast channel for real-time state synchronization
-- [x] #533 State: Add preference import validation schema with error reporting
-- [x] #532 State: Add workspace data export to JSON backup file
-- [x] #531 State: Add optimistic UI state updates for outage status transitions
-- [x] #530 State: Add toast notification queue deduplication middleware
-- [x] #529 State: Add user preference store for default table page size (10, 25, 50, 100)
-- [x] #528 State: Add active navigation tab persistence in URL query parameters
-- [x] #527 State: Add theme preference persistence across browser tabs via StorageEvent listener
-- [x] #526 State: Add session timeout warning modal after 30 minutes of inactivity
-- [x] #525 State: Add active user role and permission guards in UI store
-- [x] #524 State: Add reactive online/offline network connection state listener
 
 ---
 _Auto-generated by `scripts/update-wave5-dashboard.mjs`. Do not edit manually._
