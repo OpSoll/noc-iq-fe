@@ -1,5 +1,6 @@
 // Closes #339: windowed row range calculation for large outage/payment tables
 // Closes #340: WCAG 2.1 AA contrast ratio helper for audit/remediation
+// Closes #612: virtualized scrolling for high-volume outage lists
 
 export interface VirtualRange {
   startIndex: number;

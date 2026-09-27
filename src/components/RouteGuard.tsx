@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect } from 'react';
 import { useSession } from '@/hooks/useSession';
 import { ADMIN_ROUTES } from '@/components/Navigation';
+import RouteFocusManager from '@/components/RouteFocusManager';
 import {
   getCapabilityForPath,
   hasCapability,
@@ -114,5 +115,16 @@ export default function RouteGuard({
     );
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      {/*
+        Route change focus management (#679): moves screen reader focus to the
+        new page's <h1> and announces the page title, so a client-side
+        navigation is not silent. Mounted here so it covers every route
+        without each page opting in.
+      */}
+      <RouteFocusManager />
+      {children}
+    </>
+  );
 }
