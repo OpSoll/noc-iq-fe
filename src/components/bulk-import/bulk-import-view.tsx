@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useRef, useState, useCallback, useId } from 'react';
+import { useMemo, useRef, useState, useCallback } from 'react';
 
 import { bulkImportOutages } from '@/services/bulkImportService';
 import type {
@@ -9,17 +9,30 @@ import type {
   ImportValidationError,
 } from '@/types/bulkImport';
 
+import {
+  detectDuplicateRows,
+  DuplicateDetector,
+} from './DuplicateDetector';
+import {
+  ImportProgress,
+  type ImportProgressState,
+} from './ImportProgress';
+import { SampleDownload } from './SampleDownload';
+import { ValidationPreview } from './ValidationPreview';
+
 // ─── Constants ───────────────────────────────────────────────────────────────
-const ACCEPTED_TYPES = ['text/csv', 'application/json'] as const;
-const ACCEPTED_EXTENSIONS = ['.csv', '.json'] as const;
 const MAX_PREVIEW_ROWS = 100;
-const MAX_FILE_SIZE_MB = 5;
-const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 
 const REQUIRED_FIELDS = ['service_id', 'start_time', 'end_time'] as const;
 
+/** Schema the wizard maps incoming columns onto (mirrors REQUIRED_FIELDS). */
+const SCHEMA_FIELDS: ColumnFieldSpec[] = [
+  { id: 'service_id', label: 'Service ID', required: true },
+  { id: 'start_time', label: 'Start Time', required: true },
+  { id: 'end_time', label: 'End Time', required: true },
+];
+
 type AcceptedExtension = (typeof ACCEPTED_EXTENSIONS)[number];
-type AcceptedMimeType = (typeof ACCEPTED_TYPES)[number];
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface PreviewState {
@@ -30,13 +43,7 @@ interface PreviewState {
   totalRows: number; // Added: track total for "showing X of Y" messaging
 }
 
-interface FileValidationResult {
-  valid: boolean;
-  error?: string;
-}
-
-type UploadStatus =
-  'idle' | 'validating' | 'uploading' | 'success' | 'error' | 'cancelled';
+type UploadStatus = 'idle' | 'uploading' | 'success' | 'cancelled';
 
 // ─── CSV Parsing ─────────────────────────────────────────────────────────────
 interface ParsedCSV {
@@ -222,8 +229,22 @@ function validateJSON(text: string): {
   return { errors, parsed: records };
 }
 
-// ─── Preview Builder ─────────────────────────────────────────────────────────
-async function buildPreview(file: File): Promise<PreviewState> {
+// ─── Parsing ─────────────────────────────────────────────────────────────────
+
+/**
+ * Raw parse result kept in component state, so a column mapping change never
+ * has to re-read the file from disk.
+ */
+interface ParsedFile {
+  kind: 'csv' | 'json';
+  headers: string[];
+  rows: string[][];
+  totalRows: number;
+  /** Format level errors (malformed JSON, non-object items, ...). */
+  errors: ImportValidationError[];
+}
+
+async function parseImportFile(file: File): Promise<ParsedFile> {
   const text = await file.text();
   const ext = file.name
     .slice(file.name.lastIndexOf('.'))
@@ -231,25 +252,13 @@ async function buildPreview(file: File): Promise<PreviewState> {
 
   if (ext === '.csv' || file.type === 'text/csv') {
     const { headers, rows, totalRows } = parseCSV(text);
-    const errors = validateCSV(headers, rows);
-    const warnings: ImportValidationError[] = [];
-
-    if (totalRows === 0 && errors.length === 0) {
-      warnings.push({ message: 'File has a header row but no data rows.' });
-    } else if (totalRows > MAX_PREVIEW_ROWS) {
-      warnings.push({
-        message: `Showing ${MAX_PREVIEW_ROWS} of ${totalRows} total rows.`,
-      });
-    }
-
-    return { headers, rows, errors, warnings, totalRows };
+    return { kind: 'csv', headers, rows, totalRows, errors: [] };
   }
 
-  // JSON
   const { errors, parsed } = validateJSON(text);
 
   if (errors.length > 0 || !parsed) {
-    return { headers: [], rows: [], errors, warnings: [], totalRows: 0 };
+    return { kind: 'json', headers: [], rows: [], totalRows: 0, errors };
   }
 
   const headers = parsed.length > 0 ? Object.keys(parsed[0]) : [];
@@ -257,14 +266,57 @@ async function buildPreview(file: File): Promise<PreviewState> {
     .slice(0, MAX_PREVIEW_ROWS)
     .map((r) => headers.map((h) => String(r[h] ?? '')));
 
+  return {
+    kind: 'json',
+    headers,
+    rows,
+    totalRows: parsed.length,
+    errors,
+  };
+}
+
+// ─── Preview Builder ─────────────────────────────────────────────────────────
+
+/**
+ * Pure projection of a parsed file onto the preview state. The column mapping
+ * is applied before validation, which is what lets a CSV with non-standard
+ * headers (e.g. `Start Time`) satisfy `validateCSV`. JSON records are already
+ * keyed by the schema field names, so they skip both the mapping and the
+ * CSV-specific validation.
+ */
+function buildPreview(
+  parsed: ParsedFile,
+  mapping: ColumnMapping
+): PreviewState {
+  const isCsv = parsed.kind === 'csv';
+  const mapped = isCsv
+    ? applyColumnMapping(parsed.headers, parsed.rows, mapping)
+    : { headers: parsed.headers, rows: parsed.rows };
+
+  const errors = isCsv
+    ? validateCSV(mapped.headers, mapped.rows)
+    : parsed.errors;
   const warnings: ImportValidationError[] = [];
-  if (parsed.length > MAX_PREVIEW_ROWS) {
+
+  if (isCsv && parsed.totalRows === 0 && errors.length === 0) {
+    warnings.push({ message: 'File has a header row but no data rows.' });
+  }
+
+  if (parsed.totalRows > MAX_PREVIEW_ROWS) {
+    const unit = isCsv ? 'rows' : 'records';
+
     warnings.push({
-      message: `Showing ${MAX_PREVIEW_ROWS} of ${parsed.length} total records.`,
+      message: `Showing ${MAX_PREVIEW_ROWS} of ${parsed.totalRows} total ${unit}.`,
     });
   }
 
-  return { headers, rows, errors, warnings, totalRows: parsed.length };
+  return {
+    headers: mapped.headers,
+    rows: mapped.rows,
+    errors,
+    warnings,
+    totalRows: parsed.totalRows,
+  };
 }
 
 // ─── Components ──────────────────────────────────────────────────────────────
@@ -387,85 +439,28 @@ function ValidationList({ errors }: { errors: ImportValidationError[] }) {
   );
 }
 
-function ValidationTable({
-  headers,
-  rows,
-  errors,
-}: {
-  headers: string[];
-  rows: string[][];
-  errors: ImportValidationError[];
-}) {
-  const getCellError = (rowIndex: number, field: string) => {
-    return errors.find((e) => e.row === rowIndex + 2 && e.field === field)
-      ?.message;
-  };
-
-  return (
-    <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
-      <table className="min-w-full divide-y divide-gray-200 text-sm">
-        <thead className="bg-gray-50">
-          <tr>
-            <th className="px-4 py-2 text-left font-semibold text-gray-600">
-              Row
-            </th>
-            {headers.map((h) => (
-              <th
-                key={h}
-                className="px-4 py-2 text-left font-semibold text-gray-600"
-              >
-                {h}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-200">
-          {rows.map((row, i) => {
-            const hasRowError = errors.some((e) => e.row === i + 2);
-            return (
-              <tr key={`row-${i}`} className={hasRowError ? 'bg-red-50' : ''}>
-                <td className="px-4 py-2 text-gray-500">{i + 2}</td>
-                {headers.map((h, j) => {
-                  const cellError = getCellError(i, h);
-                  return (
-                    <td
-                      key={`${h}-${j}`}
-                      className={`px-4 py-2 ${
-                        cellError ? 'relative bg-red-100' : 'text-gray-700'
-                      }`}
-                      title={cellError}
-                    >
-                      {cellError && (
-                        <div className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-red-500" />
-                      )}
-                      {row[j]}
-                    </td>
-                  );
-                })}
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
 // ─── Main Component ──────────────────────────────────────────────────────────
 export default function BulkImportView() {
-  const inputRef = useRef<HTMLInputElement>(null);
   const abortRef = useRef<AbortController | null>(null);
-  const dropZoneRef = useRef<HTMLDivElement>(null);
 
   const [file, setFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
-  const [preview, setPreview] = useState<PreviewState | null>(null);
+  const [parsed, setParsed] = useState<ParsedFile | null>(null);
+  const [mapping, setMapping] = useState<ColumnMapping>({});
+  const [mappingConfirmed, setMappingConfirmed] = useState(false);
   const [status, setStatus] = useState<UploadStatus>('idle');
   const [progress, setProgress] = useState(0);
   const [result, setResult] = useState<BulkImportResult | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
   const [showValidationTable, setShowValidationTable] = useState(false);
+  const [excludeDuplicates, setExcludeDuplicates] = useState(true);
+  const [importProgress, setImportProgress] = useState<ImportProgressState>({
+    phase: 'idle',
+    percent: 0,
+    processed: 0,
+    total: 0,
+  });
 
   const id = useId();
   const fileInputId = `file-input-${id}`;
@@ -486,137 +481,153 @@ export default function BulkImportView() {
       };
     }
 
-    if (nextFile.size > MAX_FILE_SIZE_BYTES) {
-      return {
-        valid: false,
-        error: `File too large. Maximum size: ${MAX_FILE_SIZE_MB}MB`,
-      };
-    }
+  // ─── Derived State ─────────────────────────────────────────────────────────
+  const preview = useMemo(
+    () => (parsed ? buildPreview(parsed, mapping) : null),
+    [parsed, mapping]
+  );
 
-    if (nextFile.size === 0) {
-      return { valid: false, error: 'File is empty.' };
-    }
-
-    return { valid: true };
-  }, []);
+  const missingFields = useMemo(
+    () => missingRequiredFields(SCHEMA_FIELDS, mapping),
+    [mapping]
+  );
 
   // ─── File Handling ─────────────────────────────────────────────────────────
-  const handleFile = useCallback(
-    async (nextFile: File) => {
-      const validation = validateFile(nextFile);
-      if (!validation.valid) {
-        setFileError(validation.error ?? 'Invalid file');
-        setFile(null);
-        setPreview(null);
-        return;
-      }
+  const handleFile = useCallback(async (nextFile: File) => {
+    // Defence in depth: DropZone already validated, but the file could be
+    // handed over by another entry point later on.
+    const check = validateImportFile(nextFile);
+    if (!check.ok) {
+      setFileError(check.message);
+      setFile(null);
+      setParsed(null);
+      return;
+    }
 
-      setFileError(null);
-      setFile(nextFile);
-      setResult(null);
-      setSubmitError(null);
-      setStatus('validating');
+    setFileError(null);
+    setFile(nextFile);
+    setResult(null);
+    setSubmitError(null);
+    setStatus('idle');
+    setMappingConfirmed(false);
+    setMapping({});
 
-      try {
-        const p = await buildPreview(nextFile);
-        setPreview(p);
-        setStatus(p.errors.length > 0 ? 'error' : 'idle');
-      } catch (err) {
-        setFileError('Failed to read file. Please check the file format.');
-        setStatus('error');
-      }
-    },
-    [validateFile]
-  );
+    try {
+      const next = await parseImportFile(nextFile);
+      setParsed(next);
+      setMapping(autoDetectMapping(next.headers, SCHEMA_FIELDS));
+    } catch (err) {
+      setFileError('Failed to read file. Please check the file format.');
+      // Drop the file as well: without a parse there is nothing to preview
+      // and the upload must stay blocked until a new file is picked.
+      setFile(null);
+      setParsed(null);
+    }
+  }, []);
 
-  const handleInputChange = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      const nextFile = event.target.files?.[0];
-      if (nextFile) void handleFile(nextFile);
-      // Reset input so same file can be selected again if needed
-      event.target.value = '';
-    },
+  const handleMappingChange = useCallback((next: ColumnMapping) => {
+    setMapping(next);
+  }, []);
+
+  const handleMappingContinue = useCallback(() => {
+    setMappingConfirmed(true);
+  }, []);
+
+  // ─── Drop Zone plumbing ────────────────────────────────────────────────────
+  const handleFileSelected = useCallback(
+    (nextFile: File) => void handleFile(nextFile),
     [handleFile]
   );
 
-  // ─── Drag & Drop ───────────────────────────────────────────────────────────
-  const handleDragOver = useCallback(
-    (event: React.DragEvent<HTMLDivElement>) => {
-      event.preventDefault();
-      event.stopPropagation();
-      setDragging(true);
-    },
-    []
-  );
 
-  const handleDragLeave = useCallback(
-    (event: React.DragEvent<HTMLDivElement>) => {
-      event.preventDefault();
-      event.stopPropagation();
-      // Only set dragging false if leaving the dropzone, not entering a child
-      if (
-        dropZoneRef.current &&
-        !dropZoneRef.current.contains(event.relatedTarget as Node)
-      ) {
-        setDragging(false);
-      }
-    },
-    []
-  );
+  /** Rebuild a CSV File excluding duplicate rows when the option is enabled (#631). */
+  const buildUploadFile = useCallback((): File | null => {
+    if (!file || !preview) return file;
+    if (!excludeDuplicates) return file;
+    const detection = detectDuplicateRows(preview.headers, preview.rows);
+    if (detection.duplicateCount === 0) return file;
 
-  const handleDrop = useCallback(
-    (event: React.DragEvent<HTMLDivElement>) => {
-      event.preventDefault();
-      event.stopPropagation();
-      setDragging(false);
-
-      const files = event.dataTransfer.files;
-      if (files.length > 1) {
-        setFileError('Please upload only one file at a time.');
-        return;
-      }
-
-      const nextFile = files?.[0];
-      if (nextFile) void handleFile(nextFile);
-    },
-    [handleFile]
-  );
+    const escape = (cell: string) => {
+      if (/[",\n\r]/.test(cell)) return `"${cell.replace(/"/g, '""')}"`;
+      return cell;
+    };
+    const kept = preview.rows.filter((_, i) => !detection.excludedRowIndexes.has(i));
+    const lines = [
+      preview.headers.join(','),
+      ...kept.map((r) => r.map(escape).join(',')),
+    ];
+    const blob = new Blob([lines.join('\n') + '\n'], {
+      type: 'text/csv;charset=utf-8;',
+    });
+    return new File([blob], file.name, { type: file.type || 'text/csv' });
+  }, [file, preview, excludeDuplicates]);
 
   // ─── Submit ────────────────────────────────────────────────────────────────
   const handleSubmit = useCallback(async () => {
     if (!file || (preview && preview.errors.length > 0)) return;
 
+    const totalRows = preview?.totalRows ?? 0;
     const controller = new AbortController();
     abortRef.current = controller;
     setStatus('uploading');
     setProgress(0);
     setSubmitError(null);
     setResult(null);
+    setImportProgress({
+      phase: 'uploading',
+      percent: 0,
+      processed: 0,
+      total: totalRows,
+    });
 
     try {
-      const response = await bulkImportOutages(file, {
+      const uploadFile = buildUploadFile() ?? file;
+      const response = await bulkImportOutages(uploadFile, {
         signal: controller.signal,
-        onProgress: setProgress,
+        onProgress: (pct) => {
+          setProgress(pct);
+          const processed =
+            totalRows > 0 ? Math.round((pct / 100) * totalRows) : 0;
+          setImportProgress({
+            phase: pct >= 100 ? 'processing' : 'uploading',
+            percent: pct,
+            processed,
+            total: totalRows,
+          });
+        },
       });
 
       setResult(response);
+      setImportProgress({
+        phase: response.errors.length > 0 ? 'error' : 'success',
+        percent: 100,
+        processed: totalRows,
+        total: totalRows,
+        summary: {
+          total: totalRows,
+          imported: response.imported,
+          failed: response.errors.length,
+          skipped: response.skipped,
+        },
+      });
       setFile(null);
-      setPreview(null);
+      setParsed(null);
       setStatus('success');
-
-      if (inputRef.current) inputRef.current.value = '';
     } catch (err: unknown) {
       if (
         (err as { name?: string }).name === 'CanceledError' ||
         (err as { name?: string }).name === 'AbortError'
       ) {
         setStatus('cancelled');
+        setImportProgress((s) => ({ ...s, phase: 'cancelled' }));
       } else if (err instanceof Error) {
         setSubmitError(err.message || 'Upload failed. Please try again.');
         setStatus('error');
+        setImportProgress((s) => ({ ...s, phase: 'error' }));
       } else {
         setSubmitError('Upload failed. Please try again.');
         setStatus('error');
+        setImportProgress((s) => ({ ...s, phase: 'error' }));
       }
     } finally {
       abortRef.current = null;
@@ -624,27 +635,39 @@ export default function BulkImportView() {
         setProgress(0);
       }
     }
-  }, [file, preview, status]);
+  }, [file, preview, status, buildUploadFile]);
 
   const handleCancel = useCallback(() => {
     abortRef.current?.abort();
     setStatus('cancelled');
     setProgress(0);
+    setImportProgress((s) => ({ ...s, phase: 'cancelled' }));
   }, []);
 
   const handleReset = useCallback(() => {
     setFile(null);
     setFileError(null);
-    setPreview(null);
+    setParsed(null);
+    setMapping({});
+    setMappingConfirmed(false);
     setResult(null);
     setSubmitError(null);
     setStatus('idle');
     setProgress(0);
+    setExcludeDuplicates(true);
+    setImportProgress({ phase: 'idle', percent: 0, processed: 0, total: 0 });
     if (inputRef.current) inputRef.current.value = '';
   }, []);
 
   const hasBlockingErrors = (preview?.errors.length ?? 0) > 0;
-  const isProcessing = status === 'uploading' || status === 'validating';
+  const isUploading = status === 'uploading';
+  const isParsing = file !== null && parsed === null;
+  const isProcessing = isUploading || isParsing;
+  const isCsv = parsed?.kind === 'csv';
+  const showColumnMapper =
+    isCsv && (!mappingConfirmed || missingFields.length > 0);
+  const showMappingSummary =
+    isCsv && mappingConfirmed && missingFields.length === 0;
 
   return (
     <div className="mx-auto max-w-2xl space-y-6 p-6">
@@ -668,63 +691,17 @@ export default function BulkImportView() {
           <code className="rounded bg-gray-100 px-1 py-0.5 text-xs">.json</code>{' '}
           file to create outages in one pass.
         </p>
+        <div className="pt-1">
+          <SampleDownload />
+        </div>
       </div>
 
       {/* Drop Zone */}
-      <div
-        ref={dropZoneRef}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        onClick={() => inputRef.current?.click()}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            inputRef.current?.click();
-          }
-        }}
-        role="button"
-        tabIndex={0}
-        aria-label="File upload dropzone. Click or press Enter to browse files."
-        className={`flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-10 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-          dragging
-            ? 'border-blue-500 bg-blue-100'
-            : 'border-gray-300 bg-gray-50 hover:border-blue-300 hover:bg-blue-50'
-        } ${isProcessing ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}`}
-      >
-        <svg
-          className="mb-3 h-10 w-10 text-gray-400"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={1.5}
-            d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1M12 12V4m0 0L8 8m4-4l4 4"
-          />
-        </svg>
-        <p className="text-sm font-medium text-gray-600">
-          Drag and drop or{' '}
-          <span className="text-blue-600 underline">browse</span>
-        </p>
-        <p className="mt-1 text-xs text-gray-400">
-          Accepted formats: {ACCEPTED_EXTENSIONS.join(', ')} (max{' '}
-          {MAX_FILE_SIZE_MB}MB)
-        </p>
-        <input
-          ref={inputRef}
-          id={fileInputId}
-          type="file"
-          accept={ACCEPTED_EXTENSIONS.join(',')}
-          className="hidden"
-          onChange={handleInputChange}
-          aria-label="Choose file"
-          disabled={isProcessing}
-        />
-      </div>
+      <DropZone
+        onFileSelected={handleFileSelected}
+        onError={setFileError}
+        disabled={isProcessing}
+      />
 
       {/* File Error */}
       {fileError && (
@@ -779,44 +756,87 @@ export default function BulkImportView() {
         </div>
       )}
 
+      {/* Column Mapping Wizard */}
+      {showColumnMapper && parsed && (
+        <ColumnMapper
+          headers={parsed.headers}
+          fields={SCHEMA_FIELDS}
+          mapping={mapping}
+          onMappingChange={handleMappingChange}
+          onContinue={handleMappingContinue}
+        />
+      )}
+
+      {/* Column Mapping (confirmed) */}
+      {showMappingSummary && (
+        <div className="flex items-center justify-between rounded-lg border bg-white px-4 py-3">
+          <p className="text-xs text-gray-500">
+            Column mapping confirmed for{' '}
+            {SCHEMA_FIELDS.length - missingFields.length} of{' '}
+            {SCHEMA_FIELDS.length} columns
+          </p>
+          <button
+            type="button"
+            onClick={() => setMappingConfirmed(false)}
+            className="text-xs font-medium text-blue-600 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-1"
+          >
+            Change mapping
+          </button>
+        </div>
+      )}
+
       {/* Validation & Preview */}
       {preview && !result && (
         <div className="space-y-3">
           {/* Errors */}
           {preview.errors.length > 0 && (
             <Alert type="error">
-              <div className="flex items-center justify-between">
-                <p className="font-semibold">
-                  {preview.errors.length} validation error
-                  {preview.errors.length > 1 ? 's' : ''} found
-                </p>
-                <button
-                  onClick={() => setShowValidationTable(!showValidationTable)}
-                  className="text-xs font-medium text-blue-600 hover:underline"
-                >
-                  {showValidationTable ? 'Show as list' : 'Show in table'}
-                </button>
-              </div>
-              <div className="mt-2">
-                {showValidationTable ? (
-                  <p className="text-xs text-gray-600">
-                    Invalid rows and cells are highlighted below. Hover over a
-                    cell for details.
-                  </p>
-                ) : (
-                  <ValidationList errors={preview.errors} />
-                )}
+              <p className="font-semibold">
+                {preview.errors.length} validation error
+                {preview.errors.length > 1 ? 's' : ''} found
+              </p>
+              <div className="mt-2 max-h-48 overflow-y-auto">
+                <ValidationList errors={preview.errors} />
               </div>
             </Alert>
           )}
 
-          {/* Table */}
-          {showValidationTable && (
-            <ValidationTable
-              headers={preview.headers}
-              rows={preview.rows}
-              errors={preview.errors}
-            />
+          {/* Table + inline edit (issue #628) + duplicate detection (issue #631) */}
+          {preview.rows.length > 0 && (
+            <div className="space-y-3">
+              <DuplicateDetector
+                headers={preview.headers}
+                rows={preview.rows}
+                excludeDuplicates={excludeDuplicates}
+                onExcludeDuplicatesChange={setExcludeDuplicates}
+              />
+              {(showValidationTable || preview.errors.length > 0) && (
+                <ValidationPreview
+                  headers={preview.headers}
+                  rows={preview.rows}
+                  errors={preview.errors}
+                  excludedRowIndexes={
+                    excludeDuplicates
+                      ? detectDuplicateRows(preview.headers, preview.rows)
+                          .excludedRowIndexes
+                      : undefined
+                  }
+                  onRowsChange={(rows) =>
+                    setPreview((prev) => (prev ? { ...prev, rows } : prev))
+                  }
+                  onErrorsChange={(errors) =>
+                    setPreview((prev) =>
+                      prev
+                        ? {
+                            ...prev,
+                            errors,
+                          }
+                        : prev
+                    )
+                  }
+                />
+              )}
+            </div>
           )}
 
           {/* Warnings */}
@@ -832,77 +852,22 @@ export default function BulkImportView() {
             </Alert>
           )}
 
-          {/* Preview Table */}
+          {/* Preview */}
           {preview.headers.length > 0 && preview.rows.length > 0 && (
-            <div className="overflow-hidden rounded-lg border bg-white shadow-sm">
-              <div className="border-b px-4 py-2 flex items-center justify-between bg-gray-50">
-                <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                  Preview
-                </p>
-                <p className="text-xs text-gray-400">
-                  {preview.totalRows > MAX_PREVIEW_ROWS
-                    ? `Showing ${preview.rows.length} of ${preview.totalRows} rows`
-                    : `${preview.rows.length} row${preview.rows.length > 1 ? 's' : ''}`}
-                </p>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      {preview.headers.map((h) => (
-                        <th
-                          key={h}
-                          className={`px-3 py-2 text-left font-semibold text-gray-600 ${
-                            REQUIRED_FIELDS.includes(
-                              h as (typeof REQUIRED_FIELDS)[number]
-                            )
-                              ? 'text-blue-700'
-                              : ''
-                          }`}
-                          title={
-                            REQUIRED_FIELDS.includes(
-                              h as (typeof REQUIRED_FIELDS)[number]
-                            )
-                              ? 'Required field'
-                              : undefined
-                          }
-                        >
-                          {h}
-                          {REQUIRED_FIELDS.includes(
-                            h as (typeof REQUIRED_FIELDS)[number]
-                          ) && <span className="ml-0.5 text-blue-500">*</span>}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {preview.rows.map((row, i) => (
-                      <tr
-                        key={i}
-                        className="border-t hover:bg-gray-50 transition-colors"
-                      >
-                        {row.map((cell, j) => (
-                          <td
-                            key={j}
-                            className="px-3 py-2 text-gray-700 max-w-[200px] truncate"
-                            title={cell}
-                          >
-                            {cell}
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            <ValidationPreview
+              headers={preview.headers}
+              records={preview.rows}
+              errors={preview.errors}
+              totalRows={preview.totalRows}
+              requiredFields={REQUIRED_FIELDS}
+            />
           )}
         </div>
       )}
 
       {/* Actions */}
       <div className="space-y-2">
-        {status === 'uploading' ? (
+        {isUploading ? (
           <>
             <div
               className="w-full rounded-full bg-gray-200 h-2 overflow-hidden"
@@ -931,10 +896,15 @@ export default function BulkImportView() {
         ) : (
           <button
             onClick={() => void handleSubmit()}
-            disabled={!file || hasBlockingErrors || isProcessing}
+            disabled={
+              !file ||
+              hasBlockingErrors ||
+              missingFields.length > 0 ||
+              isProcessing
+            }
             className="w-full rounded-lg bg-blue-600 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-blue-600"
           >
-            {status === 'validating' ? 'Validating...' : 'Upload File'}
+            Upload File
           </button>
         )}
       </div>

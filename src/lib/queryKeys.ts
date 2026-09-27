@@ -40,4 +40,8 @@ export const queryKeys = {
     status: (userId: string) => ['wallet', 'status', userId] as const,
     balance: (address: string) => ['wallet', 'balance', address] as const,
   },
+  systemHealth: {
+    /** Readiness probe behind the dashboard status pill. */
+    all: ['system-health'] as const,
+  },
 } as const;

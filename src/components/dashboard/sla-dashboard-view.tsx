@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 
@@ -9,25 +9,28 @@ import OutageAlertBanner from '@/components/dashboard/OutageAlertBanner';
 import PenaltiesRewardsChart from '@/components/dashboard/PenaltiesRewardsChart';
 import SLATrendChart from '@/components/dashboard/SLATrendChart';
 import AutoRefreshControl from '@/components/dashboard/AutoRefreshControl';
-import DashboardGrid, {
-  type DashboardWidget,
-} from '@/components/dashboard/DashboardGrid';
+import ExportModal from '@/components/dashboard/ExportModal';
 import FinancialSummaryWidget from '@/components/dashboard/FinancialSummaryWidget';
 import PenaltyCreditsWidget from '@/components/dashboard/PenaltyCreditsWidget';
 import MTTRHistogramChart from '@/components/dashboard/MTTRHistogramChart';
 import SLABreachCountdownCard from '@/components/dashboard/SLABreachCountdownCard';
-import BreachToast from '@/components/notifications/BreachToast';
+import SystemStatusWidget from '@/components/dashboard/SystemStatusWidget';
 import { useToast } from '@/components/ui/toast';
+import { RouteErrorState } from '@/components/ui/route-state';
 import {
-  RouteErrorState,
-  RouteLoadingState,
-} from '@/components/ui/route-state';
+  Skeleton,
+  SkeletonChart,
+  SkeletonMetricCard,
+  SkeletonStatus,
+} from '@/components/ui/skeleton';
 import {
   buildDashboardShareUrl,
   buildDashboardSnapshot,
 } from '@/lib/dashboardSnapshot';
 import { useUrlSync } from '@/hooks/useUrlSync';
 import { useAutoRefresh } from '@/hooks/useAutoRefresh';
+import { buildMttrHistogram } from '@/lib/mttrHistogram';
+import { getOutages } from '@/services/outages';
 import {
   fetchDashboardMetrics,
   type DashboardFilters,
@@ -47,6 +50,12 @@ function delta(a: number, b: number) {
 }
 
 const SEVERITIES = ['', 'low', 'medium', 'high', 'critical'];
+// Closes #610: highlight tones for the four KPI card placeholders, in the same
+// order and colours as the real cards below.
+const METRIC_CARD_TONES = ['green', 'red', 'green', 'red'] as const;
+// Closes #609: the export modal reuses the MTTR widget's cache entry, so the
+// resolved-outage sample is fetched once and shared between both components.
+const MTTR_SAMPLE_PARAMS = { status: 'resolved', page_size: 500 };
 const DASHBOARD_DEFAULTS = {
   date_from: '',
   date_to: '',
@@ -66,6 +75,9 @@ export default function SLADashboardView() {
   const toast = useToast();
   const autoRefresh = useAutoRefresh();
   const [urlState, setUrlState] = useUrlSync(DASHBOARD_DEFAULTS);
+  // Closes #609: section/format selection lives inside ExportModal; the view
+  // only owns the open/closed flag so the toolbar button can toggle it.
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const compareMode = urlState.compare === '1';
   const filters = useMemo<DashboardFilters>(
     () => ({
@@ -272,6 +284,23 @@ export default function SLADashboardView() {
     refetchInterval: autoRefresh.refetchInterval,
   });
 
+  // Closes #609: feeds the MTTR section of the export summary. Shares the
+  // cache key with MTTRHistogramChart, so this adds no extra request.
+  const mttrSample = useQuery({
+    queryKey: queryKeys.outages.list(MTTR_SAMPLE_PARAMS),
+    queryFn: () => getOutages(MTTR_SAMPLE_PARAMS),
+    staleTime: 30_000,
+  });
+
+  const mttrBuckets = useMemo(
+    () =>
+      buildMttrHistogram(mttrSample.data?.items ?? [], {
+        dateFrom: filters.date_from,
+        dateTo: filters.date_to,
+      }),
+    [mttrSample.data, filters.date_from, filters.date_to]
+  );
+
   const onTrendClick = useCallback(
     (point: TrendPoint) => {
       pushOutageDrilldown(point);
@@ -293,12 +322,28 @@ export default function SLADashboardView() {
     [pushPaymentDrilldown]
   );
 
+  // Closes #610: placeholder state that mirrors the real widget geometry, so
+  // the first paint already occupies the final layout box and nothing shifts
+  // when the metrics query resolves.
   if (primary.isLoading) {
     return (
-      <RouteLoadingState
-        title="Loading dashboard"
-        description="Pulling the latest SLA compliance, trends, and payout metrics."
-      />
+      <div className="space-y-6 p-6">
+        <div className="space-y-1" aria-hidden="true">
+          <Skeleton className="h-8 w-64" />
+          <Skeleton className="h-5 w-96 max-w-full" />
+        </div>
+        <SkeletonStatus label="Loading SLA metrics" className="space-y-6">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {METRIC_CARD_TONES.map((highlight, index) => (
+              <SkeletonMetricCard key={index} highlight={highlight} />
+            ))}
+          </div>
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <SkeletonChart rows={4} />
+            <SkeletonChart rows={4} />
+          </div>
+        </SkeletonStatus>
+      </div>
     );
   }
 
@@ -530,6 +575,8 @@ export default function SLADashboardView() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          {/* Closes #611: readiness pill in the header control row. */}
+          <SystemStatusWidget />
           <span className="text-xs uppercase tracking-wide text-gray-400">
             Updated {lastUpdated}
           </span>
@@ -551,6 +598,13 @@ export default function SLADashboardView() {
             className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50"
           >
             Export
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsExportModalOpen(true)}
+            className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50"
+          >
+            Export Summary
           </button>
           <button
             type="button"
@@ -687,7 +741,125 @@ export default function SLADashboardView() {
         </div>
       ) : null}
 
-      <DashboardGrid widgets={widgets} />
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <KPICard
+          title="SLA Compliance"
+          value={`${metrics.sla_compliance_percentage.toFixed(1)}%`}
+          subtitle={
+            cmp
+              ? `vs ${cmp.sla_compliance_percentage.toFixed(1)}% (${delta(metrics.sla_compliance_percentage, cmp.sla_compliance_percentage)}pp)`
+              : 'Overall compliance rate'
+          }
+          highlight={metrics.sla_compliance_percentage >= 90 ? 'green' : 'red'}
+          onClick={() => pushOutageDrilldown()}
+          actionLabel="Open filtered outages"
+        />
+        <KPICard
+          title="Total Penalties"
+          value={`$${metrics.penalties.total.toLocaleString()}`}
+          subtitle={
+            cmp
+              ? `vs $${cmp.penalties.total.toLocaleString()} (${delta(metrics.penalties.total, cmp.penalties.total)})`
+              : `${metrics.penalties.count} incidents`
+          }
+          highlight="red"
+          onClick={() => pushPaymentDrilldown('penalty')}
+          actionLabel="Open filtered penalty payments"
+        />
+        <KPICard
+          title="Total Rewards"
+          value={`$${metrics.rewards.total.toLocaleString()}`}
+          subtitle={
+            cmp
+              ? `vs $${cmp.rewards.total.toLocaleString()} (${delta(metrics.rewards.total, cmp.rewards.total)})`
+              : `${metrics.rewards.count} achievements`
+          }
+          highlight="green"
+          onClick={() => pushPaymentDrilldown('reward')}
+          actionLabel="Open filtered reward payments"
+        />
+        <KPICard
+          title="Net Balance"
+          value={`${netBalance >= 0 ? '+' : ''}$${netBalance.toLocaleString()}`}
+          subtitle={(() => {
+            if (!cmp) return 'Rewards minus penalties';
+            const cmpNet = cmp.rewards.total - cmp.penalties.total;
+            return `vs ${cmpNet >= 0 ? '+' : ''}$${cmpNet.toLocaleString()} (${delta(netBalance, cmpNet)})`;
+          })()}
+          highlight={netBalance >= 0 ? 'green' : 'red'}
+          onClick={() =>
+            pushPaymentDrilldown(netBalance >= 0 ? 'reward' : 'penalty')
+          }
+          actionLabel="Open filtered payment drilldown"
+        />
+      </div>
+
+      <FinancialSummaryWidget metrics={metrics} />
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <SLATrendChart
+          data={metrics.trends}
+          onPointClick={onTrendClick}
+          dateRangeLabel={primaryRangeLabel}
+        />
+        <PenaltiesRewardsChart
+          data={metrics.trends}
+          onPenaltyClick={onPenaltyClick}
+          onRewardClick={onRewardClick}
+        />
+      </div>
+
+      <MTTRHistogramChart
+        dateFrom={filters.date_from}
+        dateTo={filters.date_to}
+      />
+
+      {cmp && cmp.trends.length > 0 ? (
+        <div>
+          <p className="mb-3 text-sm font-semibold text-gray-500 uppercase tracking-wide">
+            Comparison Window — {compareLabel}
+          </p>
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <SLATrendChart data={cmp.trends} dateRangeLabel={compareLabel} />
+            <PenaltiesRewardsChart data={cmp.trends} />
+          </div>
+        </div>
+      ) : null}
+
+      {compareMode && secondary.isLoading ? (
+        <div className="rounded-lg border border-dashed border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-600">
+          Loading comparison data for {compareLabel}…
+        </div>
+      ) : null}
+
+      {compareMode && cmp && cmp.trends.length === 0 && !secondary.isLoading ? (
+        <div className="rounded-lg border border-dashed border-yellow-200 bg-yellow-50 px-4 py-3 text-sm text-yellow-700">
+          No data available for the comparison window ({compareLabel}). Adjust
+          the comparison dates or disable compare mode.
+        </div>
+      ) : null}
+
+      {compareMode && secondary.isError ? (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          Failed to load comparison data.{' '}
+          <button
+            type="button"
+            onClick={() => void secondary.refetch()}
+            className="font-medium hover:underline"
+          >
+            Retry
+          </button>
+        </div>
+      ) : null}
+
+      <ExportModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        metrics={metrics}
+        filters={filters}
+        mttrBuckets={mttrBuckets}
+        onExported={(filename) => toast(`Exported ${filename}.`, 'success')}
+      />
     </div>
   );
 }
