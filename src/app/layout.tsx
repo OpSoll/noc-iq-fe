@@ -63,6 +63,10 @@ export default async function RootLayout({ children }: RootLayoutProps) {
             app, so dynamic status changes (e.g. outage resolution) are
             announced to screen reader users without moving focus. */}
         <LiveRegion />
+        {/* A11y #679: announces the page title on a client-side route change.
+            Separate from LiveRegion because that region is for transient
+            status, while this one reports where the user has navigated to. */}
+        <div id="route-announcer" role="status" aria-live="polite" className="sr-only" />
         <ReactQueryProvider>
           <SessionProvider>
             <FeatureFlagProvider>
