@@ -1,13 +1,15 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { WifiOff } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useToast } from '@/components/ui/toast';
 import { downloadCsv } from '@/lib/urlSyncAndExport';
+import { useAutoRefresh } from '@/hooks/useAutoRefresh';
 import { useUrlSync } from '@/hooks/useUrlSync';
 import { deleteOutage } from '@/services/outages';
 import { SeverityBadge } from '@/components/shared/SeverityBadgeAndShortcuts';
+import { TableStatusPill } from '@/components/outages/TableStatusPill';
 import type { Severity, OutageStatus } from '@/types/outages';
 
 type Outage = {
@@ -67,6 +69,47 @@ export default function OutagesPageClient({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  // -----------------------------
+  // Refresh status
+  // -----------------------------
+  // The rows the parent handed us are as fresh as this render, so the pill
+  // starts at mount and only moves when something actually refetches.
+  const [lastUpdatedAt, setLastUpdatedAt] = useState(() => new Date());
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  // Polling is off until a caller opts in, and it pauses itself whenever the
+  // tab is hidden (Page Visibility API, handled by the hook).
+  const { refetchInterval, isPolling } = useAutoRefresh();
+
+  const handleRefresh = useCallback(async () => {
+    // No parent fetch wired up: there is nothing to refetch, so leave the
+    // timestamp alone rather than pretending the data changed.
+    if (!onRefresh) return;
+
+    setIsRefreshing(true);
+
+    try {
+      await onRefresh();
+      setLastUpdatedAt(new Date());
+    } catch (err) {
+      toast(
+        err instanceof Error ? err.message : 'Failed to refresh outages.',
+        'error'
+      );
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [onRefresh, toast]);
+
+  useEffect(() => {
+    if (!isPolling || refetchInterval === false) return;
+
+    const id = setInterval(() => {
+      void handleRefresh();
+    }, refetchInterval);
+
+    return () => clearInterval(id);
+  }, [isPolling, refetchInterval, handleRefresh]);
 
   // -----------------------------
   // Derived Data (Search + Sort)
@@ -197,14 +240,9 @@ export default function OutagesPageClient({
     setShowDeleteConfirm(false);
     setDeleting(false);
 
-    try {
-      await onRefresh?.();
-    } catch (err) {
-      toast(
-        err instanceof Error ? err.message : 'Failed to refresh outages.',
-        'error'
-      );
-    }
+    // Same path as the status pill, so both the rows and the "updated" age
+    // move together (it also reports a failed refetch).
+    await handleRefresh();
   }
 
   function handleExport() {
@@ -251,7 +289,13 @@ export default function OutagesPageClient({
           className="border rounded-md px-3 py-2 w-full sm:max-w-sm"
         />
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <TableStatusPill
+            updatedAt={lastUpdatedAt}
+            isRefreshing={isRefreshing}
+            onRefresh={onRefresh ? () => void handleRefresh() : undefined}
+          />
+
           <select
             aria-label="Filter by severity"
             value={severity}
