@@ -1,8 +1,20 @@
 'use client';
 
+/**
+ * SLATrendChart
+ *
+ * Hand-rolled SLA compliance trend: one progress row per data point, plus the
+ * dashed target line. Colours come from the shared chart theme so labels,
+ * target line and above/below-target fills stay above the WCAG contrast floors
+ * in light and dark mode.
+ *
+ * Closes #608 – Dashboard: dark mode colour contrast optimization for charts
+ */
+
 import { useMemo, useRef, useState, memo } from 'react';
 import { TrendPoint } from '../../types/dashboard';
 import AnomalyOverlay from '@/components/charts/AnomalyOverlay';
+import { useChartTheme } from '@/components/charts/useChartTheme';
 import type { AnomalySegment } from '@/services/analytics';
 import {
   DEFAULT_SLA_COMPLIANCE_TARGET,
@@ -32,6 +44,7 @@ function SLATrendChart({
   const [showAnomalies, setShowAnomalies] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState(0);
   const itemRefs = useRef<Array<HTMLDivElement | null>>([]);
+  const { theme } = useChartTheme();
 
   const chartLabel = useMemo(() => {
     const rangePart = dateRangeLabel ? ` for ${dateRangeLabel}` : '';
@@ -85,9 +98,15 @@ function SLATrendChart({
   }
 
   return (
-    <div className="rounded-xl bg-white p-5 shadow-sm">
+    <div
+      className="rounded-xl p-5 shadow-sm"
+      style={{ backgroundColor: theme.surface, color: theme.axisLabel }}
+    >
       <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
+        <h3
+          className="text-sm font-semibold uppercase tracking-wide"
+          style={{ color: theme.axisLabel }}
+        >
           SLA Compliance Trend
         </h3>
         {anomalies.length > 0 && (
@@ -107,9 +126,13 @@ function SLATrendChart({
       </div>
 
       {data.length > 0 && (
-        <div className="mb-2 flex items-center gap-1.5 text-[11px] text-slate-500">
+        <div
+          className="mb-2 flex items-center gap-1.5 text-[11px]"
+          style={{ color: theme.muted }}
+        >
           <span
-            className="inline-block h-0 w-3 border-t-2 border-dashed border-slate-500"
+            className="inline-block h-0 w-3 border-t-2 border-dashed"
+            style={{ borderColor: theme.gridLine }}
             aria-hidden="true"
           />
           <span>Target {target}%</span>
@@ -121,7 +144,9 @@ function SLATrendChart({
           while arrow keys move a single focus point between them. Closes #447. */}
       <div className="space-y-3" role="group" aria-label={chartLabel}>
         {data.length === 0 ? (
-          <p className="text-sm text-gray-500">No trend data available.</p>
+          <p className="text-sm" style={{ color: theme.muted }}>
+            No trend data available.
+          </p>
         ) : (
           <>
             {data.map((point, index) => {
@@ -138,7 +163,7 @@ function SLATrendChart({
                   }}
                   className={`space-y-1 ${
                     onPointClick
-                      ? 'cursor-pointer rounded-lg p-1 hover:bg-gray-50 transition-colors'
+                      ? 'cursor-pointer rounded-lg p-1 transition-colors hover:bg-gray-50'
                       : 'rounded-lg p-1'
                   } focus:outline-none focus:ring-2 focus:ring-blue-400`}
                   onClick={() => onPointClick?.(point)}
@@ -149,20 +174,32 @@ function SLATrendChart({
                   onFocus={() => setFocusedIndex(index)}
                   onKeyDown={(e) => handlePointKeyDown(e, index)}
                 >
-                  <div className="flex items-center justify-between text-sm text-gray-600">
+                  <div
+                    className="flex items-center justify-between text-sm"
+                    style={{ color: theme.axisLabel }}
+                  >
                     <span>{point.period}</span>
                     <span>{pct.toFixed(1)}%</span>
                   </div>
-                  <div className="relative h-3 overflow-hidden rounded-full bg-gray-100">
+                  <div
+                    className="relative h-3 overflow-hidden rounded-full"
+                    style={{ backgroundColor: theme.track }}
+                  >
                     <div
-                      className={`h-full rounded-full transition-all ${
-                        above ? 'bg-green-500' : 'bg-red-500'
-                      }`}
-                      style={{ width: `${pct}%` }}
+                      className="h-full rounded-full transition-all"
+                      style={{
+                        width: `${pct}%`,
+                        backgroundColor: above
+                          ? theme.positive
+                          : theme.negative,
+                      }}
                     />
                     <div
-                      className="absolute inset-y-0 border-l-2 border-dashed border-slate-500"
-                      style={{ left: `${clampPercentage(target)}%` }}
+                      className="absolute inset-y-0 border-l-2 border-dashed"
+                      style={{
+                        left: `${clampPercentage(target)}%`,
+                        borderColor: theme.gridLine,
+                      }}
                       aria-hidden="true"
                     />
                   </div>
