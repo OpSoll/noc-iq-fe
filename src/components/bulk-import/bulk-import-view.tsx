@@ -19,6 +19,11 @@ import {
 } from './ImportProgress';
 import { SampleDownload } from './SampleDownload';
 import { ValidationPreview } from './ValidationPreview';
+import { TimezoneSelector } from './TimezoneSelector';
+import { ImportHistoryDrawer, type ImportHistoryJob } from './ImportHistoryDrawer';
+import type { SourceTimezone } from '@/lib/timezoneConvert';
+import { convertRowTimestampsToUtc } from '@/lib/timezoneConvert';
+import { parseCsvInWorker } from '@/lib/csvParseClient';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const MAX_PREVIEW_ROWS = 100;
@@ -461,6 +466,9 @@ export default function BulkImportView() {
     processed: 0,
     total: 0,
   });
+  const [sourceTimezone, setSourceTimezone] = useState<SourceTimezone>('UTC');
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [importHistory, setImportHistory] = useState<ImportHistoryJob[]>([]);
 
   const id = useId();
   const fileInputId = `file-input-${id}`;
@@ -691,10 +699,28 @@ export default function BulkImportView() {
           <code className="rounded bg-gray-100 px-1 py-0.5 text-xs">.json</code>{' '}
           file to create outages in one pass.
         </p>
-        <div className="pt-1">
+        <div className="pt-1 flex flex-wrap items-center gap-3">
           <SampleDownload />
+          <button
+            type="button"
+            className="text-sm text-blue-600 hover:underline"
+            onClick={() => setHistoryOpen(true)}
+          >
+            Import history
+          </button>
         </div>
+        <TimezoneSelector
+          value={sourceTimezone}
+          onChange={setSourceTimezone}
+          sampleTimestamps={[]}
+        />
       </div>
+
+      <ImportHistoryDrawer
+        isOpen={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+        jobs={importHistory}
+      />
 
       {/* Drop Zone */}
       <DropZone
