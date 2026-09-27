@@ -6,21 +6,19 @@
 
 | Metric | Value |
 |--------|-------|
-| Total Wave 5 issues | 150 |
+| Total Wave 5 issues | 173 |
 | Closed | 100 |
-| Open | 50 |
-| Completion | 67% |
+| Open | 73 |
+| Completion | 58% |
 
 ## Open Issues
 
-- [ ] #691 Form Validation: Add Optimistic UI update and rollback hook for status toggles
 - [ ] #689 Form Validation: Add debounced live input validation feedback
 - [ ] #679 Navigation: Add active route focus indicator for screen readers
 - [ ] #678 Navigation: Implement global keyboard shortcuts helper modal (Shift+?)
 - [ ] #677 Navigation: Add breadcrumb navigation bar with dynamic route labels
 - [ ] #676 Navigation: Implement sidebar navigation auto-collapse state persistence
 - [ ] #675 Navigation: Add Cmd+K / Ctrl+K global command palette search modal
-- [ ] #674 Webhooks UI: Implement webhook delivery search and filter controls
 - [ ] #673 Webhooks UI: Add delivery latency performance line chart
 - [ ] #672 Webhooks UI: Implement webhook endpoint deletion confirmation modal
 - [ ] #671 Webhooks UI: Add outbound rate limit configuration slider
@@ -40,13 +38,9 @@
 - [ ] #657 Wallet: Add wallet disconnect button with session state cleanup
 - [ ] #656 Wallet: Implement active network passphrase mismatch detection alert
 - [ ] #655 Wallet: Add transaction submission status tracker drawer
-- [ ] #654 Wallet: Implement multi-sig signature collection progress meter for disbursements
 - [ ] #653 Wallet: Add SLA penalty disbursement transaction builder modal
 - [ ] #652 Wallet: Implement XLM and custom SAC token balance inspector
-- [ ] #651 Wallet: Add Freighter wallet connection status indicator and auto-connect prompt
-- [ ] #650 Dispute View: Add dispute submission rate limit warning toast
 - [ ] #649 Dispute View: Implement dispute export report generator
-- [ ] #646 Dispute View: Add dispute countdown timer to arbitration deadline
 - [ ] #643 Dispute View: Implement dispute filtering drawer on dashboard view
 - [ ] #642 Dispute View: Add dispute SLA metric impact calculator component
 - [ ] #641 Dispute View: Implement dispute arbitration vote decision panel for admins
@@ -63,6 +57,35 @@
 - [ ] #630 Bulk Import: Implement import progress bar with cancel capability
 - [ ] #629 Bulk Import: Add downloadable sample CSV template builder
 - [ ] #628 Bulk Import: Implement inline cell error editing in validation preview
+- [ ] #627 Bulk Import: Add real-time row validation preview table
+- [ ] #626 Bulk Import: Implement client-side CSV column mapping wizard
+- [ ] #625 Bulk Import: Add CSV file drag-and-drop zone with format validation
+- [ ] #624 Outage Table: Add auto-refresh polling status indicator
+- [ ] #623 Outage Table: Implement empty state placeholder with action CTAs
+- [ ] #622 Outage Table: Add status tab filter pills (All, Active, Resolved, Closed)
+- [ ] #621 Outage Table: Implement bulk selection checkboxes with batch actions bar
+- [ ] #620 Outage Table: Add expandable row details summary drawer
+- [ ] #619 Outage Table: Implement column visibility toggle drawer
+- [ ] #618 Outage Table: Add CSV export button for filtered table rows
+- [ ] #617 Outage Table: Implement row action dropdown menu (Edit, Resolve, Delete)
+- [ ] #616 Outage Table: Add full-text search filter input across outage descriptions
+- [ ] #615 Outage Table: Implement severity badge color status indicators
+- [ ] #614 Outage Table: Add date range calendar filter picker
+- [ ] #613 Outage Table: Implement multi-column sorting controls
+- [ ] #612 Outage Table: Add virtualized scrolling for high-volume outage lists
+- [ ] #611 Dashboard: Add live system health status indicator widget
+- [ ] #610 Dashboard: Implement skeleton loading state placeholders for metric cards
+- [ ] #609 Dashboard: Add dashboard data export summary modal
+- [ ] #608 Dashboard: Implement dark mode color contrast optimization for charts
+- [ ] #607 Dashboard: Add SLA penalty credit summary widget
+- [ ] #606 Dashboard: Implement dashboard layout customization state persistence
+- [ ] #605 Dashboard: Add SLA target breach toast notification handler
+- [ ] #604 Dashboard: Implement active outage alert banner on dashboard view
+- [ ] #603 Dashboard: Add SLA compliance history time-series chart
+- [ ] #602 Dashboard: Implement site filter selector for dashboard metrics
+- [ ] #601 Dashboard: Add interactive SLA breach risk gauge chart
+- [ ] #600 Dashboard: Implement MTTR and MTBF metric card indicators
+- [ ] #599 Dashboard: Add real-time SLA availability widget with auto-refresh interval
 
 ## Closed Issues
 
@@ -98,6 +121,7 @@
 - [x] #694 Form Validation: Implement auto-save draft form state to local storage
 - [x] #693 Form Validation: Add custom regex format validator for site ID input fields
 - [x] #692 Form Validation: Implement race condition guard hook for concurrent mutation requests
+- [x] #691 Form Validation: Add Optimistic UI update and rollback hook for status toggles
 - [x] #690 Form Validation: Implement password strength meter and validator component
 - [x] #688 Form Validation: Implement stale data detection guard hook on form submission
 - [x] #687 Form Validation: Add Zod schema validation for outage creation form
@@ -108,8 +132,13 @@
 - [x] #682 Navigation: Implement un-saved form changes prompt before route navigation
 - [x] #681 Navigation: Add recently visited pages history dropdown in search bar
 - [x] #680 Navigation: Implement quick action floating action button (FAB) for mobile viewport
+- [x] #674 Webhooks UI: Implement webhook delivery search and filter controls
+- [x] #654 Wallet: Implement multi-sig signature collection progress meter for disbursements
+- [x] #651 Wallet: Add Freighter wallet connection status indicator and auto-connect prompt
+- [x] #650 Dispute View: Add dispute submission rate limit warning toast
 - [x] #648 Dispute View: Add dispute outcome notification banner on outage page
 - [x] #647 Dispute View: Implement dispute notes and internal comment thread component
+- [x] #646 Dispute View: Add dispute countdown timer to arbitration deadline
 - [x] #645 Dispute View: Implement dispute resolution confirmation modal
 - [x] #644 Dispute View: Add dispute bond collateral summary card
 - [x] #571 CI: Add automated release evidence package builder script
@@ -160,12 +189,6 @@
 - [x] #526 State: Add session timeout warning modal after 30 minutes of inactivity
 - [x] #525 State: Add active user role and permission guards in UI store
 - [x] #524 State: Add reactive online/offline network connection state listener
-- [x] #523 State: Add global UI state reset action button in App Settings
-- [x] #522 State: Add Zustand local storage persistence schema versioning migration helper
-- [x] #521 Webhooks: Add webhook delivery status filter pills (All, Success, Retrying, Failed)
-- [x] #520 Webhooks: Add webhook payload schema documentation popover
-- [x] #519 Webhooks: Add export webhook delivery logs to JSON / CSV
-- [x] #518 Webhooks: Add webhook delivery log retention period selector
 
 ---
 _Auto-generated by `scripts/update-wave5-dashboard.mjs`. Do not edit manually._
