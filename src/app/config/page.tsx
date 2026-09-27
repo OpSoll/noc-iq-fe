@@ -1,18 +1,18 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   RouteErrorState,
   RouteLoadingState,
-} from "@/components/ui/route-state";
-import { EmptyState } from "@/components/ui/empty-state";
-import { Settings } from "lucide-react";
-import { api } from "@/lib/api";
+} from '@/components/ui/route-state';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Settings } from 'lucide-react';
+import { api } from '@/lib/api';
 
-type Severity = "critical" | "high" | "medium" | "low";
+type Severity = 'critical' | 'high' | 'medium' | 'low';
 
 type SLASeverityConfig = {
   threshold_minutes: number;
@@ -29,14 +29,14 @@ type EditableConfig = SLASeverityConfig & {
 function getErrorMessage(error: unknown) {
   return error instanceof Error
     ? error.message
-    : "An unexpected error occurred";
+    : 'An unexpected error occurred';
 }
 
 function getSeverityVariant(severity: Severity) {
-  if (severity === "critical" || severity === "high") {
-    return "destructive";
+  if (severity === 'critical' || severity === 'high') {
+    return 'destructive';
   }
-  return "default";
+  return 'default';
 }
 
 export default function SlaConfigPage() {
@@ -44,7 +44,7 @@ export default function SlaConfigPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editingConfig, setEditingConfig] = useState<EditableConfig | null>(
-    null,
+    null
   );
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -62,7 +62,7 @@ export default function SlaConfigPage() {
     try {
       setLoading(true);
       setError(null);
-      const response = await api.get<SLAConfigMap>("/sla/config");
+      const response = await api.get<SLAConfigMap>('/sla/config');
       const nextConfigs = Object.entries(response.data)
         .map(([severity, config]) => ({
           severity: severity as Severity,
@@ -105,7 +105,7 @@ export default function SlaConfigPage() {
       if (
         isDirty &&
         !window.confirm(
-          "You have unsaved changes. Are you sure you want to discard them?",
+          'You have unsaved changes. Are you sure you want to discard them?'
         )
       ) {
         return;
@@ -125,7 +125,7 @@ export default function SlaConfigPage() {
       formData.penalty_per_minute < 0 ||
       formData.reward_base < 0
     ) {
-      setSaveError("Values cannot be negative.");
+      setSaveError('Values cannot be negative.');
       return;
     }
 
@@ -135,15 +135,15 @@ export default function SlaConfigPage() {
     try {
       const response = await api.put<SLASeverityConfig>(
         `/sla/config/${editingConfig.severity}`,
-        formData,
+        formData
       );
 
       setConfigs((currentConfigs) =>
         currentConfigs.map((config) =>
           config.severity === editingConfig.severity
             ? { severity: editingConfig.severity, ...response.data }
-            : config,
-        ),
+            : config
+        )
       );
       setEditingConfig(null);
     } catch (issue) {
@@ -168,7 +168,7 @@ export default function SlaConfigPage() {
         title="Configuration unavailable"
         description={error}
         primaryAction={{
-          label: "Try again",
+          label: 'Try again',
           onClick: () => void fetchConfigs(),
         }}
       />
@@ -329,7 +329,7 @@ export default function SlaConfigPage() {
                 disabled={isSaving}
                 className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
               >
-                {isSaving ? "Saving..." : "Save Changes"}
+                {isSaving ? 'Saving...' : 'Save Changes'}
               </button>
             </div>
           </div>

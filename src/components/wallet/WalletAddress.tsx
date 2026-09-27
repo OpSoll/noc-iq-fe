@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useCallback, useState } from "react";
-import { Copy, Check } from "lucide-react";
-import { explorerLink } from "@/lib/explorer";
-import { useToast } from "@/components/ui/toast";
+import { useCallback, useState } from 'react';
+import { Copy, Check } from 'lucide-react';
+import { explorerLink } from '@/lib/explorer';
+import { useToast } from '@/components/ui/toast';
 
 interface WalletAddressProps {
   address: string | null | undefined;
@@ -14,7 +14,7 @@ interface WalletAddressProps {
 export function WalletAddress({
   address,
   showExplorerLink = true,
-  className = "",
+  className = '',
 }: WalletAddressProps) {
   const [copied, setCopied] = useState(false);
   const toast = useToast();
@@ -24,20 +24,20 @@ export function WalletAddress({
     try {
       await navigator.clipboard.writeText(address);
       setCopied(true);
-      toast("Wallet address copied to clipboard", "success");
+      toast('Wallet address copied to clipboard', 'success');
       setTimeout(() => setCopied(false), 2000);
     } catch {
       // Fallback for environments without clipboard API
-      const textarea = document.createElement("textarea");
+      const textarea = document.createElement('textarea');
       textarea.value = address;
-      textarea.style.position = "fixed";
-      textarea.style.opacity = "0";
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
       document.body.appendChild(textarea);
       textarea.select();
-      document.execCommand("copy");
+      document.execCommand('copy');
       document.body.removeChild(textarea);
       setCopied(true);
-      toast("Wallet address copied to clipboard", "success");
+      toast('Wallet address copied to clipboard', 'success');
       setTimeout(() => setCopied(false), 2000);
     }
   }, [address, toast]);
@@ -50,7 +50,7 @@ export function WalletAddress({
     );
   }
 
-  const link = showExplorerLink ? explorerLink("account", address) : null;
+  const link = showExplorerLink ? explorerLink('account', address) : null;
 
   return (
     <span className={`inline-flex items-center gap-1.5 ${className}`}>
@@ -76,8 +76,8 @@ export function WalletAddress({
         type="button"
         onClick={() => void handleCopy()}
         className="shrink-0 rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
-        title={copied ? "Copied!" : "Copy address"}
-        aria-label={copied ? "Address copied" : "Copy address to clipboard"}
+        title={copied ? 'Copied!' : 'Copy address'}
+        aria-label={copied ? 'Address copied' : 'Copy address to clipboard'}
       >
         {copied ? (
           <Check className="h-3.5 w-3.5 text-emerald-500" aria-hidden="true" />

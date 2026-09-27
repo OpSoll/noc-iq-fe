@@ -33,7 +33,7 @@ jobs:
         id: check
 
       - name: Post checklist comment
-        if: steps.check.outcome == 'failure'
+        if: steps.check.outcome == 'failure' && github.event.pull_request.head.repo.full_name == github.repository
         uses: actions/github-script@v7
         with:
           script: |

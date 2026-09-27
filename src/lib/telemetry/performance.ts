@@ -56,7 +56,11 @@ export function resetOnLongTaskCallback(): void {
 }
 
 export function observeLongTasks(): void {
-  if (typeof window === "undefined" || typeof PerformanceObserver === "undefined") return;
+  if (
+    typeof window === 'undefined' ||
+    typeof PerformanceObserver === 'undefined'
+  )
+    return;
 
   try {
     observer = new PerformanceObserver((list) => {
@@ -79,14 +83,18 @@ export function observeLongTasks(): void {
         }
       }
     });
-    observer.observe({ type: "longtask", buffered: false });
+    observer.observe({ type: 'longtask', buffered: false });
   } catch {
     // Long task observer not supported
   }
 }
 
 export function observeINP(): void {
-  if (typeof window === "undefined" || typeof PerformanceObserver === "undefined") return;
+  if (
+    typeof window === 'undefined' ||
+    typeof PerformanceObserver === 'undefined'
+  )
+    return;
 
   try {
     inpObserver = new PerformanceObserver((list) => {
@@ -102,13 +110,18 @@ export function observeINP(): void {
         if (inpMetrics.length > 100) inpMetrics.shift();
       }
     });
-    inpObserver.observe({ type: "event", buffered: false });
+    inpObserver.observe({ type: 'event', buffered: false });
   } catch {
     // Event observer not supported
   }
 }
 
-const MONITORED_ROUTES = new Set(["/dashboard", "/outages", "/payments", "/webhooks"]);
+const MONITORED_ROUTES = new Set([
+  '/dashboard',
+  '/outages',
+  '/payments',
+  '/webhooks',
+]);
 
 export function isMonitoredRoute(route: string): boolean {
   return MONITORED_ROUTES.has(route);

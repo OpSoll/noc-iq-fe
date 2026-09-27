@@ -1,11 +1,8 @@
-"use client";
+'use client';
 
-import { Button } from "@/components/ui/button";
-import {
-  CheckIcon,
-  RefreshCwIcon,
-} from "@/components/ui/icons";
-import type { BatchOperation } from "@/features/outages/hooks/useBatchOperations";
+import { Button } from '@/components/ui/button';
+import { CheckIcon, RefreshCwIcon } from '@/components/ui/icons';
+import type { BatchOperation } from '@/features/outages/hooks/useBatchOperations';
 
 /* -------------------------------------------------------------------------- */
 /*                                    Types                                   */
@@ -44,7 +41,7 @@ export function BatchActionToolbar({
           </div>
           <div>
             <p className="text-sm font-medium text-blue-900">
-              {selectedCount} outage{selectedCount !== 1 ? "s" : ""} selected
+              {selectedCount} outage{selectedCount !== 1 ? 's' : ''} selected
             </p>
             <p className="text-xs text-blue-600">
               Select batch action to perform

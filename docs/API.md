@@ -9,6 +9,7 @@ Base URL: `http://localhost:8000` (development) | `https://api.nociq.com` (produ
 - [Outages](#outages)
 - [Root Cause Analysis (RCA)](#root-cause-analysis-rca)
 - [SLA Management](#sla-management)
+- [Bulk Import](#bulk-import)
 - [Stellar Payments](#stellar-payments)
 - [Wallet Management](#wallet-management)
 - [Smart Contracts](#smart-contracts)
@@ -31,6 +32,7 @@ Authorization: Bearer <token>
 Authenticate user and receive access token.
 
 **Request Body:**
+
 ```json
 {
   "email": "user@example.com",
@@ -39,6 +41,7 @@ Authenticate user and receive access token.
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "access_token": "eyJhbGciOiJIUzI1NiIs...",
@@ -59,6 +62,7 @@ Authenticate user and receive access token.
 Register new user account.
 
 **Request Body:**
+
 ```json
 {
   "email": "newuser@example.com",
@@ -69,6 +73,7 @@ Register new user account.
 ```
 
 **Response (201 Created):**
+
 ```json
 {
   "id": "user124",
@@ -88,6 +93,7 @@ Register new user account.
 List all outages with optional filtering.
 
 **Query Parameters:**
+
 - `status` (optional): Filter by status (`active`, `resolved`, `investigating`)
 - `severity` (optional): Filter by severity (`critical`, `high`, `medium`, `low`)
 - `start_date` (optional): Filter from date (ISO 8601)
@@ -97,11 +103,13 @@ List all outages with optional filtering.
 - `offset` (optional, default=0): Pagination offset
 
 **Example Request:**
+
 ```
 GET /api/v1/outages?severity=critical&status=active&limit=10
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "total": 45,
@@ -133,6 +141,7 @@ GET /api/v1/outages?severity=critical&status=active&limit=10
 Get detailed information about a specific outage.
 
 **Response (200 OK):**
+
 ```json
 {
   "id": "OUT001",
@@ -157,7 +166,7 @@ Get detailed information about a specific outage.
     "mttr_minutes": 15,
     "threshold_minutes": 15,
     "penalty_amount": 0,
-    "reward_amount": 750.00,
+    "reward_amount": 750.0,
     "performance_rating": "good",
     "payment_type": "reward",
     "smart_contract_invoked": true,
@@ -165,7 +174,7 @@ Get detailed information about a specific outage.
   },
   "stellar_payment": {
     "transaction_hash": "def456...",
-    "amount": 750.00,
+    "amount": 750.0,
     "asset_code": "USDC",
     "from_address": "GPOOL...",
     "to_address": "GNOC...",
@@ -198,6 +207,7 @@ Get detailed information about a specific outage.
 Create a new outage record.
 
 **Request Body:**
+
 ```json
 {
   "site_name": "Cell Tower Beta",
@@ -215,6 +225,7 @@ Create a new outage record.
 ```
 
 **Response (201 Created):**
+
 ```json
 {
   "id": "OUT002",
@@ -230,6 +241,7 @@ Create a new outage record.
 Update an existing outage.
 
 **Request Body:**
+
 ```json
 {
   "status": "resolved",
@@ -240,6 +252,7 @@ Update an existing outage.
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "id": "OUT002",
@@ -258,6 +271,7 @@ Update an existing outage.
 Get real-time SLA status for an outage.
 
 **Response (200 OK):**
+
 ```json
 {
   "outage_id": "OUT001",
@@ -265,7 +279,7 @@ Get real-time SLA status for an outage.
   "mttr_minutes": 25,
   "threshold_minutes": 15,
   "severity": "critical",
-  "penalty_amount": 1000.00,
+  "penalty_amount": 1000.0,
   "reward_amount": 0,
   "performance_rating": "poor",
   "payment_type": "penalty",
@@ -281,6 +295,7 @@ Get real-time SLA status for an outage.
 Calculate SLA for a resolved outage (triggers smart contract).
 
 **Request Body:**
+
 ```json
 {
   "outage_id": "OUT001"
@@ -288,6 +303,7 @@ Calculate SLA for a resolved outage (triggers smart contract).
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "outage_id": "OUT001",
@@ -295,7 +311,7 @@ Calculate SLA for a resolved outage (triggers smart contract).
     "status": "violated",
     "mttr_minutes": 25,
     "threshold_minutes": 15,
-    "amount": -1000.00,
+    "amount": -1000.0,
     "payment_type": "penalty"
   },
   "contract_invocation": {
@@ -311,6 +327,7 @@ Calculate SLA for a resolved outage (triggers smart contract).
 Execute payment based on SLA result.
 
 **Request Body:**
+
 ```json
 {
   "outage_id": "OUT001",
@@ -320,11 +337,12 @@ Execute payment based on SLA result.
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "payment": {
     "transaction_hash": "def456...",
-    "amount": 1000.00,
+    "amount": 1000.0,
     "from": "GOPER...",
     "to": "GPOOL...",
     "asset": "USDC",
@@ -339,29 +357,93 @@ Execute payment based on SLA result.
 Get current SLA configurations.
 
 **Response (200 OK):**
+
 ```json
 {
   "critical": {
     "threshold_minutes": 15,
-    "penalty_per_minute": 100.00,
-    "reward_base": 750.00
+    "penalty_per_minute": 100.0,
+    "reward_base": 750.0
   },
   "high": {
     "threshold_minutes": 30,
-    "penalty_per_minute": 50.00,
-    "reward_base": 750.00
+    "penalty_per_minute": 50.0,
+    "reward_base": 750.0
   },
   "medium": {
     "threshold_minutes": 60,
-    "penalty_per_minute": 25.00,
-    "reward_base": 750.00
+    "penalty_per_minute": 25.0,
+    "reward_base": 750.0
   },
   "low": {
     "threshold_minutes": 120,
-    "penalty_per_minute": 10.00,
-    "reward_base": 600.00
+    "penalty_per_minute": 10.0,
+    "reward_base": 600.0
   }
 }
+```
+
+---
+
+## Bulk Import
+
+Multipart file upload of outage records. Both endpoints take the same
+`multipart/form-data` body with a single `file` part and return the same shape.
+
+### POST `/outages/bulk`
+
+Imports the file. Writes rows.
+
+**Response `200`**
+
+```json
+{
+  "imported": 128,
+  "skipped": 4,
+  "errors": [
+    { "row": 12, "field": "end_time", "message": "must be after start_time" }
+  ]
+}
+```
+
+### POST `/outages/bulk/validate`
+
+Validates the file and writes nothing (issue #637). `imported` and `skipped` mean
+"would have been".
+
+**Response `200`**
+
+```json
+{
+  "imported": 128,
+  "skipped": 4,
+  "errors": [],
+  "database_modified": false
+}
+```
+
+`database_modified` is optional in the frontend types for now. The UI treats
+`true` as a failure rather than reporting zero modifications it cannot vouch for,
+and treats an absent field as "not reported" rather than as success. See the
+`TODO(#637)` on `BulkImportDryRunResult` in `src/types/bulkImport.ts` for the
+migration plan.
+
+### GET `/outages/bulk/history`
+
+**Response `200`** — array of past import records.
+
+```json
+[
+  {
+    "id": "imp_01",
+    "filename": "north-region.csv",
+    "imported": 128,
+    "skipped": 4,
+    "error_count": 1,
+    "errors": [],
+    "created_at": "2026-02-01T10:00:00Z"
+  }
+]
 ```
 
 ---
@@ -373,6 +455,7 @@ Get current SLA configurations.
 Process SLA-based payment for a resolved outage.
 
 **Request Body:**
+
 ```json
 {
   "outage_id": "OUT001"
@@ -380,17 +463,18 @@ Process SLA-based payment for a resolved outage.
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "outage_id": "OUT001",
   "sla_result": {
     "status": "met",
-    "amount": 1500.00,
+    "amount": 1500.0,
     "payment_type": "reward"
   },
   "payment": {
     "transaction_hash": "xyz789...",
-    "amount": 1500.00,
+    "amount": 1500.0,
     "from": "GPOOL...",
     "to": "GNOC...",
     "asset": "USDC",
@@ -404,6 +488,7 @@ Process SLA-based payment for a resolved outage.
 Get payment transaction history.
 
 **Query Parameters:**
+
 - `start_date` (optional): From date
 - `end_date` (optional): To date
 - `type` (optional): Filter by type (`penalty`, `reward`, `manual`)
@@ -412,6 +497,7 @@ Get payment transaction history.
 - `offset` (optional, default=0)
 
 **Response (200 OK):**
+
 ```json
 {
   "total": 120,
@@ -422,7 +508,7 @@ Get payment transaction history.
       "id": "pay001",
       "transaction_hash": "abc123...",
       "type": "reward",
-      "amount": 1500.00,
+      "amount": 1500.0,
       "asset_code": "USDC",
       "from_address": "GPOOL...",
       "to_address": "GNOC...",
@@ -434,9 +520,9 @@ Get payment transaction history.
     }
   ],
   "summary": {
-    "total_penalties": 5000.00,
-    "total_rewards": 12000.00,
-    "net_amount": 7000.00
+    "total_penalties": 5000.0,
+    "total_rewards": 12000.0,
+    "net_amount": 7000.0
   }
 }
 ```
@@ -450,6 +536,7 @@ Get payment transaction history.
 Create a new Stellar wallet for a user.
 
 **Request Body:**
+
 ```json
 {
   "user_id": "user123"
@@ -457,6 +544,7 @@ Create a new Stellar wallet for a user.
 ```
 
 **Response (201 Created):**
+
 ```json
 {
   "user_id": "user123",
@@ -474,6 +562,7 @@ Create a new Stellar wallet for a user.
 Get wallet details for a user.
 
 **Response (200 OK):**
+
 ```json
 {
   "user_id": "user123",
@@ -490,6 +579,7 @@ Get wallet details for a user.
 Get balance for a Stellar address.
 
 **Response (200 OK):**
+
 ```json
 {
   "address": "GXXX...",
@@ -524,12 +614,14 @@ Get balance for a Stellar address.
 Get MTTR statistics.
 
 **Query Parameters:**
+
 - `start_date`: Start date (ISO 8601)
 - `end_date`: End date (ISO 8601)
 - `severity` (optional): Filter by severity
 - `group_by` (optional): Group by (`site`, `severity`, `day`, `week`)
 
 **Response (200 OK):**
+
 ```json
 {
   "period": {
@@ -564,11 +656,13 @@ Get MTTR statistics.
 Get payment analytics.
 
 **Query Parameters:**
+
 - `start_date`: Start date
 - `end_date`: End date
 - `group_by` (optional, default=day): Group by period
 
 **Response (200 OK):**
+
 ```json
 {
   "period": {
@@ -576,25 +670,25 @@ Get payment analytics.
     "end": "2026-01-16T23:59:59Z"
   },
   "summary": {
-    "total_penalties": 15000.00,
-    "total_rewards": 22500.00,
-    "net_amount": 7500.00,
+    "total_penalties": 15000.0,
+    "total_rewards": 22500.0,
+    "net_amount": 7500.0,
     "transaction_count": 145,
     "average_transaction_amount": 258.62
   },
   "trends": [
     {
       "date": "2026-01-15",
-      "penalties": 1000.00,
-      "rewards": 1500.00,
-      "net": 500.00,
+      "penalties": 1000.0,
+      "rewards": 1500.0,
+      "net": 500.0,
       "count": 8
     },
     {
       "date": "2026-01-16",
-      "penalties": 1500.00,
-      "rewards": 2000.00,
-      "net": 500.00,
+      "penalties": 1500.0,
+      "rewards": 2000.0,
+      "net": 500.0,
       "count": 10
     }
   ]
@@ -625,27 +719,27 @@ All errors follow this structure:
 
 ### Common Error Codes
 
-| Status Code | Error Code | Description |
-|-------------|------------|-------------|
-| 400 | `VALIDATION_ERROR` | Invalid request data |
-| 401 | `UNAUTHORIZED` | Missing or invalid authentication |
-| 403 | `FORBIDDEN` | Insufficient permissions |
-| 404 | `NOT_FOUND` | Resource not found |
-| 409 | `CONFLICT` | Resource conflict (e.g., duplicate) |
-| 422 | `UNPROCESSABLE_ENTITY` | Valid syntax but semantic errors |
-| 429 | `RATE_LIMIT_EXCEEDED` | Too many requests |
-| 500 | `INTERNAL_SERVER_ERROR` | Server error |
-| 503 | `SERVICE_UNAVAILABLE` | Service temporarily unavailable |
+| Status Code | Error Code              | Description                         |
+| ----------- | ----------------------- | ----------------------------------- |
+| 400         | `VALIDATION_ERROR`      | Invalid request data                |
+| 401         | `UNAUTHORIZED`          | Missing or invalid authentication   |
+| 403         | `FORBIDDEN`             | Insufficient permissions            |
+| 404         | `NOT_FOUND`             | Resource not found                  |
+| 409         | `CONFLICT`              | Resource conflict (e.g., duplicate) |
+| 422         | `UNPROCESSABLE_ENTITY`  | Valid syntax but semantic errors    |
+| 429         | `RATE_LIMIT_EXCEEDED`   | Too many requests                   |
+| 500         | `INTERNAL_SERVER_ERROR` | Server error                        |
+| 503         | `SERVICE_UNAVAILABLE`   | Service temporarily unavailable     |
 
 ### Stellar-Specific Errors
 
-| Error Code | Description | Solution |
-|------------|-------------|----------|
-| `STELLAR_INSUFFICIENT_BALANCE` | Not enough XLM/USDC | Fund account |
-| `STELLAR_NO_TRUSTLINE` | USDC trustline not established | Create trustline |
-| `STELLAR_TRANSACTION_FAILED` | Transaction failed on network | Check Stellar Explorer for details |
-| `STELLAR_CONTRACT_ERROR` | Smart contract execution failed | Review contract parameters |
-| `STELLAR_TIMEOUT` | Transaction confirmation timeout | Resubmit transaction |
+| Error Code                     | Description                      | Solution                           |
+| ------------------------------ | -------------------------------- | ---------------------------------- |
+| `STELLAR_INSUFFICIENT_BALANCE` | Not enough XLM/USDC              | Fund account                       |
+| `STELLAR_NO_TRUSTLINE`         | USDC trustline not established   | Create trustline                   |
+| `STELLAR_TRANSACTION_FAILED`   | Transaction failed on network    | Check Stellar Explorer for details |
+| `STELLAR_CONTRACT_ERROR`       | Smart contract execution failed  | Review contract parameters         |
+| `STELLAR_TIMEOUT`              | Transaction confirmation timeout | Resubmit transaction               |
 
 ---
 
@@ -672,11 +766,13 @@ X-RateLimit-Reset: 1705405200
 List endpoints support pagination:
 
 **Request:**
+
 ```
 GET /api/v1/outages?limit=20&offset=40
 ```
 
 **Response includes:**
+
 ```json
 {
   "total": 145,
@@ -714,7 +810,7 @@ NOCIQ can send webhooks for important events:
   "data": {
     "outage_id": "OUT001",
     "transaction_hash": "abc123...",
-    "amount": 1500.00,
+    "amount": 1500.0,
     "type": "reward"
   }
 }
@@ -729,6 +825,7 @@ Configure webhooks in the admin panel or via API.
 ### Swagger UI
 
 Interactive API documentation available at:
+
 ```
 http://localhost:8000/docs
 ```
@@ -736,6 +833,7 @@ http://localhost:8000/docs
 ### Postman Collection
 
 Download our Postman collection:[WIP]
+
 ```
 https://github.com/OpSoll/noc-iq-be/blob/main/postman/NOCIQ-API.json
 ```

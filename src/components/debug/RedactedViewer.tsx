@@ -1,8 +1,12 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { cn } from "@/lib/utils";
-import { redactObject, redactJson, REDACTED_PLACEHOLDER } from "@/lib/redaction";
+import { useState } from 'react';
+import { cn } from '@/lib/utils';
+import {
+  redactObject,
+  redactJson,
+  REDACTED_PLACEHOLDER,
+} from '@/lib/redaction';
 
 interface RedactedViewerProps {
   /** The payload to display — either a string or a plain object/array. */
@@ -19,15 +23,19 @@ interface RedactedViewerProps {
  * Displays a debug payload with sensitive fields masked by default.
  * Users can copy the sanitized payload for support workflows.
  */
-export function RedactedViewer({ payload, className, label = "Debug payload" }: RedactedViewerProps) {
+export function RedactedViewer({
+  payload,
+  className,
+  label = 'Debug payload',
+}: RedactedViewerProps) {
   const [copied, setCopied] = useState(false);
 
   const sanitized =
     payload == null
-      ? ""
-      : typeof payload === "string"
-      ? redactJson(payload)
-      : JSON.stringify(redactObject(payload), null, 2);
+      ? ''
+      : typeof payload === 'string'
+        ? redactJson(payload)
+        : JSON.stringify(redactObject(payload), null, 2);
 
   function handleCopy() {
     navigator.clipboard.writeText(sanitized).then(() => {
@@ -37,7 +45,12 @@ export function RedactedViewer({ payload, className, label = "Debug payload" }: 
   }
 
   return (
-    <div className={cn("rounded-md border border-border bg-muted/50 text-sm", className)}>
+    <div
+      className={cn(
+        'rounded-md border border-border bg-muted/50 text-sm',
+        className
+      )}
+    >
       <div className="flex items-center justify-between px-3 py-2 border-b border-border">
         <span className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
           {label}
@@ -55,7 +68,7 @@ export function RedactedViewer({ payload, className, label = "Debug payload" }: 
             className="text-xs px-2 py-1 rounded bg-secondary hover:bg-secondary/80 transition-colors"
             aria-label="Copy sanitized payload"
           >
-            {copied ? "Copied!" : "Copy"}
+            {copied ? 'Copied!' : 'Copy'}
           </button>
         </div>
       </div>
@@ -64,7 +77,9 @@ export function RedactedViewer({ payload, className, label = "Debug payload" }: 
         role="region"
         aria-label={label}
       >
-        {sanitized || <span className="text-muted-foreground italic">No payload</span>}
+        {sanitized || (
+          <span className="text-muted-foreground italic">No payload</span>
+        )}
       </pre>
     </div>
   );

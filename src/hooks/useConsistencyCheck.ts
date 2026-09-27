@@ -1,6 +1,9 @@
-"use client";
-import { useMemo } from "react";
-import { checkConsistency, type ConsistencyResult } from "@/lib/consistencyCheck";
+'use client';
+import { useMemo } from 'react';
+import {
+  checkConsistency,
+  type ConsistencyResult,
+} from '@/lib/consistencyCheck';
 
 interface UseConsistencyCheckOptions {
   kpis?: Record<string, number>;

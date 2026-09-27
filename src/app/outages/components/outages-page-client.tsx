@@ -1,13 +1,25 @@
-"use client";
+'use client';
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { WifiOff } from "lucide-react";
-import { EmptyState } from "@/components/ui/empty-state";
-import { useToast } from "@/components/ui/toast";
-import { downloadCsv } from "@/lib/urlSyncAndExport";
-import { deleteOutage } from "@/services/outages";
-import { SeverityBadge } from "@/components/shared/SeverityBadgeAndShortcuts";
-import type { Severity, OutageStatus } from "@/types/outages";
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { WifiOff } from 'lucide-react';
+import {
+  HighlightedText,
+  OutageSearchBar,
+  matchesSearchTerm,
+} from '@/components/outages/OutageSearchBar';
+import { ExportButton } from '@/components/outages/ExportButton';
+import { EmptyState } from '@/components/ui/empty-state';
+import { useToast } from '@/components/ui/toast';
+import { useUrlSync } from '@/hooks/useUrlSync';
+import { deleteOutage, resolveOutage } from '@/services/outages';
+import { RowActions } from '@/components/tables/RowActions';
+import { SeverityBadge } from '@/components/shared/SeverityBadgeAndShortcuts';
+import type {
+  Outage as OutageRecord,
+  OutageStatus,
+  Severity,
+} from '@/types/outages';
 
 type Outage = {
   id: string;
@@ -18,9 +30,26 @@ type Outage = {
 };
 
 const STATUS_STYLE: Record<OutageStatus, string> = {
-  open: "bg-amber-100 text-amber-800",
-  resolved: "bg-emerald-100 text-emerald-800",
+  open: 'bg-amber-100 text-amber-800',
+  resolved: 'bg-emerald-100 text-emerald-800',
 };
+
+/**
+ * The rows the page owns are a summary shape; the row action menu operates on
+ * the full API record, so the local fields are mapped onto it (description and
+ * affected services have no local counterpart and are filled with blanks).
+ */
+function toOutageRecord(row: Outage): OutageRecord {
+  return {
+    id: row.id,
+    site_name: row.title,
+    severity: row.severity,
+    status: row.status,
+    detected_at: row.createdAt,
+    description: '',
+    affected_services: [],
+  };
+}
 
 type Props = {
   data?: Outage[];
@@ -31,28 +60,42 @@ type Props = {
 // Stable identity — a `data = []` default would be a new array each render and
 // would retrigger the sync effect below forever.
 const EMPTY_OUTAGES: Outage[] = [];
+const FILTER_DEFAULTS = {
+  search: '',
+  severity: '',
+  date_from: '',
+  date_to: '',
+  sort: 'date',
+};
 
 export default function OutagesPageClient({
   data = EMPTY_OUTAGES,
   onRefresh,
 }: Props) {
   const toast = useToast();
+  const router = useRouter();
 
   // -----------------------------
   // State
   // -----------------------------
-  const [search, setSearch] = useState("");
-  const [sortBy, setSortBy] = useState<"date" | "title">("date");
+  const [filters, setFilters] = useUrlSync(FILTER_DEFAULTS);
+  const {
+    search,
+    severity,
+    date_from: dateFrom,
+    date_to: dateTo,
+    sort,
+  } = filters;
+  const sortBy = sort as 'date' | 'title';
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [rows, setRows] = useState<Outage[]>(data);
+  const [removedIds, setRemovedIds] = useState<string[]>([]);
+  const rows = useMemo(
+    () => data.filter((item) => !removedIds.includes(item.id)),
+    [data, removedIds]
+  );
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-
-  // Keep local rows in step with refreshed props.
-  useEffect(() => {
-    setRows(data);
-  }, [data]);
 
   // -----------------------------
   // Derived Data (Search + Sort)
@@ -60,34 +103,44 @@ export default function OutagesPageClient({
   const filteredData = useMemo(() => {
     let result = [...rows];
 
-    // Search
+    // Search — matches the outage id, site name and description (#616)
     if (search) {
-      result = result.filter((item) =>
-        item.title.toLowerCase().includes(search.toLowerCase()),
-      );
+      result = result.filter((item) => matchesSearchTerm(item, search));
+    }
+
+    if (severity) {
+      result = result.filter((item) => item.severity === severity);
+    }
+
+    if (dateFrom) {
+      result = result.filter((item) => item.createdAt.slice(0, 10) >= dateFrom);
+    }
+
+    if (dateTo) {
+      result = result.filter((item) => item.createdAt.slice(0, 10) <= dateTo);
     }
 
     // Sort
-    if (sortBy === "date") {
+    if (sortBy === 'date') {
       result.sort(
         (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
     }
 
-    if (sortBy === "title") {
+    if (sortBy === 'title') {
       result.sort((a, b) => a.title.localeCompare(b.title));
     }
 
     return result;
-  }, [rows, search, sortBy]);
+  }, [rows, search, severity, dateFrom, dateTo, sortBy]);
 
   // -----------------------------
   // Selection State (visible rows)
   // -----------------------------
   const selectedVisibleCount = useMemo(
     () => filteredData.filter((item) => selectedIds.includes(item.id)).length,
-    [filteredData, selectedIds],
+    [filteredData, selectedIds]
   );
 
   const allVisibleSelected =
@@ -108,7 +161,7 @@ export default function OutagesPageClient({
   // -----------------------------
   function toggleSelect(id: string) {
     setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
     );
   }
 
@@ -133,38 +186,40 @@ export default function OutagesPageClient({
 
     // allSettled so one bad ID doesn't abandon the rest of the batch.
     const outcomes = await Promise.allSettled(
-      selectedIds.map((id) => deleteOutage(id)),
+      selectedIds.map((id) => deleteOutage(id))
     );
 
     const deletedIds = selectedIds.filter(
-      (_, i) => outcomes[i].status === "fulfilled",
+      (_, i) => outcomes[i].status === 'fulfilled'
     );
-    const failures = outcomes.filter((o) => o.status === "rejected");
+    const failures = outcomes.filter((o) => o.status === 'rejected');
 
     // Drop what actually went through, keep failures selected for a retry.
     if (deletedIds.length) {
-      setRows((prev) => prev.filter((item) => !deletedIds.includes(item.id)));
+      setRemovedIds((prev) => [...new Set([...prev, ...deletedIds])]);
     }
     setSelectedIds((prev) => prev.filter((id) => !deletedIds.includes(id)));
 
     if (failures.length) {
       const first = failures[0] as PromiseRejectedResult;
       const reason =
-        first.reason instanceof Error ? first.reason.message : "Deletion failed.";
+        first.reason instanceof Error
+          ? first.reason.message
+          : 'Deletion failed.';
       const message =
         failures.length === selectedIds.length
           ? `Failed to delete ${failures.length} outage(s). ${reason}`
           : `Deleted ${deletedIds.length}, but ${failures.length} failed. ${reason}`;
 
       setDeleteError(message);
-      toast(message, "error");
+      toast(message, 'error');
       setDeleting(false);
       return;
     }
 
     toast(
-      `Deleted ${deletedIds.length} outage${deletedIds.length === 1 ? "" : "s"}.`,
-      "success",
+      `Deleted ${deletedIds.length} outage${deletedIds.length === 1 ? '' : 's'}.`,
+      'success'
     );
     setShowDeleteConfirm(false);
     setDeleting(false);
@@ -173,37 +228,46 @@ export default function OutagesPageClient({
       await onRefresh?.();
     } catch (err) {
       toast(
-        err instanceof Error ? err.message : "Failed to refresh outages.",
-        "error",
+        err instanceof Error ? err.message : 'Failed to refresh outages.',
+        'error'
       );
     }
   }
 
-  function handleExport() {
-    if (!filteredData.length) {
-      toast("There are no outages to export.", "info");
-      return;
-    }
+  // -----------------------------
+  // Row actions (#617)
+  // -----------------------------
+  function handleRowViewDetails(outage: OutageRecord) {
+    router.push(`/outages/${encodeURIComponent(outage.id)}`);
+  }
 
+  async function handleRowResolve(outage: OutageRecord) {
     try {
-      downloadCsv(
-        "outages.csv",
-        filteredData.map((item) => ({
-          ID: item.id,
-          Title: item.title,
-          Severity: item.severity,
-          Status: item.status,
-          "Created At": new Date(item.createdAt).toISOString(),
-        })),
+      const elapsed = Math.max(
+        1,
+        Math.round((Date.now() - Date.parse(outage.detected_at)) / 60_000)
       );
-      toast(
-        `Exported ${filteredData.length} outage${filteredData.length === 1 ? "" : "s"} to outages.csv.`,
-        "success",
-      );
+      await resolveOutage(outage.id, { mttr_minutes: elapsed });
+      toast(`Resolved ${outage.site_name}.`, 'success');
+      await onRefresh?.();
     } catch (err) {
       toast(
-        err instanceof Error ? err.message : "Failed to export outages.",
-        "error",
+        err instanceof Error ? err.message : 'Failed to resolve the outage.',
+        'error'
+      );
+    }
+  }
+
+  async function handleRowSoftDelete(outage: OutageRecord) {
+    try {
+      await deleteOutage(outage.id);
+      setRemovedIds((prev) => [...prev, outage.id]);
+      toast(`Soft deleted ${outage.site_name}.`, 'success');
+      await onRefresh?.();
+    } catch (err) {
+      toast(
+        err instanceof Error ? err.message : 'Failed to delete the outage.',
+        'error'
       );
     }
   }
@@ -215,30 +279,64 @@ export default function OutagesPageClient({
     <div className="space-y-6">
       {/* Controls */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <input
-          type="text"
-          placeholder="Search outages..."
+        <OutageSearchBar
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="border rounded-md px-3 py-2 w-full sm:max-w-sm"
+          onChange={(value) => setFilters({ search: value })}
+          resultCount={filteredData.length}
+          totalCount={rows.length}
         />
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <select
+            aria-label="Filter by severity"
+            value={severity}
+            onChange={(e) => setFilters({ severity: e.target.value })}
+            className="border rounded-md px-3 py-2"
+          >
+            <option value="">All severities</option>
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+            <option value="critical">Critical</option>
+          </select>
+          <label className="sr-only" htmlFor="outage-date-from">
+            From date
+          </label>
+          <input
+            id="outage-date-from"
+            aria-label="From date"
+            type="date"
+            value={dateFrom}
+            onChange={(e) => setFilters({ date_from: e.target.value })}
+            className="border rounded-md px-3 py-2"
+          />
+          <label className="sr-only" htmlFor="outage-date-to">
+            To date
+          </label>
+          <input
+            id="outage-date-to"
+            aria-label="To date"
+            type="date"
+            value={dateTo}
+            onChange={(e) => setFilters({ date_to: e.target.value })}
+            className="border rounded-md px-3 py-2"
+          />
+
           <select
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as "date" | "title")}
+            onChange={(e) => setFilters({ sort: e.target.value })}
             className="border rounded-md px-3 py-2"
           >
             <option value="date">Newest</option>
             <option value="title">Title</option>
           </select>
 
-          <button
-            onClick={handleExport}
-            className="px-4 py-2 border rounded-md"
-          >
-            Export
-          </button>
+          <ExportButton
+            rows={filteredData}
+            onExported={({ rowCount, filename }) =>
+              toast(`Exported ${rowCount} to ${filename}.`, 'success')
+            }
+          />
 
           <button
             onClick={() => {
@@ -248,7 +346,7 @@ export default function OutagesPageClient({
             disabled={!selectedIds.length || deleting}
             className="px-4 py-2 bg-red-500 text-white rounded-md disabled:opacity-50"
           >
-            Delete{selectedIds.length ? ` (${selectedIds.length})` : ""}
+            Delete{selectedIds.length ? ` (${selectedIds.length})` : ''}
           </button>
         </div>
       </div>
@@ -266,7 +364,7 @@ export default function OutagesPageClient({
                 checked={allVisibleSelected}
                 onChange={toggleSelectAll}
                 aria-checked={
-                  someVisibleSelected ? "mixed" : allVisibleSelected
+                  someVisibleSelected ? 'mixed' : allVisibleSelected
                 }
                 aria-label={`Select all outages, ${selectedVisibleCount} of ${filteredData.length} selected`}
               />
@@ -287,21 +385,16 @@ export default function OutagesPageClient({
               <div
                 key={item.id}
                 className="border rounded-lg p-4 flex items-center justify-between"
-                tabIndex={0}
-                role="button"
-                aria-label={`View outage: ${item.title}`}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    toggleSelect(item.id);
-                  }
-                }}
               >
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="font-medium">{item.title}</h3>
+                    <h3 className="font-medium">
+                      <HighlightedText text={item.title} term={search} />
+                    </h3>
                     <SeverityBadge severity={item.severity} />
-                    <span className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-medium uppercase ${STATUS_STYLE[item.status]}`}>
+                    <span
+                      className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-medium uppercase ${STATUS_STYLE[item.status]}`}
+                    >
                       {item.status}
                     </span>
                   </div>
@@ -310,13 +403,23 @@ export default function OutagesPageClient({
                   </p>
                 </div>
 
-                <input
-                  type="checkbox"
-                  className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                  checked={selectedIds.includes(item.id)}
-                  onChange={() => toggleSelect(item.id)}
-                  aria-label={`Select outage: ${item.title}`}
-                />
+                <div className="flex items-center gap-2">
+                  <RowActions
+                    outage={toOutageRecord(item)}
+                    onViewDetails={handleRowViewDetails}
+                    onResolve={handleRowResolve}
+                    onSoftDelete={handleRowSoftDelete}
+                    busy={deleting}
+                  />
+
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                    checked={selectedIds.includes(item.id)}
+                    onChange={() => toggleSelect(item.id)}
+                    aria-label={`Select outage: ${item.title}`}
+                  />
+                </div>
               </div>
             ))
           ) : (
@@ -326,13 +429,13 @@ export default function OutagesPageClient({
               description={
                 search
                   ? "Try adjusting your search query to find what you're looking for."
-                  : "All systems are currently operational."
+                  : 'All systems are currently operational.'
               }
               action={
                 search
                   ? {
-                      label: "Clear Search",
-                      onClick: () => setSearch(""),
+                      label: 'Clear Search',
+                      onClick: () => setFilters({ search: '' }),
                     }
                   : undefined
               }
@@ -349,12 +452,17 @@ export default function OutagesPageClient({
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
         >
           <div className="w-full max-w-sm space-y-4 rounded-xl bg-white p-6 shadow-xl">
-            <h2 id="bulk-delete-title" className="text-lg font-semibold text-slate-900">
-              Delete {selectedIds.length} outage{selectedIds.length === 1 ? "" : "s"}?
+            <h2
+              id="bulk-delete-title"
+              className="text-lg font-semibold text-slate-900"
+            >
+              Delete {selectedIds.length} outage
+              {selectedIds.length === 1 ? '' : 's'}?
             </h2>
             <p className="text-sm text-slate-600">
               This will permanently delete the selected outage
-              {selectedIds.length === 1 ? "" : "s"}. This action cannot be undone.
+              {selectedIds.length === 1 ? '' : 's'}. This action cannot be
+              undone.
             </p>
 
             {deleteError && (
@@ -379,7 +487,7 @@ export default function OutagesPageClient({
                 disabled={deleting || !selectedIds.length}
                 className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
               >
-                {deleting ? "Deleting…" : deleteError ? "Retry" : "Delete"}
+                {deleting ? 'Deleting…' : deleteError ? 'Retry' : 'Delete'}
               </button>
             </div>
           </div>

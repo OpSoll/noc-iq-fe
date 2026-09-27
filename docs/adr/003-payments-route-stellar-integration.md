@@ -24,10 +24,10 @@ Payments are executed on the Stellar network. The payments route must present tr
 
 ## Alternatives Considered
 
-| Option | Reason rejected |
-|--------|----------------|
-| Direct Stellar SDK calls in components | Couples UI to SDK; hard to test and mock |
-| Separate payments page for each transaction | Creates excessive routing overhead |
+| Option                                      | Reason rejected                          |
+| ------------------------------------------- | ---------------------------------------- |
+| Direct Stellar SDK calls in components      | Couples UI to SDK; hard to test and mock |
+| Separate payments page for each transaction | Creates excessive routing overhead       |
 
 ## References
 

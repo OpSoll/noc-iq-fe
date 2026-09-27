@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useEffect } from "react";
-import { RouteErrorState } from "@/components/ui/route-state";
+import { useEffect } from 'react';
+import { RouteErrorState } from '@/components/ui/route-state';
 
 export default function GlobalError({
   error,
@@ -12,13 +12,13 @@ export default function GlobalError({
 }) {
   useEffect(() => {
     // Log the error and stack trace to the console for debugging
-    console.group("🚨 Frontend Error Boundary Caught an Exception");
-    console.error("Message:", error.message);
+    console.group('🚨 Frontend Error Boundary Caught an Exception');
+    console.error('Message:', error.message);
     if (error.stack) {
-      console.error("Stack Trace:", error.stack);
+      console.error('Stack Trace:', error.stack);
     }
     if (error.digest) {
-      console.error("Digest:", error.digest);
+      console.error('Digest:', error.digest);
     }
     console.groupEnd();
   }, [error]);
@@ -28,14 +28,17 @@ export default function GlobalError({
       <RouteErrorState
         title="Something went wrong"
         description={
-          error.message || "An unexpected error occurred while loading this page."
+          error.message ||
+          'An unexpected error occurred while loading this page.'
         }
-        primaryAction={{ label: "Try again", onClick: reset }}
-        
-        secondaryAction={{ label: "Reload page", onClick: () => window.location.reload() }}
-        
+        primaryAction={{ label: 'Try again', onClick: reset }}
+
+        secondaryAction={{
+          label: 'Reload page',
+          onClick: () => window.location.reload(),
+        }}
       />
-      {process.env.NODE_ENV === "development" && error.digest ? (
+      {process.env.NODE_ENV === 'development' && error.digest ? (
         <div className="mx-auto w-full max-w-xl rounded-xl border border-slate-200 bg-white p-4 text-xs text-slate-500 shadow-sm">
           <p className="mb-1 font-semibold text-slate-700">Error digest</p>
           <code className="font-mono">{error.digest}</code>

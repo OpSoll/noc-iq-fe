@@ -4,13 +4,13 @@ CI enforces this policy on every PR that modifies `package.json`.
 
 ## Rules
 
-| Rule ID | Description |
-|---------|-------------|
-| `single-http-client` | Only `axios` is the approved HTTP client. |
-| `single-date-lib` | At most one date utility library. |
-| `no-duplicate-lodash` | Only one lodash variant (prefer `lodash-es`). |
-| `no-css-in-js` | No CSS-in-JS libraries — use Tailwind classes. |
-| `no-prod-polyfills` | Polyfill packages must be in `devDependencies`. |
+| Rule ID               | Description                                     |
+| --------------------- | ----------------------------------------------- |
+| `single-http-client`  | Only `axios` is the approved HTTP client.       |
+| `single-date-lib`     | At most one date utility library.               |
+| `no-duplicate-lodash` | Only one lodash variant (prefer `lodash-es`).   |
+| `no-css-in-js`        | No CSS-in-JS libraries — use Tailwind classes.  |
+| `no-prod-polyfills`   | Polyfill packages must be in `devDependencies`. |
 
 ## Adding an Exception
 

@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 export interface CommandAction {
   id: string;
@@ -22,7 +22,7 @@ export default function WebhookCommandPalette({
   isOpen,
   onClose,
 }: WebhookCommandPaletteProps) {
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -30,52 +30,52 @@ export default function WebhookCommandPalette({
     ? actions.filter(
         (a) =>
           a.label.toLowerCase().includes(query.toLowerCase()) ||
-          a.keywords.some((k) => k.toLowerCase().includes(query.toLowerCase())),
+          a.keywords.some((k) => k.toLowerCase().includes(query.toLowerCase()))
       )
     : actions;
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       switch (e.key) {
-        case "ArrowDown":
+        case 'ArrowDown':
           e.preventDefault();
           setSelectedIndex((i) => Math.min(i + 1, filtered.length - 1));
           break;
-        case "ArrowUp":
+        case 'ArrowUp':
           e.preventDefault();
           setSelectedIndex((i) => Math.max(i - 1, 0));
           break;
-        case "Enter":
+        case 'Enter':
           e.preventDefault();
           if (filtered[selectedIndex]) {
             filtered[selectedIndex].action();
             onClose();
           }
           break;
-        case "Escape":
+        case 'Escape':
           e.preventDefault();
           onClose();
           break;
       }
     },
-    [filtered, selectedIndex, onClose],
+    [filtered, selectedIndex, onClose]
   );
 
   // Register global shortcut (Ctrl+K)
   useEffect(() => {
     function handler(e: KeyboardEvent) {
-      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
         if (isOpen) {
           onClose();
         }
       }
-      if (e.key === "Escape" && isOpen) {
+      if (e.key === 'Escape' && isOpen) {
         onClose();
       }
     }
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
@@ -126,8 +126,8 @@ export default function WebhookCommandPalette({
                   onMouseEnter={() => setSelectedIndex(idx)}
                   className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition-colors ${
                     idx === selectedIndex
-                      ? "bg-blue-50 text-blue-700"
-                      : "text-slate-600 hover:bg-slate-50"
+                      ? 'bg-blue-50 text-blue-700'
+                      : 'text-slate-600 hover:bg-slate-50'
                   }`}
                 >
                   <div className="flex items-center gap-2">
@@ -153,19 +153,19 @@ export default function WebhookCommandPalette({
             <span>
               <kbd className="rounded border border-slate-200 px-1 font-mono">
                 ↑↓
-              </kbd>{" "}
+              </kbd>{' '}
               Navigate
             </span>
             <span>
               <kbd className="rounded border border-slate-200 px-1 font-mono">
                 ↵
-              </kbd>{" "}
+              </kbd>{' '}
               Select
             </span>
             <span>
               <kbd className="rounded border border-slate-200 px-1 font-mono">
                 Esc
-              </kbd>{" "}
+              </kbd>{' '}
               Close
             </span>
           </div>
@@ -181,56 +181,56 @@ export function getWebhookCommandActions(
   onFilter: (f: { status?: string; event?: string }) => void,
   onReplay: () => void,
   onMute: () => void,
-  onInspect: () => void,
+  onInspect: () => void
 ): CommandAction[] {
   return [
     {
-      id: "filter-failed",
-      label: "Filter failed deliveries",
-      shortcut: "f f",
-      keywords: ["filter", "failed", "dead", "letter", "error"],
-      action: () => onFilter({ ...filters, status: "failed" }),
-      context: "status=failed",
+      id: 'filter-failed',
+      label: 'Filter failed deliveries',
+      shortcut: 'f f',
+      keywords: ['filter', 'failed', 'dead', 'letter', 'error'],
+      action: () => onFilter({ ...filters, status: 'failed' }),
+      context: 'status=failed',
     },
     {
-      id: "filter-success",
-      label: "Filter successful deliveries",
-      shortcut: "f s",
-      keywords: ["filter", "success", "ok", "delivered"],
-      action: () => onFilter({ ...filters, status: "success" }),
-      context: "status=success",
+      id: 'filter-success',
+      label: 'Filter successful deliveries',
+      shortcut: 'f s',
+      keywords: ['filter', 'success', 'ok', 'delivered'],
+      action: () => onFilter({ ...filters, status: 'success' }),
+      context: 'status=success',
     },
     {
-      id: "filter-all",
-      label: "Show all deliveries",
-      shortcut: "f a",
-      keywords: ["filter", "all", "clear", "reset"],
+      id: 'filter-all',
+      label: 'Show all deliveries',
+      shortcut: 'f a',
+      keywords: ['filter', 'all', 'clear', 'reset'],
       action: () => onFilter({}),
-      context: "clear filters",
+      context: 'clear filters',
     },
     {
-      id: "replay-failed",
-      label: "Replay all failed",
-      shortcut: "r f",
-      keywords: ["replay", "retry", "failed", "dead", "letter"],
+      id: 'replay-failed',
+      label: 'Replay all failed',
+      shortcut: 'r f',
+      keywords: ['replay', 'retry', 'failed', 'dead', 'letter'],
       action: () => onReplay(),
-      context: "re-queue failed",
+      context: 're-queue failed',
     },
     {
-      id: "mute-webhook",
-      label: "Mute selected webhook",
-      shortcut: "m w",
-      keywords: ["mute", "silence", "disable", "pause"],
+      id: 'mute-webhook',
+      label: 'Mute selected webhook',
+      shortcut: 'm w',
+      keywords: ['mute', 'silence', 'disable', 'pause'],
       action: () => onMute(),
-      context: "disable notifications",
+      context: 'disable notifications',
     },
     {
-      id: "inspect-delivery",
-      label: "Inspect delivery details",
-      shortcut: "i d",
-      keywords: ["inspect", "detail", "view", "payload", "headers"],
+      id: 'inspect-delivery',
+      label: 'Inspect delivery details',
+      shortcut: 'i d',
+      keywords: ['inspect', 'detail', 'view', 'payload', 'headers'],
       action: () => onInspect(),
-      context: "view payload",
+      context: 'view payload',
     },
   ];
 }

@@ -1,4 +1,4 @@
-export type TelemetryHealthState = "normal" | "degraded" | "disabled";
+export type TelemetryHealthState = 'normal' | 'degraded' | 'disabled';
 
 export interface TelemetryMetrics {
   totalEmitted: number;
@@ -11,7 +11,7 @@ const DEGRADED_THRESHOLD = 0.05;
 const WINDOW_SIZE = 100;
 
 export class TelemetryHealthManager {
-  private state: TelemetryHealthState = "normal";
+  private state: TelemetryHealthState = 'normal';
   private emitted = 0;
   private dropped = 0;
   private window: boolean[] = [];
@@ -22,20 +22,20 @@ export class TelemetryHealthManager {
   }
 
   getState(): TelemetryHealthState {
-    if (this.state === "disabled") return "disabled";
+    if (this.state === 'disabled') return 'disabled';
     if (this.window.length >= WINDOW_SIZE) {
       const dropRate = this.window.filter((d) => d).length / this.window.length;
       if (dropRate > DEGRADED_THRESHOLD) {
-        this.state = "degraded";
+        this.state = 'degraded';
       } else {
-        this.state = "normal";
+        this.state = 'normal';
       }
     }
     return this.state;
   }
 
   recordEmit(): void {
-    if (this.state === "disabled") return;
+    if (this.state === 'disabled') return;
     this.emitted++;
     this.window.push(false);
     if (this.window.length > WINDOW_SIZE) {
@@ -44,7 +44,7 @@ export class TelemetryHealthManager {
   }
 
   recordDrop(): void {
-    if (this.state === "disabled") return;
+    if (this.state === 'disabled') return;
     this.dropped++;
     this.window.push(true);
     if (this.window.length > WINDOW_SIZE) {
@@ -53,11 +53,11 @@ export class TelemetryHealthManager {
   }
 
   disable(): void {
-    this.state = "disabled";
+    this.state = 'disabled';
   }
 
   enable(): void {
-    this.state = "normal";
+    this.state = 'normal';
   }
 
   getMetrics(): TelemetryMetrics {
@@ -71,7 +71,7 @@ export class TelemetryHealthManager {
   }
 
   reset(): void {
-    this.state = "normal";
+    this.state = 'normal';
     this.emitted = 0;
     this.dropped = 0;
     this.window = [];

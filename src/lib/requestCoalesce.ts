@@ -8,7 +8,11 @@ interface InFlightRequest<T> {
 export function createCoalescer() {
   const inflight = new Map<string, InFlightRequest<unknown>>();
 
-  async function request<T>(key: string, fetcher: Fetcher<T>, options?: { authScope?: string }): Promise<T> {
+  async function request<T>(
+    key: string,
+    fetcher: Fetcher<T>,
+    options?: { authScope?: string }
+  ): Promise<T> {
     const fullKey = options?.authScope ? `${key}:${options.authScope}` : key;
     const existing = inflight.get(fullKey);
     if (existing) {
@@ -23,7 +27,11 @@ export function createCoalescer() {
     return promise;
   }
 
-  function clear(): void { inflight.clear(); }
-  function getInflightCount(): number { return inflight.size; }
+  function clear(): void {
+    inflight.clear();
+  }
+  function getInflightCount(): number {
+    return inflight.size;
+  }
   return { request, clear, getInflightCount };
 }

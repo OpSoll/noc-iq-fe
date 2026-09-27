@@ -1,10 +1,10 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { deleteOutage, getOutage, resolveOutage } from "@/services/outages";
+import { deleteOutage, getOutage, resolveOutage } from '@/services/outages';
 
 export const outageKeys = {
-  all: ["outages"] as const,
-  detail: (id: string) => ["outages", id] as const,
+  all: ['outages'] as const,
+  detail: (id: string) => ['outages', id] as const,
 };
 
 export function useOutage(id: string) {
@@ -13,7 +13,7 @@ export function useOutage(id: string) {
     queryFn: () => getOutage(id),
     enabled: !!id,
     refetchInterval: (query) =>
-      query.state.data?.status === "resolved" ? false : 15_000,
+      query.state.data?.status === 'resolved' ? false : 15_000,
   });
 }
 

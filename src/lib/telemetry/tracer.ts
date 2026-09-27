@@ -12,7 +12,7 @@ export interface Span {
   endTime: number | null;
   durationMs: number | null;
   attributes: Record<string, string | number | boolean>;
-  status: "ok" | "error" | "unset";
+  status: 'ok' | 'error' | 'unset';
   events: SpanEvent[];
 }
 
@@ -23,14 +23,17 @@ export interface SpanEvent {
 }
 
 export interface Tracer {
-  startSpan(name: string, attributes?: Record<string, string | number | boolean>): SpanHandle;
+  startSpan(
+    name: string,
+    attributes?: Record<string, string | number | boolean>
+  ): SpanHandle;
 }
 
 export interface SpanHandle {
   span: Span;
   setAttribute(key: string, value: string | number | boolean): void;
   addEvent(name: string, attributes?: Record<string, string>): void;
-  setStatus(status: "ok" | "error"): void;
+  setStatus(status: 'ok' | 'error'): void;
   end(): void;
 }
 
@@ -40,7 +43,10 @@ const activeSpans: Span[] = [];
 const MAX_STORED_SPANS = 500;
 
 function isEnabled(): boolean {
-  if (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_OTEL_ENABLED === "true") {
+  if (
+    typeof process !== 'undefined' &&
+    process.env?.NEXT_PUBLIC_OTEL_ENABLED === 'true'
+  ) {
     return true;
   }
   return false;
@@ -64,14 +70,17 @@ export function getCorrelationId(): string | null {
 
 // ── Tracer implementation ────────────────────────────────────────────────────
 
-function createSpan(name: string, attributes?: Record<string, string | number | boolean>): SpanHandle {
+function createSpan(
+  name: string,
+  attributes?: Record<string, string | number | boolean>
+): SpanHandle {
   const span: Span = {
     name,
     startTime: performance.now(),
     endTime: null,
     durationMs: null,
     attributes: { ...attributes },
-    status: "unset",
+    status: 'unset',
     events: [],
   };
 
@@ -101,7 +110,15 @@ function createSpan(name: string, attributes?: Record<string, string | number | 
 
 function createNoopTracer(): Tracer {
   const noopHandle: SpanHandle = {
-    span: { name: "", startTime: 0, endTime: 0, durationMs: null, attributes: {}, status: "unset", events: [] },
+    span: {
+      name: '',
+      startTime: 0,
+      endTime: 0,
+      durationMs: null,
+      attributes: {},
+      status: 'unset',
+      events: [],
+    },
     setAttribute() {},
     addEvent() {},
     setStatus() {},
@@ -151,39 +168,47 @@ export function resetTracer(): void {
 
 // ── Convenience wrappers for common route instrumentation ────────────────────
 
-export function instrumentLoad<T>(routeName: string, fn: () => Promise<T>): Promise<T> {
+export function instrumentLoad<T>(
+  routeName: string,
+  fn: () => Promise<T>
+): Promise<T> {
   const tracer = getTracer();
-  const span = tracer.startSpan(`${routeName}.load`, { "span.kind": "client" });
-  span.addEvent("load.start");
+  const span = tracer.startSpan(`${routeName}.load`, { 'span.kind': 'client' });
+  span.addEvent('load.start');
   return fn()
     .then((result) => {
-      span.setStatus("ok");
-      span.addEvent("load.end");
+      span.setStatus('ok');
+      span.addEvent('load.end');
       span.end();
       return result;
     })
     .catch((err) => {
-      span.setStatus("error");
-      span.addEvent("load.error");
+      span.setStatus('error');
+      span.addEvent('load.error');
       span.end();
       throw err;
     });
 }
 
-export function instrumentMutate<T>(routeName: string, fn: () => Promise<T>): Promise<T> {
+export function instrumentMutate<T>(
+  routeName: string,
+  fn: () => Promise<T>
+): Promise<T> {
   const tracer = getTracer();
-  const span = tracer.startSpan(`${routeName}.mutate`, { "span.kind": "client" });
-  span.addEvent("mutate.start");
+  const span = tracer.startSpan(`${routeName}.mutate`, {
+    'span.kind': 'client',
+  });
+  span.addEvent('mutate.start');
   return fn()
     .then((result) => {
-      span.setStatus("ok");
-      span.addEvent("mutate.end");
+      span.setStatus('ok');
+      span.addEvent('mutate.end');
       span.end();
       return result;
     })
     .catch((err) => {
-      span.setStatus("error");
-      span.addEvent("mutate.error");
+      span.setStatus('error');
+      span.addEvent('mutate.error');
       span.end();
       throw err;
     });

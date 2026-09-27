@@ -1,11 +1,7 @@
-export type PaymentType = "reward" | "penalty" | "manual" | string;
+export type PaymentType = 'reward' | 'penalty' | 'manual' | string;
 export type PaymentStatus = string;
 export type ReconciliationStatus =
-  | "pending"
-  | "matched"
-  | "mismatched"
-  | "manual_review"
-  | string;
+  'pending' | 'matched' | 'mismatched' | 'manual_review' | string;
 
 export interface Payment {
   id: string;

@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useMemo } from "react";
+import { useMemo } from 'react';
 
 interface AriaSummaryProps {
   title: string;
@@ -21,35 +21,31 @@ export function AriaSummary({
     const parts = [title, description];
 
     if (stats && stats.length > 0) {
-      const statsText = stats.map((s) => `${s.label}: ${s.value}`).join(". ");
+      const statsText = stats.map((s) => `${s.label}: ${s.value}`).join('. ');
       parts.push(statsText);
     }
 
     if (filters) {
       const activeFilters = Object.entries(filters).filter(
-        ([, v]) => v !== undefined && v !== "",
+        ([, v]) => v !== undefined && v !== ''
       );
       if (activeFilters.length > 0) {
         const filterText = activeFilters
           .map(([k, v]) => `${k}: ${v}`)
-          .join(", ");
+          .join(', ');
         parts.push(`Active filters: ${filterText}`);
       }
     }
 
-    return parts.join(". ");
+    return parts.join('. ');
   }, [title, description, stats, filters]);
 
   const ariaProps = live
-    ? { "aria-live": "polite" as const, "aria-atomic": true as const }
+    ? { 'aria-live': 'polite' as const, 'aria-atomic': true as const }
     : {};
 
   return (
-    <div
-      role="status"
-      className="sr-only"
-      {...ariaProps}
-    >
+    <div role="status" className="sr-only" {...ariaProps}>
       {summaryText}
     </div>
   );
@@ -63,9 +59,7 @@ export function ChartSummary({
   dataPoints: Array<{ label: string; value: string | number }>;
 }) {
   const summary = useMemo(() => {
-    const points = dataPoints
-      .map((p) => `${p.label}: ${p.value}`)
-      .join(". ");
+    const points = dataPoints.map((p) => `${p.label}: ${p.value}`).join('. ');
     return `${label}. ${points}`;
   }, [label, dataPoints]);
 
@@ -88,11 +82,13 @@ export function TableSummary({
   selectionCount?: number;
 }) {
   const summary = useMemo(() => {
-    const parts = [`${name} table with ${rowCount} rows and ${columnCount} columns`];
+    const parts = [
+      `${name} table with ${rowCount} rows and ${columnCount} columns`,
+    ];
     if (selectionCount !== undefined && selectionCount > 0) {
       parts.push(`${selectionCount} rows selected`);
     }
-    return parts.join(". ");
+    return parts.join('. ');
   }, [name, rowCount, columnCount, selectionCount]);
 
   return (

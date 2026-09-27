@@ -1,14 +1,14 @@
-import { refreshAccessToken } from "@/services/auth.service";
+import { refreshAccessToken } from '@/services/auth.service';
 
 export type FetchFunction = (
   input: RequestInfo | URL,
-  init?: RequestInit,
+  init?: RequestInit
 ) => Promise<Response>;
 
 export type FetchMiddleware = (
   input: RequestInfo | URL,
   init: RequestInit,
-  next: FetchFunction,
+  next: FetchFunction
 ) => Promise<Response>;
 
 export class ApiError extends Error {
@@ -20,46 +20,38 @@ export class ApiError extends Error {
     message: string,
     status: number,
     code?: string,
-    details?: unknown,
+    details?: unknown
   ) {
     super(message);
 
-    this.name = "ApiError";
+    this.name = 'ApiError';
     this.status = status;
     this.code = code;
     this.details = details;
   }
 }
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? "";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
 
 const generateCorrelationId = (): string => {
   return crypto.randomUUID();
 };
 
 const getAccessToken = (): string | null => {
-  if (typeof window === "undefined") {
+  if (typeof window === 'undefined') {
     return null;
   }
 
-  return sessionStorage.getItem("accessToken");
+  return sessionStorage.getItem('accessToken');
 };
 
-const authMiddleware: FetchMiddleware = async (
-  input,
-  init,
-  next,
-) => {
+const authMiddleware: FetchMiddleware = async (input, init, next) => {
   const headers = new Headers(init.headers);
 
   const accessToken = getAccessToken();
 
   if (accessToken) {
-    headers.set(
-      "Authorization",
-      `Bearer ${accessToken}`,
-    );
+    headers.set('Authorization', `Bearer ${accessToken}`);
   }
 
   return next(input, {
@@ -68,26 +60,18 @@ const authMiddleware: FetchMiddleware = async (
   });
 };
 
-const correlationMiddleware: FetchMiddleware =
-  async (input, init, next) => {
-    const headers = new Headers(init.headers);
+const correlationMiddleware: FetchMiddleware = async (input, init, next) => {
+  const headers = new Headers(init.headers);
 
-    headers.set(
-      "X-Correlation-ID",
-      generateCorrelationId(),
-    );
+  headers.set('X-Correlation-ID', generateCorrelationId());
 
-    return next(input, {
-      ...init,
-      headers,
-    });
-  };
+  return next(input, {
+    ...init,
+    headers,
+  });
+};
 
-const errorMiddleware: FetchMiddleware = async (
-  input,
-  init,
-  next,
-) => {
+const errorMiddleware: FetchMiddleware = async (input, init, next) => {
   const response = await next(input, init);
 
   if (response.ok) {
@@ -103,24 +87,22 @@ const errorMiddleware: FetchMiddleware = async (
   }
 
   const message =
-    typeof details === "object" &&
+    typeof details === 'object' &&
     details !== null &&
-    "message" in details &&
-    typeof details.message === "string"
+    'message' in details &&
+    typeof details.message === 'string'
       ? details.message
-      : response.statusText ||
-        "An API request failed";
+      : response.statusText || 'An API request failed';
 
-  throw new ApiError(
-    message,
-    response.status,
-    undefined,
-    details,
-  );
+  throw new ApiError(message, response.status, undefined, details);
 };
 
 function compose(...middlewares: FetchMiddleware[]): FetchFunction {
-  const execute = (index: number, input: RequestInfo | URL, init: RequestInit): Promise<Response> => {
+  const execute = (
+    index: number,
+    input: RequestInfo | URL,
+    init: RequestInit
+  ): Promise<Response> => {
     if (index >= middlewares.length) {
       return fetch(input, init);
     }
@@ -130,4 +112,8 @@ function compose(...middlewares: FetchMiddleware[]): FetchFunction {
   return (input, init) => execute(0, input, init ?? {});
 }
 
-export const fetchClient = compose(authMiddleware, correlationMiddleware, errorMiddleware);
+export const fetchClient = compose(
+  authMiddleware,
+  correlationMiddleware,
+  errorMiddleware
+);

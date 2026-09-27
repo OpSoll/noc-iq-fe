@@ -1,18 +1,22 @@
-"use client";
+'use client';
 
-import { useMemo, useState } from "react";
-import { useToast } from "@/components/ui/toast";
-import { useWalletDetail, useWalletStatus, useWalletBalance } from "@/hooks/useWallet";
-import { useCreateWallet, useLinkWallet } from "@/hooks/useWalletMutations";
-import { WalletAddress } from "@/components/wallet/WalletAddress";
-import { WalletHealthBadge } from "@/components/wallet/WalletHealthBadge";
-import FreshnessIndicator from "@/components/dashboard/FreshnessIndicator";
-import { AccountProfileCard } from "./components/AccountProfileCard";
-import { SessionManagementCard } from "./components/SessionManagementCard";
-import { WalletReadinessCard } from "./components/WalletReadinessCard";
-import { AccountSessionFormCard } from "./components/AccountSessionFormCard";
-import { STELLAR_NETWORK_LABEL } from "@/lib/explorer";
-import { RefreshCcw } from "lucide-react";
+import { useMemo, useState } from 'react';
+import { useToast } from '@/components/ui/toast';
+import {
+  useWalletDetail,
+  useWalletStatus,
+  useWalletBalance,
+} from '@/hooks/useWallet';
+import { useCreateWallet, useLinkWallet } from '@/hooks/useWalletMutations';
+import { WalletAddress } from '@/components/wallet/WalletAddress';
+import { WalletHealthBadge } from '@/components/wallet/WalletHealthBadge';
+import FreshnessIndicator from '@/components/dashboard/FreshnessIndicator';
+import { AccountProfileCard } from './components/AccountProfileCard';
+import { SessionManagementCard } from './components/SessionManagementCard';
+import { WalletReadinessCard } from './components/WalletReadinessCard';
+import { AccountSessionFormCard } from './components/AccountSessionFormCard';
+import { STELLAR_NETWORK_LABEL } from '@/lib/explorer';
+import { RefreshCcw } from 'lucide-react';
 
 type AuthUser = {
   id: string;
@@ -34,19 +38,23 @@ export default function SettingsPage() {
   const [session, setSession] = useState<AuthSessionResponse | null>(null);
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const [walletForm, setWalletForm] = useState({
-    user_id: "",
-    public_key: "",
+    user_id: '',
+    public_key: '',
     funded: false,
     trustline_ready: false,
   });
 
   const activeUserId = useMemo(
     () => currentUser?.id ?? (walletForm.user_id.trim() || undefined),
-    [currentUser?.id, walletForm.user_id],
+    [currentUser?.id, walletForm.user_id]
   );
 
-  const [requestedUserId, setRequestedUserId] = useState<string | undefined>(undefined);
-  const [requestedAddressState, setRequestedAddressState] = useState<string | undefined>(undefined);
+  const [requestedUserId, setRequestedUserId] = useState<string | undefined>(
+    undefined
+  );
+  const [requestedAddressState, setRequestedAddressState] = useState<
+    string | undefined
+  >(undefined);
 
   const walletQuery = useWalletDetail(requestedUserId);
   const walletStatusQuery = useWalletStatus(requestedUserId);
@@ -58,27 +66,28 @@ export default function SettingsPage() {
 
   const walletAssetCount = useMemo(
     () => Object.keys(walletBalance?.balances ?? {}).length,
-    [walletBalance],
+    [walletBalance]
   );
 
   const walletReadinessLabel = useMemo(() => {
-    if (!walletStatus) return "Not loaded";
-    if (!walletStatus.active) return "Inactive";
-    if (!walletStatus.funded) return "Funding required";
-    if (!walletStatus.trustline_ready) return "Trustline missing";
-    return walletStatus.usable ? "Ready" : "Review required";
+    if (!walletStatus) return 'Not loaded';
+    if (!walletStatus.active) return 'Inactive';
+    if (!walletStatus.funded) return 'Funding required';
+    if (!walletStatus.trustline_ready) return 'Trustline missing';
+    return walletStatus.usable ? 'Ready' : 'Review required';
   }, [walletStatus]);
 
   const walletReadinessTone = useMemo(() => {
-    if (!walletStatus) return "text-slate-900";
-    return walletStatus.usable ? "text-emerald-600" : "text-amber-600";
+    if (!walletStatus) return 'text-slate-900';
+    return walletStatus.usable ? 'text-emerald-600' : 'text-amber-600';
   }, [walletStatus]);
 
-  const walletAddress = wallet?.public_key ?? walletStatus?.public_key ?? walletForm.public_key;
+  const walletAddress =
+    wallet?.public_key ?? walletStatus?.public_key ?? walletForm.public_key;
 
   function handleCreateWallet() {
     if (!activeUserId) {
-      toast("Provide a user ID or log in before creating a wallet.", "error");
+      toast('Provide a user ID or log in before creating a wallet.', 'error');
       return;
     }
     createWalletMutation.mutate(
@@ -93,13 +102,16 @@ export default function SettingsPage() {
             trustline_ready: data.trustline_ready,
           }));
         },
-      },
+      }
     );
   }
 
   function handleLinkWallet() {
     if (!walletForm.user_id.trim() || !walletForm.public_key.trim()) {
-      toast("Provide both a user ID and public key before linking a wallet.", "error");
+      toast(
+        'Provide both a user ID and public key before linking a wallet.',
+        'error'
+      );
       return;
     }
     linkWalletMutation.mutate({
@@ -112,38 +124,45 @@ export default function SettingsPage() {
 
   function handleLoadWalletDetails() {
     if (!activeUserId) {
-      toast("Provide a user ID or log in before loading wallet details.", "error");
+      toast(
+        'Provide a user ID or log in before loading wallet details.',
+        'error'
+      );
       return;
     }
     setRequestedUserId(activeUserId);
-    toast("Wallet details loaded.", "success");
+    toast('Wallet details loaded.', 'success');
   }
 
   function handleLoadBalance() {
     const address = wallet?.public_key ?? walletForm.public_key.trim();
     if (!address) {
-      toast("Load or link a wallet before requesting balances.", "error");
+      toast('Load or link a wallet before requesting balances.', 'error');
       return;
     }
     setRequestedAddressState(address);
-    toast("Wallet balance loaded.", "success");
+    toast('Wallet balance loaded.', 'success');
   }
 
   function handleRefreshWalletStatus() {
     if (!activeUserId) {
-      toast("Provide a user ID or log in before refreshing wallet status.", "error");
+      toast(
+        'Provide a user ID or log in before refreshing wallet status.',
+        'error'
+      );
       return;
     }
     setRequestedUserId(activeUserId);
     void walletStatusQuery.refetch();
     void walletQuery.refetch();
-    toast("Wallet status refreshed.", "success");
+    toast('Wallet status refreshed.', 'success');
   }
 
   const walletStatusUpdatedAt = walletStatus?.last_updated
     ? new Date(walletStatus.last_updated)
     : null;
-  const isWalletRefreshing = walletStatusQuery.isFetching || walletQuery.isFetching;
+  const isWalletRefreshing =
+    walletStatusQuery.isFetching || walletQuery.isFetching;
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 px-4 py-8">
@@ -152,7 +171,8 @@ export default function SettingsPage() {
           Settings and Wallet Control
         </h1>
         <p className="text-sm text-slate-500">
-          Manage operator session state, register or sign in, and check wallet readiness from the live backend.
+          Manage operator session state, register or sign in, and check wallet
+          readiness from the live backend.
         </p>
       </div>
 
@@ -161,44 +181,58 @@ export default function SettingsPage() {
 
       <div className="grid gap-4 md:grid-cols-4">
         <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Session</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+            Session
+          </p>
           <p className="mt-2 text-xl font-semibold text-slate-900">
-            {currentUser ? "Authenticated" : "Not signed in"}
+            {currentUser ? 'Authenticated' : 'Not signed in'}
           </p>
           <p className="mt-1 text-sm text-slate-500">
-            {currentUser?.email ?? "Load or create an operator account"}
+            {currentUser?.email ?? 'Load or create an operator account'}
           </p>
         </div>
 
         <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Wallet</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+            Wallet
+          </p>
           <p className="mt-2 text-xl font-semibold text-slate-900">
-            {walletAddress ? "Connected" : "Not linked"}
+            {walletAddress ? 'Connected' : 'Not linked'}
           </p>
           <p className="mt-1 truncate text-sm text-slate-500">
-            {walletAddress || "Create or link a wallet to continue"}
+            {walletAddress || 'Create or link a wallet to continue'}
           </p>
         </div>
 
         <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Readiness</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+            Readiness
+          </p>
           <p className={`mt-2 text-xl font-semibold ${walletReadinessTone}`}>
             {walletReadinessLabel}
           </p>
           <p className="mt-1 text-sm text-slate-500">
             {walletStatus
-              ? `${walletStatus.funded ? "Funded" : "Unfunded"} • ${
-                  walletStatus.trustline_ready ? "Trustline ready" : "Trustline missing"
+              ? `${walletStatus.funded ? 'Funded' : 'Unfunded'} • ${
+                  walletStatus.trustline_ready
+                    ? 'Trustline ready'
+                    : 'Trustline missing'
                 }`
-              : "Load wallet details to inspect readiness"}
+              : 'Load wallet details to inspect readiness'}
           </p>
         </div>
 
         <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Balances</p>
-          <p className="mt-2 text-xl font-semibold text-slate-900">{walletAssetCount}</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+            Balances
+          </p>
+          <p className="mt-2 text-xl font-semibold text-slate-900">
+            {walletAssetCount}
+          </p>
           <p className="mt-1 text-sm text-slate-500">
-            {walletAssetCount > 0 ? "Tracked assets loaded" : "No balance data loaded yet"}
+            {walletAssetCount > 0
+              ? 'Tracked assets loaded'
+              : 'No balance data loaded yet'}
           </p>
         </div>
       </div>
@@ -209,14 +243,18 @@ export default function SettingsPage() {
           setCurrentUser={setCurrentUser}
           session={session}
           setSession={setSession}
-          onUserSelected={(userId) => setWalletForm((current) => ({ ...current, user_id: userId }))}
+          onUserSelected={(userId) =>
+            setWalletForm((current) => ({ ...current, user_id: userId }))
+          }
         />
 
         <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="flex items-start justify-between">
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-xl font-semibold text-slate-900">Wallet Status</h2>
+                <h2 className="text-xl font-semibold text-slate-900">
+                  Wallet Status
+                </h2>
                 <span
                   className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-medium text-slate-500"
                   title="Stellar network"
@@ -225,7 +263,8 @@ export default function SettingsPage() {
                 </span>
               </div>
               <p className="text-sm text-slate-500">
-                Create, link, and inspect the operator wallet through the backend bridge.
+                Create, link, and inspect the operator wallet through the
+                backend bridge.
               </p>
             </div>
             <div className="flex flex-col items-end gap-2">
@@ -240,13 +279,23 @@ export default function SettingsPage() {
             <input
               className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
               value={walletForm.user_id}
-              onChange={(event) => setWalletForm((current) => ({ ...current, user_id: event.target.value }))}
+              onChange={(event) =>
+                setWalletForm((current) => ({
+                  ...current,
+                  user_id: event.target.value,
+                }))
+              }
               placeholder="User ID"
             />
             <input
               className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
               value={walletForm.public_key}
-              onChange={(event) => setWalletForm((current) => ({ ...current, public_key: event.target.value }))}
+              onChange={(event) =>
+                setWalletForm((current) => ({
+                  ...current,
+                  public_key: event.target.value,
+                }))
+              }
               placeholder="Public key"
             />
             <div className="flex flex-wrap gap-4 text-sm text-slate-600">
@@ -254,7 +303,12 @@ export default function SettingsPage() {
                 <input
                   type="checkbox"
                   checked={walletForm.funded}
-                  onChange={(event) => setWalletForm((current) => ({ ...current, funded: event.target.checked }))}
+                  onChange={(event) =>
+                    setWalletForm((current) => ({
+                      ...current,
+                      funded: event.target.checked,
+                    }))
+                  }
                 />
                 Funded
               </label>
@@ -262,7 +316,12 @@ export default function SettingsPage() {
                 <input
                   type="checkbox"
                   checked={walletForm.trustline_ready}
-                  onChange={(event) => setWalletForm((current) => ({ ...current, trustline_ready: event.target.checked }))}
+                  onChange={(event) =>
+                    setWalletForm((current) => ({
+                      ...current,
+                      trustline_ready: event.target.checked,
+                    }))
+                  }
                 />
                 Trustline ready
               </label>
@@ -275,36 +334,42 @@ export default function SettingsPage() {
               disabled={createWalletMutation.isPending}
               className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
             >
-              {createWalletMutation.isPending ? "Creating..." : "Create wallet"}
+              {createWalletMutation.isPending ? 'Creating...' : 'Create wallet'}
             </button>
             <button
               onClick={handleLinkWallet}
               disabled={linkWalletMutation.isPending}
               className="rounded-md border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
             >
-              {linkWalletMutation.isPending ? "Linking..." : "Link wallet"}
+              {linkWalletMutation.isPending ? 'Linking...' : 'Link wallet'}
             </button>
             <button
               onClick={handleLoadWalletDetails}
               disabled={walletQuery.isFetching || walletStatusQuery.isFetching}
               className="rounded-md border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
             >
-              {walletQuery.isFetching || walletStatusQuery.isFetching ? "Loading..." : "Load wallet details"}
+              {walletQuery.isFetching || walletStatusQuery.isFetching
+                ? 'Loading...'
+                : 'Load wallet details'}
             </button>
             <button
               onClick={handleLoadBalance}
               disabled={walletBalanceQuery.isFetching}
               className="rounded-md border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
             >
-              {walletBalanceQuery.isFetching ? "Loading..." : "Load balance"}
+              {walletBalanceQuery.isFetching ? 'Loading...' : 'Load balance'}
             </button>
             <button
               onClick={handleRefreshWalletStatus}
               disabled={isWalletRefreshing}
               className="inline-flex items-center justify-center gap-2 rounded-md border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-100 disabled:opacity-60 sm:col-span-2"
             >
-              <RefreshCcw className={`h-4 w-4 ${isWalletRefreshing ? "animate-spin" : ""}`} />
-              {isWalletRefreshing ? "Refreshing status…" : "Refresh wallet status"}
+              <RefreshCcw
+                className={`h-4 w-4 ${isWalletRefreshing ? 'animate-spin' : ''}`}
+              />
+              {isWalletRefreshing
+                ? 'Refreshing status…'
+                : 'Refresh wallet status'}
             </button>
           </div>
 
@@ -321,14 +386,18 @@ export default function SettingsPage() {
                   </div>
                   <div className="flex justify-between gap-4">
                     <dt>Funded</dt>
-                    <dd className={`font-medium ${wallet.funded ? "text-emerald-700" : "text-amber-600"}`}>
-                      {wallet.funded ? "Yes" : "No"}
+                    <dd
+                      className={`font-medium ${wallet.funded ? 'text-emerald-700' : 'text-amber-600'}`}
+                    >
+                      {wallet.funded ? 'Yes' : 'No'}
                     </dd>
                   </div>
                   <div className="flex justify-between gap-4">
                     <dt>Trustline</dt>
-                    <dd className={`font-medium ${wallet.trustline_ready ? "text-emerald-700" : "text-amber-600"}`}>
-                      {wallet.trustline_ready ? "Ready" : "Missing"}
+                    <dd
+                      className={`font-medium ${wallet.trustline_ready ? 'text-emerald-700' : 'text-amber-600'}`}
+                    >
+                      {wallet.trustline_ready ? 'Ready' : 'Missing'}
                     </dd>
                   </div>
                 </dl>
@@ -343,35 +412,47 @@ export default function SettingsPage() {
                 <dl className="mt-3 grid gap-2 text-slate-600">
                   <div className="flex justify-between gap-4">
                     <dt>Active</dt>
-                    <dd className={`font-medium ${walletStatus.active ? "text-emerald-700" : "text-red-600"}`}>
-                      {walletStatus.active ? "Yes" : "No"}
+                    <dd
+                      className={`font-medium ${walletStatus.active ? 'text-emerald-700' : 'text-red-600'}`}
+                    >
+                      {walletStatus.active ? 'Yes' : 'No'}
                     </dd>
                   </div>
                   <div className="flex justify-between gap-4">
                     <dt>Funded</dt>
-                    <dd className={`font-medium ${walletStatus.funded ? "text-emerald-700" : "text-amber-600"}`}>
-                      {walletStatus.funded ? "Yes" : "Funding required"}
+                    <dd
+                      className={`font-medium ${walletStatus.funded ? 'text-emerald-700' : 'text-amber-600'}`}
+                    >
+                      {walletStatus.funded ? 'Yes' : 'Funding required'}
                     </dd>
                   </div>
                   <div className="flex justify-between gap-4">
                     <dt>Trustline</dt>
-                    <dd className={`font-medium ${walletStatus.trustline_ready ? "text-emerald-700" : "text-amber-600"}`}>
-                      {walletStatus.trustline_ready ? "Ready" : "Missing"}
+                    <dd
+                      className={`font-medium ${walletStatus.trustline_ready ? 'text-emerald-700' : 'text-amber-600'}`}
+                    >
+                      {walletStatus.trustline_ready ? 'Ready' : 'Missing'}
                     </dd>
                   </div>
                   <div className="flex justify-between gap-4">
                     <dt>Usable</dt>
-                    <dd className={`font-medium ${walletStatus.usable ? "text-emerald-700" : "text-red-600"}`}>
-                      {walletStatus.usable ? "Ready" : "Not ready"}
+                    <dd
+                      className={`font-medium ${walletStatus.usable ? 'text-emerald-700' : 'text-red-600'}`}
+                    >
+                      {walletStatus.usable ? 'Ready' : 'Not ready'}
                     </dd>
                   </div>
                   <div className="flex justify-between gap-4">
                     <dt>Last updated</dt>
-                    <dd className="font-medium text-slate-900">{new Date(walletStatus.last_updated).toLocaleString()}</dd>
+                    <dd className="font-medium text-slate-900">
+                      {new Date(walletStatus.last_updated).toLocaleString()}
+                    </dd>
                   </div>
                 </dl>
               ) : (
-                <p className="mt-3 text-slate-500">Load wallet details to inspect readiness.</p>
+                <p className="mt-3 text-slate-500">
+                  Load wallet details to inspect readiness.
+                </p>
               )}
             </div>
           </div>
@@ -380,15 +461,19 @@ export default function SettingsPage() {
             <h3 className="font-medium text-slate-900">Balances</h3>
             {walletBalance ? (
               <div className="mt-3 grid gap-2">
-                {Object.entries(walletBalance.balances).map(([asset, balance]) => (
-                  <div
-                    key={asset}
-                    className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2"
-                  >
-                    <span className="font-medium text-slate-900">{asset}</span>
-                    <span className="text-slate-600">{balance.balance}</span>
-                  </div>
-                ))}
+                {Object.entries(walletBalance.balances).map(
+                  ([asset, balance]) => (
+                    <div
+                      key={asset}
+                      className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2"
+                    >
+                      <span className="font-medium text-slate-900">
+                        {asset}
+                      </span>
+                      <span className="text-slate-600">{balance.balance}</span>
+                    </div>
+                  )
+                )}
               </div>
             ) : (
               <p className="mt-3 text-slate-500">No balance data loaded yet.</p>

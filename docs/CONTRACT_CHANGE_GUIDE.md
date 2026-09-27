@@ -20,14 +20,14 @@ node scripts/contract-change-check.mjs --base origin/main
 
 ## What Counts as a Contract Change
 
-| File changed | Impacted service | Affected routes |
-|---|---|---|
-| `src/services/outages.ts`, `src/lib/api.ts` | outages | `/outages`, `/outages/[id]`, `/outages/new` |
-| `src/services/paymentService.ts`, `src/lib/client.ts` | payments | `/payments` |
-| `src/services/sla.ts`, `src/hooks/useSlaConfig.ts` | sla | `/outages/[id]`, `/config` |
-| `src/services/bulkImportService.ts` | bulkImport | `/bulk-import`, `/bulk-import/history` |
-| `src/services/webhookService.ts` | webhooks | `/webhooks` |
-| `src/lib/auth/**` | auth | `/login`, `/register` |
+| File changed                                          | Impacted service | Affected routes                             |
+| ----------------------------------------------------- | ---------------- | ------------------------------------------- |
+| `src/services/outages.ts`, `src/lib/api.ts`           | outages          | `/outages`, `/outages/[id]`, `/outages/new` |
+| `src/services/paymentService.ts`, `src/lib/client.ts` | payments         | `/payments`                                 |
+| `src/services/sla.ts`, `src/hooks/useSlaConfig.ts`    | sla              | `/outages/[id]`, `/config`                  |
+| `src/services/bulkImportService.ts`                   | bulkImport       | `/bulk-import`, `/bulk-import/history`      |
+| `src/services/webhookService.ts`                      | webhooks         | `/webhooks`                                 |
+| `src/lib/auth/**`                                     | auth             | `/login`, `/register`                       |
 
 ## Checklist
 

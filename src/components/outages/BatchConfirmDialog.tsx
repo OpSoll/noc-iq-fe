@@ -1,14 +1,17 @@
-"use client";
+'use client';
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef } from 'react';
 
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
 import {
   AlertTriangleIcon,
   CheckIcon,
   RefreshCwIcon,
-} from "@/components/ui/icons";
-import type { BatchOperation, BatchProgress } from "@/features/outages/hooks/useBatchOperations";
+} from '@/components/ui/icons';
+import type {
+  BatchOperation,
+  BatchProgress,
+} from '@/features/outages/hooks/useBatchOperations';
 
 /* -------------------------------------------------------------------------- */
 /*                                    Types                                   */
@@ -16,7 +19,7 @@ import type { BatchOperation, BatchProgress } from "@/features/outages/hooks/use
 
 interface BatchConfirmDialogProps {
   open: boolean;
-  operation: BatchOperation | null;
+  operation: ConfirmableOperation | null;
   selectedCount: number;
   progress: BatchProgress | null;
   hasUnresolved: boolean;
@@ -28,21 +31,43 @@ interface BatchConfirmDialogProps {
 /*                              Operation Labels                              */
 /* -------------------------------------------------------------------------- */
 
-const OPERATION_LABELS: Record<BatchOperation, { title: string; description: string; warning: string }> = {
+/**
+ * Batch operations plus the single-row `soft-delete` confirmation used by the
+ * outage table row action menu.
+ */
+export type ConfirmableOperation = BatchOperation | 'soft-delete';
+
+const OPERATION_LABELS: Record<
+  ConfirmableOperation,
+  { title: string; description: string; warning: string }
+> = {
   acknowledge: {
-    title: "Acknowledge Outages",
-    description: "Mark the selected outages as acknowledged. This will notify assigned responders and update incident status.",
-    warning: "Acknowledged outages will be removed from the unacknowledged queue. This action cannot be undone.",
+    title: 'Acknowledge Outages',
+    description:
+      'Mark the selected outages as acknowledged. This will notify assigned responders and update incident status.',
+    warning:
+      'Acknowledged outages will be removed from the unacknowledged queue. This action cannot be undone.',
   },
   resolve: {
-    title: "Resolve Outages",
-    description: "Resolve all selected outages. This will stop SLA timers and trigger any applicable penalty/reward payments.",
-    warning: "Resolved outages will be closed. SLA results and payments will be finalized. This action cannot be undone.",
+    title: 'Resolve Outages',
+    description:
+      'Resolve all selected outages. This will stop SLA timers and trigger any applicable penalty/reward payments.',
+    warning:
+      'Resolved outages will be closed. SLA results and payments will be finalized. This action cannot be undone.',
   },
-  "recalculate-sla": {
-    title: "Recalculate SLA",
-    description: "Recompute SLA metrics for all selected outages. This may change penalty/reward amounts based on the latest data.",
-    warning: "SLA recalculation may affect financial amounts. Double-check the results after completion.",
+  'recalculate-sla': {
+    title: 'Recalculate SLA',
+    description:
+      'Recompute SLA metrics for all selected outages. This may change penalty/reward amounts based on the latest data.',
+    warning:
+      'SLA recalculation may affect financial amounts. Double-check the results after completion.',
+  },
+  'soft-delete': {
+    title: 'Soft Delete Outage',
+    description:
+      'Remove this outage from the active list. Historical SLA and payment records are retained.',
+    warning:
+      'Soft deleted outages leave every current view immediately. This action cannot be undone from the table.',
   },
 };
 
@@ -71,14 +96,14 @@ export function BatchConfirmDialog({
     confirmBtnRef.current?.focus();
 
     function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape" && !progress) {
+      if (e.key === 'Escape' && !progress) {
         onCancel();
       }
     }
 
-    document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener('keydown', handleKeyDown);
     return () => {
-      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener('keydown', handleKeyDown);
       previousFocusRef.current?.focus();
     };
   }, [open, progress, onCancel]);
@@ -121,9 +146,7 @@ export function BatchConfirmDialog({
             >
               {labels.title}
             </h2>
-            <p className="mt-1 text-sm text-slate-500">
-              {labels.description}
-            </p>
+            <p className="mt-1 text-sm text-slate-500">{labels.description}</p>
           </div>
         </div>
 
@@ -140,7 +163,7 @@ export function BatchConfirmDialog({
           </div>
 
           {/* Unresolved warning */}
-          {operation === "resolve" && hasUnresolved && (
+          {operation === 'resolve' && hasUnresolved && (
             <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5">
               <AlertTriangleIcon className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
               <p className="text-xs text-amber-700">
@@ -186,7 +209,9 @@ export function BatchConfirmDialog({
           </Button>
           <Button
             ref={confirmBtnRef}
-            variant={operation === "recalculate-sla" ? "default" : "destructive"}
+            variant={
+              operation === 'recalculate-sla' ? 'default' : 'destructive'
+            }
             size="sm"
             onClick={onConfirm}
             disabled={isExecuting}

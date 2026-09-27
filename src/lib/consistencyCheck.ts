@@ -28,14 +28,23 @@ export function checkConsistency(
   tolerances: Tolerances = DEFAULT_TOLERANCES
 ): ConsistencyResult {
   const mismatches: ConsistencyMismatch[] = [];
-  const allKeys = new Set([...Object.keys(kpis), ...Object.keys(chartAggregates)]);
+  const allKeys = new Set([
+    ...Object.keys(kpis),
+    ...Object.keys(chartAggregates),
+  ]);
   for (const key of allKeys) {
     const kpiVal = kpis[key] ?? 0;
     const chartVal = chartAggregates[key] ?? 0;
     const tolerance = tolerances[key] ?? 0.01;
     const delta = Math.abs(kpiVal - chartVal);
     if (delta > tolerance) {
-      mismatches.push({ metric: key, kpiValue: kpiVal, chartValue: chartVal, delta, tolerance });
+      mismatches.push({
+        metric: key,
+        kpiValue: kpiVal,
+        chartValue: chartVal,
+        delta,
+        tolerance,
+      });
     }
   }
   return { consistent: mismatches.length === 0, mismatches };

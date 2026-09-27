@@ -6,85 +6,109 @@
  * Designed to run after `npm test -- --coverage` and `npm run lint`.
  */
 
-import { readFileSync, writeFileSync, existsSync } from "fs";
+import { readFileSync, writeFileSync, existsSync } from 'fs';
 
 const now = new Date().toISOString().slice(0, 10);
-const testExitCode = process.env.TEST_EXIT_CODE ?? "0";
+const testExitCode = process.env.TEST_EXIT_CODE ?? '0';
 
 // ── Route domain definitions ──────────────────────────────────────────────────
 const DOMAINS = [
   {
-    name: "Auth",
-    routes: ["/login", "/register", "/(auth)/logic"],
-    testFiles: ["tests/auth-flow.test.tsx"],
-    services: ["src/lib/auth/"],
-    riskLevel: "🔴 Critical",
+    name: 'Auth',
+    routes: ['/login', '/register', '/(auth)/logic'],
+    testFiles: ['tests/auth-flow.test.tsx'],
+    services: ['src/lib/auth/'],
+    riskLevel: '🔴 Critical',
   },
   {
-    name: "Outages",
-    routes: ["/outages", "/outages/[id]", "/outages/new"],
-    testFiles: ["tests/outages-flow.test.tsx"],
-    services: ["src/services/outages.ts"],
-    riskLevel: "🟠 High",
+    name: 'Outages',
+    routes: ['/outages', '/outages/[id]', '/outages/new'],
+    testFiles: ['tests/outages-flow.test.tsx'],
+    services: ['src/services/outages.ts'],
+    riskLevel: '🟠 High',
   },
   {
-    name: "Payments",
-    routes: ["/payments"],
-    testFiles: ["tests/payments-view.test.tsx"],
-    services: ["src/services/paymentService.ts"],
-    riskLevel: "🔴 Critical",
+    name: 'Payments',
+    routes: ['/payments'],
+    testFiles: ['tests/payments-view.test.tsx'],
+    services: ['src/services/paymentService.ts'],
+    riskLevel: '🔴 Critical',
   },
   {
-    name: "Bulk Import",
-    routes: ["/bulk-import", "/bulk-import/history"],
-    testFiles: ["tests/bulk-import-view.test.tsx"],
-    services: ["src/services/bulkImportService.ts"],
-    riskLevel: "🟡 Medium",
+    name: 'Bulk Import',
+    routes: ['/bulk-import', '/bulk-import/history'],
+    testFiles: ['tests/bulk-import-view.test.tsx'],
+    services: ['src/services/bulkImportService.ts'],
+    riskLevel: '🟡 Medium',
   },
   {
-    name: "Config",
-    routes: ["/config"],
-    testFiles: ["tests/config-page.test.tsx"],
-    services: ["src/lib/config/"],
-    riskLevel: "🟠 High",
+    name: 'Config',
+    routes: ['/config'],
+    testFiles: ['tests/config-page.test.tsx'],
+    services: ['src/lib/config/'],
+    riskLevel: '🟠 High',
   },
   {
-    name: "Settings",
-    routes: ["/setting"],
-    testFiles: ["tests/settings-wallet.test.tsx"],
+    name: 'Settings',
+    routes: ['/setting'],
+    testFiles: ['tests/settings-wallet.test.tsx'],
     services: [],
-    riskLevel: "🟡 Medium",
+    riskLevel: '🟡 Medium',
   },
 ];
 
 // ── Parse test results ────────────────────────────────────────────────────────
 function parseTestResults() {
-  if (!existsSync("test-results.json")) {
-    return { total: "N/A", passed: "N/A", failed: "N/A", status: "⚠️ No data" };
+  if (!existsSync('test-results.json')) {
+    return { total: 'N/A', passed: 'N/A', failed: 'N/A', status: '⚠️ No data' };
   }
   try {
-    const raw = JSON.parse(readFileSync("test-results.json", "utf8"));
+    const raw = JSON.parse(readFileSync('test-results.json', 'utf8'));
     // Vitest JSON reporter shape
-    const numTotalTests = raw.numTotalTests ?? raw.testResults?.reduce((s, f) => s + (f.numPassingTests + f.numFailingTests), 0) ?? 0;
-    const numPassedTests = raw.numPassedTests ?? raw.testResults?.reduce((s, f) => s + f.numPassingTests, 0) ?? 0;
-    const numFailedTests = raw.numFailedTests ?? (numTotalTests - numPassedTests);
-    const status = testExitCode === "0" ? "✅ Pass" : "❌ Fail";
-    return { total: numTotalTests, passed: numPassedTests, failed: numFailedTests, status };
+    const numTotalTests =
+      raw.numTotalTests ??
+      raw.testResults?.reduce(
+        (s, f) => s + (f.numPassingTests + f.numFailingTests),
+        0
+      ) ??
+      0;
+    const numPassedTests =
+      raw.numPassedTests ??
+      raw.testResults?.reduce((s, f) => s + f.numPassingTests, 0) ??
+      0;
+    const numFailedTests = raw.numFailedTests ?? numTotalTests - numPassedTests;
+    const status = testExitCode === '0' ? '✅ Pass' : '❌ Fail';
+    return {
+      total: numTotalTests,
+      passed: numPassedTests,
+      failed: numFailedTests,
+      status,
+    };
   } catch {
-    return { total: "N/A", passed: "N/A", failed: "N/A", status: "⚠️ Parse error" };
+    return {
+      total: 'N/A',
+      passed: 'N/A',
+      failed: 'N/A',
+      status: '⚠️ Parse error',
+    };
   }
 }
 
 // ── Lint results ──────────────────────────────────────────────────────────────
 function parseLintResults() {
-  if (!existsSync("lint-results.json")) return { errors: "N/A", warnings: "N/A" };
+  if (!existsSync('lint-results.json'))
+    return { errors: 'N/A', warnings: 'N/A' };
   try {
-    const raw = JSON.parse(readFileSync("lint-results.json", "utf8"));
-    const errors = Array.isArray(raw) ? raw.reduce((s, f) => s + f.errorCount, 0) : "N/A";
-    const warnings = Array.isArray(raw) ? raw.reduce((s, f) => s + f.warningCount, 0) : "N/A";
+    const raw = JSON.parse(readFileSync('lint-results.json', 'utf8'));
+    const errors = Array.isArray(raw)
+      ? raw.reduce((s, f) => s + f.errorCount, 0)
+      : 'N/A';
+    const warnings = Array.isArray(raw)
+      ? raw.reduce((s, f) => s + f.warningCount, 0)
+      : 'N/A';
     return { errors, warnings };
   } catch {
-    return { errors: "N/A", warnings: "N/A" };
+    return { errors: 'N/A', warnings: 'N/A' };
   }
 }
 
@@ -94,13 +118,13 @@ const lintSummary = parseLintResults();
 // ── Build scorecard markdown ──────────────────────────────────────────────────
 const rows = DOMAINS.map(({ name, routes, testFiles, riskLevel }) => {
   const hasCoverage = testFiles.length > 0;
-  const coverageStatus = hasCoverage ? "🟢 Has tests" : "🔴 No tests";
-  return `| ${name} | ${routes.join(", ")} | ${riskLevel} | ${coverageStatus} |`;
-}).join("\n");
+  const coverageStatus = hasCoverage ? '🟢 Has tests' : '🔴 No tests';
+  return `| ${name} | ${routes.join(', ')} | ${riskLevel} | ${coverageStatus} |`;
+}).join('\n');
 
 const scorecard = `# Frontend Reliability Scorecard
 
-> Generated: ${now} | Commit: \`${process.env.GITHUB_SHA?.slice(0, 7) ?? "local"}\`
+> Generated: ${now} | Commit: \`${process.env.GITHUB_SHA?.slice(0, 7) ?? 'local'}\`
 
 ## Overall Health
 
@@ -143,5 +167,5 @@ The artifact is retained for 90 days per run.
 - After any service change, re-run: \`npm test && node scripts/generate-scorecard.mjs\`
 `;
 
-writeFileSync("docs/RELIABILITY_SCORECARD.md", scorecard);
-console.log("✅ Scorecard written to docs/RELIABILITY_SCORECARD.md");
+writeFileSync('docs/RELIABILITY_SCORECARD.md', scorecard);
+console.log('✅ Scorecard written to docs/RELIABILITY_SCORECARD.md');

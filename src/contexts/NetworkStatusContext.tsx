@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {
   createContext,
@@ -7,8 +7,8 @@ import {
   useCallback,
   useEffect,
   useMemo,
-} from "react";
-import { networkEvents } from "@/lib/network-events";
+} from 'react';
+import { networkEvents } from '@/lib/network-events';
 
 interface NetworkStatusState {
   isOnline: boolean;
@@ -17,7 +17,7 @@ interface NetworkStatusState {
 }
 
 const NetworkStatusContext = createContext<NetworkStatusState | undefined>(
-  undefined,
+  undefined
 );
 
 export function NetworkStatusProvider({
@@ -26,7 +26,7 @@ export function NetworkStatusProvider({
   children: React.ReactNode;
 }) {
   const [isOnline, setIsOnline] = useState(() =>
-    typeof window !== "undefined" ? navigator.onLine : true,
+    typeof window !== 'undefined' ? navigator.onLine : true
   );
   const [, setRetry] = useState(0);
 
@@ -38,21 +38,21 @@ export function NetworkStatusProvider({
     const onlineHandler = () => setIsOnline(true);
     const offlineHandler = () => setIsOnline(false);
 
-    window.addEventListener("online", onlineHandler);
-    window.addEventListener("offline", offlineHandler);
+    window.addEventListener('online', onlineHandler);
+    window.addEventListener('offline', offlineHandler);
 
     const unsubscribe = networkEvents.subscribe(setIsOnline);
 
     return () => {
-      window.removeEventListener("online", onlineHandler);
-      window.removeEventListener("offline", offlineHandler);
+      window.removeEventListener('online', onlineHandler);
+      window.removeEventListener('offline', offlineHandler);
       unsubscribe();
     };
   }, []);
 
   const value = useMemo(
     () => ({ isOnline, triggerRetry, setIsOnline }),
-    [isOnline, triggerRetry, setIsOnline],
+    [isOnline, triggerRetry, setIsOnline]
   );
 
   return (
@@ -66,7 +66,7 @@ export function useNetworkStatus() {
   const context = useContext(NetworkStatusContext);
   if (context === undefined) {
     throw new Error(
-      "useNetworkStatus must be used within a NetworkStatusProvider",
+      'useNetworkStatus must be used within a NetworkStatusProvider'
     );
   }
   return context;

@@ -1,6 +1,6 @@
-import { describe, it, expect } from "vitest";
-import { createMockApi } from "../mocks/apiMock";
-import type { Outage } from "@/types/outages";
+import { describe, it, expect } from 'vitest';
+import { createMockApi } from '../mocks/apiMock';
+import type { Outage } from '@/types/outages';
 
 interface MutationResult<T> {
   success: boolean;
@@ -11,13 +11,13 @@ interface MutationResult<T> {
 async function simulateMutation<T>(
   mockApi: ReturnType<typeof createMockApi>,
   operation: () => Promise<T>,
-  shouldFail: boolean,
+  shouldFail: boolean
 ): Promise<MutationResult<T>> {
   if (shouldFail) {
     const errorMock = createMockApi({ errorRate: 1 });
     try {
       await errorMock.getOutages();
-      return { success: false, error: "Simulated mutation failure" };
+      return { success: false, error: 'Simulated mutation failure' };
     } catch (err) {
       return { success: false, error: (err as Error).message };
     }
@@ -30,18 +30,18 @@ async function simulateMutation<T>(
   }
 }
 
-describe("Optimistic UI Rollback Mutation Stress Tests", () => {
+describe('Optimistic UI Rollback Mutation Stress Tests', () => {
   const mock = createMockApi();
 
-  it("resolves outage mutation restores list consistency after rollback", async () => {
+  it('resolves outage mutation restores list consistency after rollback', async () => {
     const initial = await mock.getOutages();
     const initialCount = initial.length;
 
     // Simulate a failed resolve mutation
     const failResult = await simulateMutation(
       mock,
-      () => mock.getOutage("mock-1"),
-      true,
+      () => mock.getOutage('mock-1'),
+      true
     );
     expect(failResult.success).toBe(false);
 
@@ -49,11 +49,11 @@ describe("Optimistic UI Rollback Mutation Stress Tests", () => {
     const afterRollback = await mock.getOutages();
     expect(afterRollback.length).toBe(initialCount);
     expect(afterRollback.map((o: Outage) => o.id).sort()).toEqual(
-      initial.map((o: Outage) => o.id).sort(),
+      initial.map((o: Outage) => o.id).sort()
     );
   });
 
-  it("rapid success/failure alternation maintains data consistency", async () => {
+  it('rapid success/failure alternation maintains data consistency', async () => {
     const initial = await mock.getOutages();
     const statuses: boolean[] = [];
 
@@ -63,7 +63,7 @@ describe("Optimistic UI Rollback Mutation Stress Tests", () => {
       const result = await simulateMutation(
         mock,
         () => mock.getOutages(),
-        shouldFail,
+        shouldFail
       );
       statuses.push(result.success);
     }
@@ -77,7 +77,7 @@ describe("Optimistic UI Rollback Mutation Stress Tests", () => {
     expect(failures).toBe(5);
   });
 
-  it("no stale toast artifacts remain after rollback", async () => {
+  it('no stale toast artifacts remain after rollback', async () => {
     const results: MutationResult<Outage[]>[] = [];
 
     // Batch of mutations with mixed results
@@ -85,7 +85,7 @@ describe("Optimistic UI Rollback Mutation Stress Tests", () => {
       const result = await simulateMutation(
         mock,
         () => mock.getOutages(),
-        i === 2,
+        i === 2
       );
       results.push(result);
     }
@@ -100,7 +100,7 @@ describe("Optimistic UI Rollback Mutation Stress Tests", () => {
     successes.forEach((r) => expect(r.data).toBeTruthy());
   });
 
-  it("chained payment mutations rollback correctly", async () => {
+  it('chained payment mutations rollback correctly', async () => {
     const initialPayments = await mock.getPayments();
     const initialCount = initialPayments.length;
 
@@ -108,7 +108,7 @@ describe("Optimistic UI Rollback Mutation Stress Tests", () => {
     const failResult = await simulateMutation(
       mock,
       () => mock.getPayments(),
-      true,
+      true
     );
     expect(failResult.success).toBe(false);
 
@@ -116,7 +116,7 @@ describe("Optimistic UI Rollback Mutation Stress Tests", () => {
     const refreshResult = await simulateMutation(
       mock,
       () => mock.getPayments(),
-      false,
+      false
     );
     expect(refreshResult.success).toBe(true);
 
@@ -125,18 +125,14 @@ describe("Optimistic UI Rollback Mutation Stress Tests", () => {
     expect(finalPayments.length).toBe(initialCount);
   });
 
-  it("rapid outage updates do not corrupt detail view", async () => {
-    const outageId = "mock-1";
+  it('rapid outage updates do not corrupt detail view', async () => {
+    const outageId = 'mock-1';
     const initial = await mock.getOutage(outageId);
     expect(initial).toBeTruthy();
 
     const updates = Array.from({ length: 5 }, (_, i) => i % 2 === 0);
     for (const shouldFail of updates) {
-      await simulateMutation(
-        mock,
-        () => mock.getOutage(outageId),
-        shouldFail,
-      );
+      await simulateMutation(mock, () => mock.getOutage(outageId), shouldFail);
     }
 
     const final = await mock.getOutage(outageId);
