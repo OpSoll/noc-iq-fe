@@ -14,6 +14,13 @@ vi.mock('next/link', () => ({
   }) => <a href={href}>{children}</a>,
 }));
 
+// The view navigates to the outage table from the import summary modal, so it
+// needs the router stub every other router-dependent test in this repo uses.
+const { mockRouterPush } = vi.hoisted(() => ({ mockRouterPush: vi.fn() }));
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: mockRouterPush }),
+}));
+
 const mockBulkImport = vi.fn();
 vi.mock('@/services/bulkImportService', () => ({
   bulkImportOutages: (...a: unknown[]) => mockBulkImport(...a),
@@ -69,7 +76,12 @@ describe('BulkImportView', () => {
     await screen.findByText('data.csv');
     fireEvent.click(screen.getByRole('button', { name: /upload file/i }));
     expect(await screen.findByText('Import Summary')).toBeInTheDocument();
-    expect(screen.getByText('3')).toBeInTheDocument();
+    // The breakdown is asserted through the summary modal, which now also
+    // reports the counts, so a bare getByText('3') would be ambiguous.
+    expect(screen.getByTestId('import-summary-imported')).toHaveTextContent(
+      '3'
+    );
+    expect(screen.getByTestId('import-summary-skipped')).toHaveTextContent('1');
   });
 
   it('shows server validation errors in summary', async () => {
