@@ -5,18 +5,25 @@
 import {
   AUTO_REFRESH_OPTIONS,
   type AutoRefreshMs,
+  type AutoRefreshOption,
 } from '@/hooks/useAutoRefresh';
 
 interface AutoRefreshControlProps {
   value: AutoRefreshMs;
   onChange: (value: AutoRefreshMs) => void;
   isTabVisible: boolean;
+  /** Interval presets to offer; defaults to the dashboard header's list. */
+  options?: AutoRefreshOption[];
+  /** Accessible name, so several controls on a page stay distinguishable. */
+  ariaLabel?: string;
 }
 
 export default function AutoRefreshControl({
   value,
   onChange,
   isTabVisible,
+  options = AUTO_REFRESH_OPTIONS,
+  ariaLabel = 'Auto-refresh interval',
 }: AutoRefreshControlProps) {
   const isPolling = value > 0;
 
@@ -36,12 +43,12 @@ export default function AutoRefreshControl({
         Auto-refresh
       </span>
       <select
-        aria-label="Auto-refresh interval"
+        aria-label={ariaLabel}
         className="rounded border border-gray-200 bg-white px-2 py-1 text-sm text-gray-700"
         value={value}
         onChange={(e) => onChange(Number(e.target.value) as AutoRefreshMs)}
       >
-        {AUTO_REFRESH_OPTIONS.map((option) => (
+        {options.map((option) => (
           <option key={option.value} value={option.value}>
             {option.label}
           </option>
