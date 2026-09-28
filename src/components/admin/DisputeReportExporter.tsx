@@ -109,7 +109,7 @@ export const DisputeReportExporter: React.FC<DisputeReportExporterProps> = ({ di
                 </tr>
               </thead>
               <tbody>
-                ${dispute.votes.map(v => `<tr><td>${v.voterName}</td><td><strong>${v.vote}</strong></td><td>${v.comment \vert{}\vert{} 'N/A'}</td><td>${new Date(v.timestamp).toLocaleString()}</td></tr>`).join('')}
+                ${dispute.votes.map(v => `<tr><td>${v.voterName}</td><td><strong>${v.vote}</strong></td><td>${v.comment || 'N/A'}</td><td>${new Date(v.timestamp).toLocaleString()}</td></tr>`).join('')}
               </tbody>
             </table>
 
