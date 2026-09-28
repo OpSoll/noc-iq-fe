@@ -35,7 +35,8 @@
     "react-hook-form": "^7.89.0",
     "react-window": "^1.8.11",
     "tailwind-merge": "^3.4.0",
-    "zustand": "^5.0.15"
+    "zustand": "^5.0.15",
+    "papaparse": "^5.5.2"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.18",
@@ -54,6 +55,7 @@
     "prettier": "^3.5.3",
     "tailwindcss": "^4.1.18",
     "typescript": "^5",
-    "vitest": "^4.1.2"
+    "vitest": "^4.1.2",
+    "@types/papaparse": "^5.3.15"
   }
 }
