@@ -473,22 +473,6 @@ export default function BulkImportView() {
   const id = useId();
   const fileInputId = `file-input-${id}`;
 
-  // ─── File Validation ───────────────────────────────────────────────────────
-  const validateFile = useCallback((nextFile: File): FileValidationResult => {
-    const extension = nextFile.name
-      .slice(nextFile.name.lastIndexOf('.'))
-      .toLowerCase() as AcceptedExtension;
-    const isAcceptedType =
-      ACCEPTED_EXTENSIONS.includes(extension) ||
-      ACCEPTED_TYPES.includes(nextFile.type as AcceptedMimeType);
-
-    if (!isAcceptedType) {
-      return {
-        valid: false,
-        error: `Invalid file type. Accepted formats: ${ACCEPTED_EXTENSIONS.join(', ')}`,
-      };
-    }
-
   // ─── Derived State ─────────────────────────────────────────────────────────
   const preview = useMemo(
     () => (parsed ? buildPreview(parsed, mapping) : null),
