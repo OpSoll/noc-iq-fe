@@ -15,6 +15,10 @@ import PenaltyCreditsWidget from '@/components/dashboard/PenaltyCreditsWidget';
 import MTTRHistogramChart from '@/components/dashboard/MTTRHistogramChart';
 import SLABreachCountdownCard from '@/components/dashboard/SLABreachCountdownCard';
 import SystemStatusWidget from '@/components/dashboard/SystemStatusWidget';
+import SlaWidget from '@/components/dashboard/SlaWidget';
+import MttrMtbfCards from '@/components/dashboard/MttrMtbfCards';
+import { BreachToast } from '@/components/notifications/BreachToast';
+import type { DashboardWidget } from '@/components/dashboard/DashboardGrid';
 import { useToast } from '@/components/ui/toast';
 import { RouteErrorState } from '@/components/ui/route-state';
 import {
@@ -531,10 +535,10 @@ export default function SLADashboardView() {
       title: 'Compliance and Payout Trends',
       render: () => trendCharts,
     },
-{
+    {
       id: 'mttr-histogram',
       title: 'MTTR Distribution',
-      render: (
+      render: () => (
         <MTTRHistogramChart
           dateFrom={filters.date_from}
           dateTo={filters.date_to}
@@ -733,6 +737,9 @@ export default function SLADashboardView() {
         </div>
       ) : null}
 
+      {/* Closes #599: live availability, polled at 15s/30s/60s. */}
+      <SlaWidget dateFrom={filters.date_from} dateTo={filters.date_to} />
+
       {isEmptyDataset ? (
         <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
           No dashboard data matches the current filters yet. Export and share
@@ -793,6 +800,9 @@ export default function SLADashboardView() {
           actionLabel="Open filtered payment drilldown"
         />
       </div>
+
+      {/* Closes #600: MTTR/MTBF with previous-cycle trend indicators. */}
+      <MttrMtbfCards dateFrom={filters.date_from} dateTo={filters.date_to} />
 
       <FinancialSummaryWidget metrics={metrics} />
 
