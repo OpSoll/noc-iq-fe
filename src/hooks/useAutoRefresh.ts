@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 // Closes #454: auto-refresh interval toggle for the dashboard header
 
-export type AutoRefreshMs = 0 | 10_000 | 30_000 | 60_000;
+export type AutoRefreshMs = 0 | 10_000 | 15_000 | 30_000 | 60_000;
 
 export interface AutoRefreshOption {
   label: string;
@@ -14,6 +14,19 @@ export interface AutoRefreshOption {
 export const AUTO_REFRESH_OPTIONS: AutoRefreshOption[] = [
   { label: 'Off', value: 0 },
   { label: '10s', value: 10_000 },
+  { label: '30s', value: 30_000 },
+  { label: '60s', value: 60_000 },
+];
+
+/**
+ * Interval presets for the SLA availability widget (closes #599), which offers
+ * 15s / 30s / 60s polling. Kept as a separate list rather than editing
+ * {@link AUTO_REFRESH_OPTIONS} so the dashboard header control keeps the 10s
+ * preset it already shipped with.
+ */
+export const SLA_WIDGET_REFRESH_OPTIONS: AutoRefreshOption[] = [
+  { label: 'Off', value: 0 },
+  { label: '15s', value: 15_000 },
   { label: '30s', value: 30_000 },
   { label: '60s', value: 60_000 },
 ];

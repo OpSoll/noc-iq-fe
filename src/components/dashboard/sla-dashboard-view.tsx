@@ -857,6 +857,9 @@ export default function SLADashboardView() {
         />
       </div>
 
+      {/* Closes #600: MTTR/MTBF with previous-cycle trend indicators. */}
+      <MttrMtbfCards dateFrom={filters.date_from} dateTo={filters.date_to} />
+
       <FinancialSummaryWidget metrics={metrics} />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
