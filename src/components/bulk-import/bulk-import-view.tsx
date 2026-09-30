@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo, useRef, useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import { useMemo, useRef, useState, useCallback, useId } from 'react';
 
 import { bulkImportOutages } from '@/services/bulkImportService';
 import type {
@@ -10,17 +11,25 @@ import type {
 } from '@/types/bulkImport';
 
 import {
-  detectDuplicateRows,
-  DuplicateDetector,
-} from './DuplicateDetector';
-import {
-  ImportProgress,
-  type ImportProgressState,
-} from './ImportProgress';
+  ColumnMapper,
+  applyColumnMapping,
+  autoDetectMapping,
+  missingRequiredFields,
+  type ColumnFieldSpec,
+  type ColumnMapping,
+} from './ColumnMapper';
+import { ACCEPTED_EXTENSIONS, DropZone, validateImportFile } from './DropZone';
+import { detectDuplicateRows, DuplicateDetector } from './DuplicateDetector';
+import { ImportProgress, type ImportProgressState } from './ImportProgress';
+import { ImportSummaryModal } from './ImportSummaryModal';
+import { buildImportSummary } from '@/lib/importSummary';
 import { SampleDownload } from './SampleDownload';
 import { ValidationPreview } from './ValidationPreview';
 import { TimezoneSelector } from './TimezoneSelector';
-import { ImportHistoryDrawer, type ImportHistoryJob } from './ImportHistoryDrawer';
+import {
+  ImportHistoryDrawer,
+  type ImportHistoryJob,
+} from './ImportHistoryDrawer';
 import type { SourceTimezone } from '@/lib/timezoneConvert';
 import { convertRowTimestampsToUtc } from '@/lib/timezoneConvert';
 import { parseCsvInWorker } from '@/lib/csvParseClient';
@@ -48,7 +57,7 @@ interface PreviewState {
   totalRows: number; // Added: track total for "showing X of Y" messaging
 }
 
-type UploadStatus = 'idle' | 'uploading' | 'success' | 'cancelled';
+type UploadStatus = 'idle' | 'uploading' | 'success' | 'error' | 'cancelled';
 
 // ─── CSV Parsing ─────────────────────────────────────────────────────────────
 interface ParsedCSV {
@@ -446,7 +455,9 @@ function ValidationList({ errors }: { errors: ImportValidationError[] }) {
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 export default function BulkImportView() {
+  const router = useRouter();
   const abortRef = useRef<AbortController | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
   const [file, setFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
@@ -469,31 +480,31 @@ export default function BulkImportView() {
   const [sourceTimezone, setSourceTimezone] = useState<SourceTimezone>('UTC');
   const [historyOpen, setHistoryOpen] = useState(false);
   const [importHistory, setImportHistory] = useState<ImportHistoryJob[]>([]);
+  // Closes #632: the completion modal is dismissed independently of the
+  // on-page result card, which stays as the persistent record of the import.
+  const [importSummaryOpen, setImportSummaryOpen] = useState(false);
 
   const id = useId();
   const fileInputId = `file-input-${id}`;
 
-  // ─── File Validation ───────────────────────────────────────────────────────
-  const validateFile = useCallback((nextFile: File): FileValidationResult => {
-    const extension = nextFile.name
-      .slice(nextFile.name.lastIndexOf('.'))
-      .toLowerCase() as AcceptedExtension;
-    const isAcceptedType =
-      ACCEPTED_EXTENSIONS.includes(extension) ||
-      ACCEPTED_TYPES.includes(nextFile.type as AcceptedMimeType);
-
-    if (!isAcceptedType) {
-      return {
-        valid: false,
-        error: `Invalid file type. Accepted formats: ${ACCEPTED_EXTENSIONS.join(', ')}`,
-      };
-    }
-
   // ─── Derived State ─────────────────────────────────────────────────────────
-  const preview = useMemo(
-    () => (parsed ? buildPreview(parsed, mapping) : null),
-    [parsed, mapping]
-  );
+  // Inline cell edits are layered on top of the derived preview rather than
+  // written back into `parsed`: writing them back would re-apply the column
+  // mapping on the next render and mangle rows that are already mapped.
+  const [previewEdits, setPreviewEdits] = useState<{
+    rows?: string[][];
+    errors?: ImportValidationError[];
+  }>({});
+
+  const preview = useMemo(() => {
+    if (!parsed) return null;
+    const derived = buildPreview(parsed, mapping);
+    return {
+      ...derived,
+      rows: previewEdits.rows ?? derived.rows,
+      errors: previewEdits.errors ?? derived.errors,
+    };
+  }, [parsed, mapping, previewEdits]);
 
   const missingFields = useMemo(
     () => missingRequiredFields(SCHEMA_FIELDS, mapping),
@@ -523,6 +534,7 @@ export default function BulkImportView() {
     try {
       const next = await parseImportFile(nextFile);
       setParsed(next);
+      setPreviewEdits({});
       setMapping(autoDetectMapping(next.headers, SCHEMA_FIELDS));
     } catch (err) {
       setFileError('Failed to read file. Please check the file format.');
@@ -547,7 +559,6 @@ export default function BulkImportView() {
     [handleFile]
   );
 
-
   /** Rebuild a CSV File excluding duplicate rows when the option is enabled (#631). */
   const buildUploadFile = useCallback((): File | null => {
     if (!file || !preview) return file;
@@ -559,7 +570,9 @@ export default function BulkImportView() {
       if (/[",\n\r]/.test(cell)) return `"${cell.replace(/"/g, '""')}"`;
       return cell;
     };
-    const kept = preview.rows.filter((_, i) => !detection.excludedRowIndexes.has(i));
+    const kept = preview.rows.filter(
+      (_, i) => !detection.excludedRowIndexes.has(i)
+    );
     const lines = [
       preview.headers.join(','),
       ...kept.map((r) => r.map(escape).join(',')),
@@ -621,6 +634,7 @@ export default function BulkImportView() {
       setFile(null);
       setParsed(null);
       setStatus('success');
+      setImportSummaryOpen(true);
     } catch (err: unknown) {
       if (
         (err as { name?: string }).name === 'CanceledError' ||
@@ -656,6 +670,7 @@ export default function BulkImportView() {
     setFile(null);
     setFileError(null);
     setParsed(null);
+    setPreviewEdits({});
     setMapping({});
     setMappingConfirmed(false);
     setResult(null);
@@ -663,6 +678,7 @@ export default function BulkImportView() {
     setStatus('idle');
     setProgress(0);
     setExcludeDuplicates(true);
+    setImportSummaryOpen(false);
     setImportProgress({ phase: 'idle', percent: 0, processed: 0, total: 0 });
     if (inputRef.current) inputRef.current.value = '';
   }, []);
@@ -848,17 +864,10 @@ export default function BulkImportView() {
                       : undefined
                   }
                   onRowsChange={(rows) =>
-                    setPreview((prev) => (prev ? { ...prev, rows } : prev))
+                    setPreviewEdits((prev) => ({ ...prev, rows }))
                   }
                   onErrorsChange={(errors) =>
-                    setPreview((prev) =>
-                      prev
-                        ? {
-                            ...prev,
-                            errors,
-                          }
-                        : prev
-                    )
+                    setPreviewEdits((prev) => ({ ...prev, errors }))
                   }
                 />
               )}
@@ -876,17 +885,6 @@ export default function BulkImportView() {
                 ))}
               </ul>
             </Alert>
-          )}
-
-          {/* Preview */}
-          {preview.headers.length > 0 && preview.rows.length > 0 && (
-            <ValidationPreview
-              headers={preview.headers}
-              records={preview.rows}
-              errors={preview.errors}
-              totalRows={preview.totalRows}
-              requiredFields={REQUIRED_FIELDS}
-            />
           )}
         </div>
       )}
@@ -940,6 +938,17 @@ export default function BulkImportView() {
         <Alert type="error" onDismiss={() => setSubmitError(null)}>
           {submitError}
         </Alert>
+      )}
+
+      {/* Closes #632: notify the operator as soon as the import finishes. */}
+      {result && (
+        <ImportSummaryModal
+          open={importSummaryOpen}
+          summary={buildImportSummary(result)}
+          errors={result.errors}
+          onClose={() => setImportSummaryOpen(false)}
+          onViewOutages={() => router.push('/outages')}
+        />
       )}
 
       {/* Success Result */}

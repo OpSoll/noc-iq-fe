@@ -15,6 +15,13 @@ import PenaltyCreditsWidget from '@/components/dashboard/PenaltyCreditsWidget';
 import MTTRHistogramChart from '@/components/dashboard/MTTRHistogramChart';
 import SLABreachCountdownCard from '@/components/dashboard/SLABreachCountdownCard';
 import SystemStatusWidget from '@/components/dashboard/SystemStatusWidget';
+import SiteSelector, {
+  deriveSiteOptions,
+} from '@/components/dashboard/SiteSelector';
+import RiskGauge from '@/components/charts/RiskGauge';
+import SlaTrendChart from '@/components/charts/SlaTrendChart';
+import { BreachToast } from '@/components/notifications/BreachToast';
+import type { DashboardWidget } from '@/components/dashboard/DashboardGrid';
 import { useToast } from '@/components/ui/toast';
 import { RouteErrorState } from '@/components/ui/route-state';
 import {
@@ -30,6 +37,7 @@ import {
 import { useUrlSync } from '@/hooks/useUrlSync';
 import { useAutoRefresh } from '@/hooks/useAutoRefresh';
 import { buildMttrHistogram } from '@/lib/mttrHistogram';
+import { buildSlaTrendSeries, resolveTrendWindow } from '@/lib/slaTrendSeries';
 import { getOutages } from '@/services/outages';
 import {
   fetchDashboardMetrics,
@@ -56,6 +64,10 @@ const METRIC_CARD_TONES = ['green', 'red', 'green', 'red'] as const;
 // Closes #609: the export modal reuses the MTTR widget's cache entry, so the
 // resolved-outage sample is fetched once and shared between both components.
 const MTTR_SAMPLE_PARAMS = { status: 'resolved', page_size: 500 };
+// Closes #601/#603: the gauge and the history chart need the raw outage
+// records, not the aggregated analytics payload. Unfiltered by status, because
+// downtime that is still accruing counts against the error budget.
+const DASHBOARD_OUTAGE_PARAMS = { page_size: 500 };
 const DASHBOARD_DEFAULTS = {
   date_from: '',
   date_to: '',
@@ -301,6 +313,46 @@ export default function SLADashboardView() {
     [mttrSample.data, filters.date_from, filters.date_to]
   );
 
+  // Closes #601/#603: one outage sample feeds both the breach-risk gauge and
+  // the compliance history chart.
+  const outagesQuery = useQuery({
+    queryKey: queryKeys.outages.list(DASHBOARD_OUTAGE_PARAMS),
+    queryFn: () => getOutages(DASHBOARD_OUTAGE_PARAMS),
+    staleTime: 30_000,
+    refetchInterval: autoRefresh.refetchInterval,
+  });
+
+  const outageItems = outagesQuery.data?.items;
+
+  const trendWindow = useMemo(
+    () => resolveTrendWindow(filters.date_from, filters.date_to),
+    [filters.date_from, filters.date_to]
+  );
+
+  const trendSeries = useMemo(
+    () => buildSlaTrendSeries(outageItems ?? [], trendWindow),
+    [outageItems, trendWindow]
+  );
+
+  // The day buckets partition the window and merging is local to each bucket,
+  // so the sum is the merged downtime for the whole window.
+  const windowDowntimeMinutes = useMemo(
+    () => trendSeries.reduce((sum, day) => sum + day.downtimeMinutes, 0),
+    [trendSeries]
+  );
+
+  const windowMinutes = useMemo(
+    () => (trendWindow.to.getTime() - trendWindow.from.getTime()) / 60_000,
+    [trendWindow]
+  );
+
+  // Closes #602: the site menu is derived from the same sample, so it always
+  // lists sites that actually have data behind them.
+  const siteOptions = useMemo(
+    () => deriveSiteOptions(outageItems ?? []),
+    [outageItems]
+  );
+
   const onTrendClick = useCallback(
     (point: TrendPoint) => {
       pushOutageDrilldown(point);
@@ -531,10 +583,10 @@ export default function SLADashboardView() {
       title: 'Compliance and Payout Trends',
       render: () => trendCharts,
     },
-{
+    {
       id: 'mttr-histogram',
       title: 'MTTR Distribution',
-      render: (
+      render: () => (
         <MTTRHistogramChart
           dateFrom={filters.date_from}
           dateTo={filters.date_to}
@@ -689,16 +741,14 @@ export default function SLADashboardView() {
             ))}
           </select>
         </label>
-        <label className="space-y-1 text-xs">
-          <span className="font-medium text-slate-600">Site</span>
-          <input
-            type="text"
-            placeholder="e.g. site-a"
-            className="w-full rounded border border-slate-200 bg-white px-2 py-1.5 text-sm"
-            value={filters.site ?? ''}
-            onChange={(e) => set('site', e.target.value)}
-          />
-        </label>
+        {/* Closes #602: a controlled site dropdown replaces the free-text
+            input, so the filter value is always one the data actually has. */}
+        <SiteSelector
+          options={siteOptions}
+          value={urlState.site}
+          onChange={(siteId) => set('site', siteId)}
+          loading={outagesQuery.isLoading}
+        />
       </div>
 
       {compareMode ? (
@@ -732,6 +782,19 @@ export default function SLADashboardView() {
           </p>
         </div>
       ) : null}
+
+      {/* Closes #601/#603: error-budget gauge and compliance history. */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <RiskGauge
+          downtimeMinutes={windowDowntimeMinutes}
+          windowMinutes={windowMinutes}
+        />
+        <SlaTrendChart
+          outages={outageItems ?? []}
+          dateFrom={filters.date_from}
+          dateTo={filters.date_to}
+        />
+      </div>
 
       {isEmptyDataset ? (
         <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
