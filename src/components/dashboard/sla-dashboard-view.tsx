@@ -13,6 +13,7 @@ import ExportModal from '@/components/dashboard/ExportModal';
 import FinancialSummaryWidget from '@/components/dashboard/FinancialSummaryWidget';
 import PenaltyCreditsWidget from '@/components/dashboard/PenaltyCreditsWidget';
 import MTTRHistogramChart from '@/components/dashboard/MTTRHistogramChart';
+import MttrMtbfCards from '@/components/dashboard/MttrMtbfCards';
 import SLABreachCountdownCard from '@/components/dashboard/SLABreachCountdownCard';
 import SystemStatusWidget from '@/components/dashboard/SystemStatusWidget';
 import SiteSelector, {
@@ -37,6 +38,7 @@ import {
 import { useUrlSync } from '@/hooks/useUrlSync';
 import { useAutoRefresh } from '@/hooks/useAutoRefresh';
 import { buildMttrHistogram } from '@/lib/mttrHistogram';
+import { KPI_DEFINITIONS } from '@/lib/kpiDefinitions';
 import { buildSlaTrendSeries, resolveTrendWindow } from '@/lib/slaTrendSeries';
 import { getOutages } from '@/services/outages';
 import {
@@ -458,6 +460,7 @@ export default function SLADashboardView() {
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <KPICard
         title="SLA Compliance"
+        definition={KPI_DEFINITIONS.slaCompliance}
         value={`${metrics.sla_compliance_percentage.toFixed(1)}%`}
         subtitle={
           cmp
@@ -470,6 +473,7 @@ export default function SLADashboardView() {
       />
       <KPICard
         title="Total Penalties"
+        definition={KPI_DEFINITIONS.totalPenalties}
         value={`$${metrics.penalties.total.toLocaleString()}`}
         subtitle={
           cmp
@@ -482,6 +486,7 @@ export default function SLADashboardView() {
       />
       <KPICard
         title="Total Rewards"
+        definition={KPI_DEFINITIONS.totalRewards}
         value={`$${metrics.rewards.total.toLocaleString()}`}
         subtitle={
           cmp
@@ -494,6 +499,7 @@ export default function SLADashboardView() {
       />
       <KPICard
         title="Net Balance"
+        definition={KPI_DEFINITIONS.netBalance}
         value={`${netBalance >= 0 ? '+' : ''}$${netBalance.toLocaleString()}`}
         subtitle={(() => {
           if (!cmp) return 'Rewards minus penalties';
@@ -807,6 +813,7 @@ export default function SLADashboardView() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KPICard
           title="SLA Compliance"
+        definition={KPI_DEFINITIONS.slaCompliance}
           value={`${metrics.sla_compliance_percentage.toFixed(1)}%`}
           subtitle={
             cmp
@@ -819,6 +826,7 @@ export default function SLADashboardView() {
         />
         <KPICard
           title="Total Penalties"
+        definition={KPI_DEFINITIONS.totalPenalties}
           value={`$${metrics.penalties.total.toLocaleString()}`}
           subtitle={
             cmp
@@ -831,6 +839,7 @@ export default function SLADashboardView() {
         />
         <KPICard
           title="Total Rewards"
+        definition={KPI_DEFINITIONS.totalRewards}
           value={`$${metrics.rewards.total.toLocaleString()}`}
           subtitle={
             cmp
@@ -843,6 +852,7 @@ export default function SLADashboardView() {
         />
         <KPICard
           title="Net Balance"
+        definition={KPI_DEFINITIONS.netBalance}
           value={`${netBalance >= 0 ? '+' : ''}$${netBalance.toLocaleString()}`}
           subtitle={(() => {
             if (!cmp) return 'Rewards minus penalties';

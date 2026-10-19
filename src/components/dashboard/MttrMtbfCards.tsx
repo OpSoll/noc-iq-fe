@@ -20,6 +20,7 @@ import { memo, useMemo } from 'react';
 
 import MetricCard from '@/components/dashboard/MetricCard';
 import { useDashboardOutageSample } from '@/hooks/useDashboardOutageSample';
+import { KPI_DEFINITIONS } from '@/lib/kpiDefinitions';
 import {
   filterOutagesByDetectedAt,
   resolveMetricWindow,
@@ -103,6 +104,7 @@ function MttrMtbfCards({ dateFrom, dateTo, className }: MttrMtbfCardsProps) {
         trend={query.isLoading ? 'unknown' : mttr.trend}
         comparison={query.isLoading ? 'Loading…' : describeComparison(mttr)}
         detail="Average time from detection to resolution, over resolved outages."
+        definition={KPI_DEFINITIONS.mttr}
       />
       <MetricCard
         title="Mean Time Between Failures"
@@ -111,6 +113,7 @@ function MttrMtbfCards({ dateFrom, dateTo, className }: MttrMtbfCardsProps) {
         trend={query.isLoading ? 'unknown' : mtbf.trend}
         comparison={query.isLoading ? 'Loading…' : describeComparison(mtbf)}
         detail="Average gap between consecutive outage detections."
+        definition={KPI_DEFINITIONS.mtbf}
       />
     </div>
   );

@@ -1,6 +1,8 @@
 import React from 'react';
 import type { KPIConfidence } from '@/services/analytics';
 
+import MetricDefinitionTip from './MetricDefinitionTip';
+
 interface KPICardProps {
   title: string;
   value: string | number;
@@ -9,6 +11,8 @@ interface KPICardProps {
   confidence?: KPIConfidence;
   onClick?: () => void;
   actionLabel?: string;
+  /** Precise definition of how the metric is computed (#1017). */
+  definition?: string;
 }
 
 const highlightMap: Record<string, string> = {
@@ -33,13 +37,22 @@ const KPICard: React.FC<KPICardProps> = ({
   confidence,
   onClick,
   actionLabel,
+  definition,
 }) => {
   const interactive = typeof onClick === 'function';
 
   return (
     <div
-      className={`rounded-xl border-l-4 shadow-sm ${highlightMap[highlight]} ${interactive ? 'transition-transform hover:-translate-y-0.5' : ''}`}
+      className={`relative rounded-xl border-l-4 shadow-sm ${highlightMap[highlight]} ${interactive ? 'transition-transform hover:-translate-y-0.5' : ''}`}
     >
+      {/* #1017: rendered as a sibling of the interactive region (not nested
+          inside the card's button) so the placed affordance stays valid HTML
+          and remains independently keyboard-focusable. */}
+      {definition ? (
+        <span className="absolute right-3 top-3 z-10">
+          <MetricDefinitionTip title={title} definition={definition} />
+        </span>
+      ) : null}
       {interactive ? (
         <button
           type="button"
