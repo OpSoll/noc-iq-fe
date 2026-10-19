@@ -11,6 +11,12 @@ import {
 import { EmptyState } from '@/components/ui/empty-state';
 import { Settings } from 'lucide-react';
 import { api } from '@/lib/api';
+import {
+  getBoundsHint,
+  SLA_BOUNDS,
+  validateSlaConfig,
+  type SlaBoundKey,
+} from '@/lib/slaBounds';
 
 type Severity = 'critical' | 'high' | 'medium' | 'low';
 
@@ -39,6 +45,66 @@ function getSeverityVariant(severity: Severity) {
   return 'default';
 }
 
+/**
+ * A bounded number input for an SLA field (#989): bound-derived `min`/`step`
+ * attributes, helper text describing the accepted range and an inline error when
+ * the value falls outside it.
+ */
+function SlaNumberField({
+  id,
+  field,
+  label,
+  value,
+  error,
+  onChange,
+}: {
+  id: string;
+  field: SlaBoundKey;
+  label: string;
+  value: number;
+  error?: string;
+  onChange: (value: number) => void;
+}) {
+  const spec = SLA_BOUNDS[field];
+  const hintId = `${id}-hint`;
+  const errorId = `${id}-error`;
+
+  return (
+    <div>
+      <label htmlFor={id} className="mb-1 block text-sm font-medium">
+        {label}
+      </label>
+      <input
+        id={id}
+        type="number"
+        min={spec.min}
+        max={spec.max}
+        step={spec.step}
+        value={value}
+        aria-describedby={error ? `${hintId} ${errorId}` : hintId}
+        aria-invalid={error ? true : undefined}
+        onChange={(event) => onChange(Number(event.target.value))}
+        className={`w-full rounded border p-2 outline-none focus:ring-2 focus:ring-blue-500 ${
+          error ? 'border-red-400' : ''
+        }`}
+      />
+      <p id={hintId} className="mt-1 text-xs text-muted-foreground">
+        {getBoundsHint(field)}
+      </p>
+      {error ? (
+        <p
+          id={errorId}
+          role="alert"
+          data-testid={`${id}-error`}
+          className="mt-1 text-xs text-red-600"
+        >
+          {error}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 export default function SlaConfigPage() {
   const [configs, setConfigs] = useState<EditableConfig[]>([]);
   const [loading, setLoading] = useState(true);
@@ -53,6 +119,9 @@ export default function SlaConfigPage() {
     penalty_per_minute: 0,
     reward_base: 0,
   });
+
+  // #989: inline errors for out-of-range values, shown per field.
+  const boundErrors = validateSlaConfig(formData);
 
   useEffect(() => {
     void fetchConfigs();
@@ -117,6 +186,14 @@ export default function SlaConfigPage() {
 
   async function handleSave() {
     if (!editingConfig) {
+      return;
+    }
+
+    // #989: reject out-of-range values with a per-field message.
+    const boundErrors = validateSlaConfig(formData);
+    const firstError = Object.values(boundErrors)[0];
+    if (firstError) {
+      setSaveError(firstError);
       return;
     }
 
@@ -254,66 +331,45 @@ export default function SlaConfigPage() {
             ) : null}
 
             <div className="space-y-4">
-              <div>
-                <label
-                  htmlFor="sla-threshold-minutes"
-                  className="mb-1 block text-sm font-medium"
-                >
-                  Threshold (minutes)
-                </label>
-                <input
-                  id="sla-threshold-minutes"
-                  type="number"
-                  value={formData.threshold_minutes}
-                  onChange={(event) =>
-                    setFormData((current) => ({
-                      ...current,
-                      threshold_minutes: Number(event.target.value),
-                    }))
-                  }
-                  className="w-full rounded border p-2 outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="sla-reward-base"
-                  className="mb-1 block text-sm font-medium"
-                >
-                  Reward Base
-                </label>
-                <input
-                  id="sla-reward-base"
-                  type="number"
-                  value={formData.reward_base}
-                  onChange={(event) =>
-                    setFormData((current) => ({
-                      ...current,
-                      reward_base: Number(event.target.value),
-                    }))
-                  }
-                  className="w-full rounded border p-2 outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="sla-penalty-per-minute"
-                  className="mb-1 block text-sm font-medium"
-                >
-                  Penalty Per Minute
-                </label>
-                <input
-                  id="sla-penalty-per-minute"
-                  type="number"
-                  value={formData.penalty_per_minute}
-                  onChange={(event) =>
-                    setFormData((current) => ({
-                      ...current,
-                      penalty_per_minute: Number(event.target.value),
-                    }))
-                  }
-                  className="w-full rounded border p-2 outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
+              <SlaNumberField
+                id="sla-threshold-minutes"
+                field="threshold_minutes"
+                label="Threshold (minutes)"
+                value={formData.threshold_minutes}
+                error={boundErrors.threshold_minutes}
+                onChange={(value) =>
+                  setFormData((current) => ({
+                    ...current,
+                    threshold_minutes: value,
+                  }))
+                }
+              />
+              <SlaNumberField
+                id="sla-reward-base"
+                field="reward_base"
+                label="Reward Base"
+                value={formData.reward_base}
+                error={boundErrors.reward_base}
+                onChange={(value) =>
+                  setFormData((current) => ({
+                    ...current,
+                    reward_base: value,
+                  }))
+                }
+              />
+              <SlaNumberField
+                id="sla-penalty-per-minute"
+                field="penalty_per_minute"
+                label="Penalty Per Minute"
+                value={formData.penalty_per_minute}
+                error={boundErrors.penalty_per_minute}
+                onChange={(value) =>
+                  setFormData((current) => ({
+                    ...current,
+                    penalty_per_minute: value,
+                  }))
+                }
+              />
             </div>
 
             <div className="mt-6 flex justify-end gap-3">
