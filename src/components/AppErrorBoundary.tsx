@@ -24,6 +24,8 @@ import {
   type ReactNode,
 } from 'react';
 
+import { redactSensitiveText } from '@/lib/telemetry/privacy';
+
 // ─── Telemetry logging ────────────────────────────────────────────────────────
 
 /**
@@ -31,15 +33,20 @@ import {
  * channel. In production this is the `console.error` stream (captured by
  * error-monitoring services such as Sentry via their SDK instrumentation).
  * The function is extracted so it can be spied on in tests.
+ *
+ * #977: message, stack and component stack are passed through
+ * {@link redactSensitiveText} first, so an `Authorization: Bearer …` header or
+ * a `token=` query parameter that ended up inside an error can never be emitted
+ * to the monitoring backend.
  */
 export function logErrorToTelemetry(error: Error, errorInfo: ErrorInfo): void {
   console.error(
     '[AppErrorBoundary] Caught render error:',
-    error.message,
+    redactSensitiveText(error.message),
     '\nComponent stack:',
-    errorInfo.componentStack ?? '(unavailable)',
+    redactSensitiveText(errorInfo.componentStack ?? '(unavailable)'),
     '\nStack trace:',
-    error.stack ?? '(unavailable)'
+    redactSensitiveText(error.stack ?? '(unavailable)')
   );
 }
 
