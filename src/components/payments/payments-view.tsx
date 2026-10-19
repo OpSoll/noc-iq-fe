@@ -1,5 +1,7 @@
 'use client';
 
+import { useMemo } from 'react';
+
 import { useUrlSync } from '@/hooks/useUrlSync';
 import { PaymentService } from '@/services/paymentService';
 import type { Payment } from '@/types/payment';
@@ -23,6 +25,7 @@ import {
   PaginationEllipsis,
 } from '@/components/ui/pagination';
 import { queryKeys } from '@/lib/queryKeys';
+import { formatTotal, summarizePayments } from '@/lib/paymentTotals';
 
 type SortDirection = 'asc' | 'desc';
 
@@ -166,9 +169,12 @@ export function PaymentsView() {
     enabled: !dateError,
   });
 
-  const payments = data?.items ?? [];
+  const payments = useMemo(() => data?.items ?? [], [data]);
   const total = data?.total ?? 0;
   const totalPages = Math.ceil(total / perPage);
+
+  // #1005: totals for the rows currently on screen, shown in a sticky footer.
+  const totals = useMemo(() => summarizePayments(payments), [payments]);
 
   const handleFilterChange = (key: string, value: string) => {
     setUrlState({ [key]: value, page: '1' } as Partial<typeof URL_DEFAULTS>);
@@ -395,6 +401,38 @@ export function PaymentsView() {
               ))
             )}
           </tbody>
+          {/* #1005: sticky totals for the rows on screen. */}
+          {!isLoading && payments.length > 0 && (
+            <tfoot className="sticky bottom-0 z-10 border-t-2 border-gray-200 bg-white text-sm font-semibold text-gray-700">
+              <tr data-testid="payments-totals-row">
+                <td className="px-4 py-3">
+                  {totals.count} row{totals.count === 1 ? '' : 's'}
+                </td>
+                <td className="px-4 py-3">
+                  <span className="text-green-700">
+                    +{formatTotal(totals.rewards, totals.assetCode)}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-gray-500">Total</td>
+                <td className="px-4 py-3 text-gray-500">Rewards</td>
+                <td className="px-4 py-3">
+                  <span className="text-red-700">
+                    -{formatTotal(totals.penalties, totals.assetCode)}
+                  </span>
+                </td>
+                <td className="px-4 py-3">
+                  <span
+                    data-testid="payments-net-total"
+                    className={
+                      totals.net >= 0 ? 'text-gray-700' : 'text-red-700'
+                    }
+                  >
+                    Net {formatTotal(totals.net, totals.assetCode)}
+                  </span>
+                </td>
+              </tr>
+            </tfoot>
+          )}
         </table>
       </div>
 
