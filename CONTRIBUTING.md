@@ -137,8 +137,10 @@ git checkout -b docs/stellar-guide
 ```bash
 npm run test
 npm run lint
-npm run type-check
 ```
+
+See [Running Frontend Tests](#-running-frontend-tests) for how to scope tests to a
+single file, run the end-to-end suite, and collect coverage.
 
 ### 4. Commit Your Changes
 
@@ -159,6 +161,103 @@ When building shared UI components in `src/components/ui/`:
 - **Tailwind CSS Tokens**: Always utilize Tailwind CSS classes and design tokens. Avoid hardcoded static styles or inline style objects.
 - **Component File Structure**: Place reusable primitives in `src/components/ui/` and domain-specific feature cards under `src/app/<feature>/components/`.
 - **Keyboard & High Contrast Focus**: Ensure interactive controls include explicit `focus-visible:ring-2` styles and satisfy WCAG 2.1 AA 4.5:1 text contrast ratios.
+
+## 🧪 Running Frontend Tests
+
+Tests use [Vitest](https://vitest.dev/) with jsdom and `@testing-library/react`.
+The configuration lives in `vitest.config.ts` (the main suite) and
+`vitest.e2e.config.ts` (the smoke/browser-path suite under `tests/e2e/`).
+
+All commands below map directly to `package.json` scripts, so what you run
+locally is what CI runs.
+
+### Full test suite
+
+Runs every `*.test.ts(x)` / `*.spec.ts(x)` file, excluding `tests/e2e/**` and
+`node_modules/**`:
+
+```bash
+npm test
+# equivalent to: vitest run
+```
+
+To re-run on change while developing:
+
+```bash
+npx vitest
+```
+
+### A single file
+
+Everything after `--` is forwarded to Vitest as a filter, so you can pass a path
+(or a substring):
+
+```bash
+npm test -- src/lib/slaTarget.test.ts
+npm test -- tests/config-page.test.tsx
+# substring match across the suite:
+npm test -- slaTarget
+```
+
+Run one test by name with `-t`:
+
+```bash
+npm test -- src/lib/slaTarget.test.ts -t "variance"
+```
+
+### Related files only
+
+Point Vitest at a directory to run every test beneath it:
+
+```bash
+npm test -- src/components/dashboard
+npm test -- tests/
+```
+
+### End-to-end / route smoke suite
+
+The `tests/e2e/` suite is excluded from the default run and uses its own config.
+This is the command CI uses in `preview-quality-gate.yml` and
+`route-smoke-matrix.yml`:
+
+```bash
+npx vitest run --config vitest.e2e.config.ts tests/e2e/ --reporter=verbose
+```
+
+A single e2e file:
+
+```bash
+npx vitest run --config vitest.e2e.config.ts tests/e2e/route-smoke.test.ts --reporter=verbose
+```
+
+### Coverage
+
+Coverage is enabled with Vitest's `--coverage` flag (the same invocation the
+`reliability-scorecard` workflow uses):
+
+```bash
+npm test -- --coverage
+```
+
+Write a machine-readable report (used by CI to publish the scorecard):
+
+```bash
+npm test -- --coverage --reporter=json --outputFile=test-results.json
+```
+
+If the coverage provider is not yet installed, Vitest prompts to install
+`@vitest/coverage-v8`; accept it or add it as a dev dependency.
+
+### Conventions
+
+- Place unit tests next to the code as `<name>.test.ts(x)`. Integration tests
+  that exercise multiple modules live under `tests/`, and browser-path/route
+  tests under `tests/e2e/`.
+- Always assert behaviour, not implementation details, and inject "now"/random
+  values rather than relying on the wall clock so tests stay deterministic.
+- Prefer `@testing-library/react` queries (`getByRole`, `getByLabelText`) over
+  test ids, and cover the failure/empty branches, not just the happy path.
+- Before opening a PR, run `npm test`, `npm run lint` and `npx tsc --noEmit`.
 
 ## 🧪 Writing Vitest Hook Tests
 
