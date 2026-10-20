@@ -13,6 +13,8 @@
 
 import type { MetricTrend } from '@/lib/mttrMtbf';
 
+import MetricDefinitionTip from './MetricDefinitionTip';
+
 export interface MetricCardProps {
   title: string;
   /** Formatted metric value, e.g. `2h 15m`. */
@@ -25,6 +27,8 @@ export interface MetricCardProps {
   comparison: string;
   /** One-line explanation of what the metric means. */
   detail?: string;
+  /** Precise definition of how the metric is computed (#1017). */
+  definition?: string;
 }
 
 const TREND_STYLES: Record<MetricTrend, { text: string; label: string }> = {
@@ -51,6 +55,7 @@ export default function MetricCard({
   trend,
   comparison,
   detail,
+  definition,
 }: MetricCardProps) {
   const style = TREND_STYLES[trend];
   const arrow = trendArrow(changePercentage);
@@ -60,7 +65,12 @@ export default function MetricCard({
       data-testid="metric-card"
       className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm"
     >
-      <p className="text-sm font-medium text-gray-500">{title}</p>
+      <div className="flex items-center gap-1">
+        <p className="text-sm font-medium text-gray-500">{title}</p>
+        {definition ? (
+          <MetricDefinitionTip title={title} definition={definition} />
+        ) : null}
+      </div>
 
       <div className="mt-1 flex flex-wrap items-baseline gap-2">
         <p className="text-3xl font-bold tabular-nums text-gray-800">{value}</p>
