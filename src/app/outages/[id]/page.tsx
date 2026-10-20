@@ -6,6 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 
 import { SLADisputesPanel } from '@/components/outages/SLADisputesPanel';
+import { PostMortemUploader } from '@/components/outages/PostMortemUploader';
 import { PrintButton } from '@/components/shared/PrintButton';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -709,6 +710,8 @@ export default function OutageDetailsPage() {
             </div>
           </CardContent>
         </Card>
+
+        <PostMortemUploader outageId={outage.id} isResolved={isResolved} />
 
         <SLADisputesPanel
           outageId={outage.id}
