@@ -15,6 +15,7 @@ import {
   rotateWebhookSecret,
 } from '@/services/webhookService';
 import { saveDraft, loadDraft, clearDraft } from '@/lib/drafts';
+import { formatTimestamp } from '@/lib/time';
 import type { Webhook, WebhookDelivery } from '@/types/webhook';
 import { WebhookDeliveryChart } from '@/components/webhooks/WebhookDeliveryChart';
 import { DeliverySearchFilter } from '@/components/webhooks/DeliverySearchFilter';
@@ -598,7 +599,7 @@ is_valid = hmac.compare_digest(signature, hash)`;
                               </div>
                               <div className="flex items-center gap-2">
                                 <span className="text-gray-400">
-                                  {new Date(d.created_at).toLocaleString()}
+                                  {formatTimestamp(d.created_at)}
                                 </span>
                                 <button
                                   onClick={() =>
