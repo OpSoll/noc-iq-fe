@@ -1,22 +1,71 @@
 # Wave 5 Closure Dashboard
 
-> Last updated: 2026-10-19
+> Last updated: 2026-10-20
 
 ## Issue Completion
 
 | Metric | Value |
 |--------|-------|
-| Total Wave 5 issues | 100 |
+| Total Wave 5 issues | 138 |
 | Closed | 100 |
-| Open | 0 |
-| Completion | 100% |
+| Open | 38 |
+| Completion | 72% |
 
 ## Open Issues
 
-_All issues closed! 🎉_
+- [ ] #1017 Dashboard: Add tooltips describing each KPI metric definition
+- [ ] #1016 Responsive: Add a min-width guard for chart containers
+- [ ] #1015 Docs: Add a component inventory doc for shared UI primitives
+- [ ] #1014 Testing: Add tests for the config diff generator
+- [ ] #1013 Testing: Add tests for the persisted page-size preference
+- [ ] #1012 State: Add a global error boundary reset on route change
+- [ ] #1011 State: Sync dashboard date range with the URL
+- [ ] #1010 Performance: Add request dedupe for duplicate dashboard queries
+- [ ] #1009 Bulk Import: Add a download-errors action for failed validation rows
+- [ ] #1008 Settings: Add an avatar initials fallback for the profile card
+- [ ] #1007 Config: Add a diff preview before saving config changes
+- [ ] #1006 Webhooks: Add a filter for delivery status in the history panel
+- [ ] #1005 Payments: Add a sticky totals row to the payments table
+- [ ] #1004 Outages: Show a subtle row highlight for recently updated outages
+- [ ] #1003 Outages: Add an SLA status column toggle to the outages table
+- [ ] #1002 Accessibility: Add visible labels to the dashboard date range inputs
+- [ ] #1001 Accessibility: Add keyboard support to severity legend tooltips
+- [ ] #1000 UX: Show a 'No results' message when command palette finds nothing
+- [ ] #999 UX: Add a keyboard shortcut to open the create outage form
+- [ ] #998 UX: Add page-level scroll restoration on back navigation
+- [ ] #997 Docs: Add a troubleshooting section for common local dev errors
+- [ ] #996 DX: Add a script to check for unused exports
+- [ ] #995 DX: Add a lint rule forbidding direct console.log in components
+- [ ] #994 Testing: Add tests for the CopyButton component
+- [ ] #993 Testing: Add tests for the relative time formatter
+- [ ] #992 Shared: Add a reusable relative-time component
+- [ ] #991 Shared: Add a reusable copy-to-clipboard button component
+- [ ] #990 Settings: Add a session-state message when the session list fails to load
+- [ ] #989 Config: Add numeric step and bounds hints to SLA threshold inputs
+- [ ] #988 Bulk Import: Preserve validation table scroll position on refresh
+- [ ] #987 Webhooks: Add relative 'last delivery' time in the webhook list
+- [ ] #986 Payments: Add relative timestamps for payment created_at
+- [ ] #981 UX: Add page title updates per route
+- [ ] #980 Theming: Add theme-aware focus ring color tokens
+- [ ] #979 Theming: Apply the persisted theme before first paint
+- [ ] #978 Security: Warn before navigating to external explorer links
+- [ ] #969 Docs: Document how to run and scope frontend tests
+- [ ] #968 Testing: Add accessibility test for the outage detail page
 
 ## Closed Issues
 
+- [x] #985 Outages: Show an SLA status tooltip on the detail page badges
+- [x] #984 Outages: Add a quick 'Assigned to me' filter chip
+- [x] #983 UX: Guard against losing unsaved edits when leaving the config page
+- [x] #982 UX: Auto-focus the first field of the create outage form
+- [x] #977 Security: Redact auth tokens from client error telemetry
+- [x] #976 Notifications: Add a success toast after deleting an outage
+- [x] #975 Type Safety: Add strict types for webhook payload objects
+- [x] #974 Refactor: Extract a shared currency/amount formatter
+- [x] #973 Refactor: Centralize relative and absolute time formatting
+- [x] #972 Refactor: Extract a shared severity badge component
+- [x] #971 DX: Add npm script to run a single test file
+- [x] #970 Docs: Document required frontend environment variables
 - [x] #723 UI Resilience: Implement WebSocket connection auto-reconnect with exponential backoff
 - [x] #722 UI Resilience: Add local storage corruption recovery guard
 - [x] #721 UI Resilience: Implement image fallback loader for broken asset logos
@@ -105,18 +154,6 @@ _All issues closed! 🎉_
 - [x] #638 Dispute View: Add formal dispute filing modal component
 - [x] #637 Bulk Import: Add bulk import dry-run simulation mode toggle
 - [x] #636 Bulk Import: Implement multi-file bulk import queue manager
-- [x] #635 Bulk Import: Add import history log drawer
-- [x] #634 Bulk Import: Implement timezone offset converter in import wizard
-- [x] #633 Bulk Import: Add client-side CSV parsing worker thread
-- [x] #632 Bulk Import: Implement import execution summary notification modal
-- [x] #631 Bulk Import: Add duplicate row detection and skip option
-- [x] #630 Bulk Import: Implement import progress bar with cancel capability
-- [x] #629 Bulk Import: Add downloadable sample CSV template builder
-- [x] #628 Bulk Import: Implement inline cell error editing in validation preview
-- [x] #627 Bulk Import: Add real-time row validation preview table
-- [x] #626 Bulk Import: Implement client-side CSV column mapping wizard
-- [x] #625 Bulk Import: Add CSV file drag-and-drop zone with format validation
-- [x] #624 Outage Table: Add auto-refresh polling status indicator
 
 ---
 _Auto-generated by `scripts/update-wave5-dashboard.mjs`. Do not edit manually._
