@@ -19,6 +19,11 @@ import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/components/ui/toast';
 import { announce } from '@/hooks/useOutageRealtime';
 import {
+  getSlaAmountTooltip,
+  getSlaRatingTooltip,
+  getSlaStatusBadgeTooltip,
+} from '@/lib/slaStatusTooltip';
+import {
   getOutage,
   resolveOutage,
   updateOutage,
@@ -505,12 +510,37 @@ export default function OutageDetailsPage() {
               <>
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Status</span>
-                  <Badge variant="outline">{outage.sla_status.status}</Badge>
+                  {/* #985: focusable badge so keyboard users get the SLA explanation too. */}
+                  <span
+                    tabIndex={0}
+                    role="img"
+                    data-testid="sla-status-badge"
+                    title={getSlaStatusBadgeTooltip(
+                      outage.sla_status,
+                      outage.sla_status.reason_code
+                    )}
+                    aria-label={`SLA status ${outage.sla_status.status}. ${getSlaStatusBadgeTooltip(
+                      outage.sla_status,
+                      outage.sla_status.reason_code
+                    )}`}
+                    className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  >
+                    {outage.sla_status.status}
+                  </span>
                 </div>
                 <Separator />
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Rating</span>
-                  <span className="font-medium">
+                  <span
+                    tabIndex={0}
+                    role="img"
+                    data-testid="sla-rating-badge"
+                    title={getSlaRatingTooltip(outage.sla_status)}
+                    aria-label={`SLA rating ${outage.sla_status.rating}. ${getSlaRatingTooltip(
+                      outage.sla_status
+                    )}`}
+                    className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  >
                     {outage.sla_status.rating}
                   </span>
                 </div>
@@ -518,7 +548,14 @@ export default function OutageDetailsPage() {
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Amount</span>
                   <span
-                    className={`font-semibold ${outage.sla_status.amount > 0 ? 'text-green-600' : 'text-red-600'}`}
+                    tabIndex={0}
+                    role="img"
+                    data-testid="sla-amount-badge"
+                    title={getSlaAmountTooltip(outage.sla_status)}
+                    aria-label={`SLA amount ${outage.sla_status.amount}. ${getSlaAmountTooltip(
+                      outage.sla_status
+                    )}`}
+                    className={`font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${outage.sla_status.amount > 0 ? 'text-green-600' : 'text-red-600'}`}
                   >
                     {outage.sla_status.amount > 0 ? '+' : ''}
                     {outage.sla_status.amount}
