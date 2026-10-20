@@ -23,6 +23,7 @@ import {
 } from '@tanstack/react-table';
 import { ColumnToggle } from '@/components/tables/ColumnToggle';
 import type { ColumnOption } from '@/components/tables/ColumnToggle';
+import { formatTimestamp } from '@/lib/time';
 import type { Severity, OutageStatus } from '@/types/outages';
 
 // ─── Domain types ─────────────────────────────────────────────────────────────
@@ -171,7 +172,7 @@ function buildColumns(): ColumnDef<OutageRow>[] {
       enableSorting: true,
       cell: ({ row }) => (
         <span className="text-slate-600 text-xs">
-          {new Date(row.original.createdAt).toLocaleString()}
+          {formatTimestamp(row.original.createdAt)}
         </span>
       ),
     },

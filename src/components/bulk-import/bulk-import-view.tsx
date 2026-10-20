@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMemo, useRef, useState, useCallback, useId } from 'react';
 
-import { bulkImportOutages } from '@/services/bulkImportService';
+import { bulkImportOutages, downloadImportErrorsCSV } from '@/services/bulkImportService';
 import type {
   BulkImportResult,
   ImportValidationError,
@@ -837,6 +837,15 @@ export default function BulkImportView() {
                 {preview.errors.length} validation error
                 {preview.errors.length > 1 ? 's' : ''} found
               </p>
+              {/* Issue #1009: download the failed rows so they can be fixed and re-imported. */}
+              <button
+                type="button"
+                onClick={() => downloadImportErrorsCSV(preview.errors)}
+                className="mt-1 text-xs text-blue-600 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-1"
+                data-testid="download-validation-errors"
+              >
+                Download errors (CSV)
+              </button>
               <div className="mt-2 max-h-48 overflow-y-auto">
                 <ValidationList errors={preview.errors} />
               </div>
@@ -1004,32 +1013,7 @@ export default function BulkImportView() {
                   {result.errors.length > 1 ? 's' : ''}
                 </p>
                 <button
-                  onClick={() => {
-                    const rows = [
-                      ['row', 'field', 'message'],
-                      ...result.errors.map((e) => [
-                        e.row != null ? String(e.row) : '',
-                        e.field ?? '',
-                        e.message,
-                      ]),
-                    ];
-                    const csv = rows
-                      .map((r) =>
-                        r.map((c) => `"${c.replace(/"/g, '""')}"`).join(',')
-                      )
-                      .join('\n');
-                    const blob = new Blob([csv], {
-                      type: 'text/csv;charset=utf-8;',
-                    });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `import-errors-${new Date().toISOString().slice(0, 10)}.csv`;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                  }}
+                  onClick={() => downloadImportErrorsCSV(result.errors)}
                   className="text-xs text-blue-600 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-1"
                 >
                   Download report

@@ -15,6 +15,7 @@ import { useUrlSync } from '@/hooks/useUrlSync';
 import { deleteOutage, resolveOutage } from '@/services/outages';
 import { RowActions } from '@/components/tables/RowActions';
 import { SeverityBadge } from '@/components/shared/SeverityBadgeAndShortcuts';
+import SeverityLegend from '@/components/outages/SeverityLegend';
 import type {
   Outage as OutageRecord,
   OutageStatus,
@@ -341,6 +342,8 @@ export default function OutagesPageClient({
             <option value="high">High</option>
             <option value="critical">Critical</option>
           </select>
+          {/* #1001: keyboard-accessible severity legend. */}
+          <SeverityLegend />
           <label className="sr-only" htmlFor="outage-date-from">
             From date
           </label>

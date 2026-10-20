@@ -2,11 +2,16 @@ import type { AxiosRequestConfig } from 'axios';
 
 import { api } from '@/lib/api';
 
-import type { BulkImportRecord, BulkImportResult } from '@/types/bulkImport';
+import type {
+  BulkImportRecord,
+  BulkImportResult,
+  BulkImportDryRunResult,
+} from '@/types/bulkImport';
 
 type AxiosProgressEvent = { loaded: number; total?: number };
 
 const BULK_IMPORT_ENDPOINT = '/outages/bulk';
+const BULK_IMPORT_VALIDATE_ENDPOINT = '/outages/bulk/validate';
 const BULK_IMPORT_HISTORY_ENDPOINT = '/outages/bulk/history';
 
 interface BulkImportProgress {
@@ -158,16 +163,18 @@ export async function fetchBulkImportHistory(): Promise<BulkImportRecord[]> {
 }
 
 /**
- * Optional helper for downloading failed import reports.
+ * Serialize failed import rows to CSV (issue #1009).
+ *
+ * Pure and side-effect free so it can be unit tested; the browser download in
+ * {@link downloadImportErrorsCSV} is a thin wrapper around it.
  */
-export function downloadImportErrorsCSV(
+export function buildImportErrorsCSV(
   errors: Array<{
     row?: number;
     field?: string;
     message: string;
-  }>,
-  filename = `bulk-import-errors-${new Date().toISOString().slice(0, 10)}.csv`
-): void {
+  }>
+): string {
   const rows = [
     ['row', 'field', 'message'],
 
@@ -178,9 +185,35 @@ export function downloadImportErrorsCSV(
     ]),
   ];
 
-  const csv = rows
+  return rows
     .map((row) => row.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(','))
     .join('\n');
+}
+
+/** Default filename for a failed-import report, stamped with today's date. */
+export function defaultImportErrorsFilename(now: Date = new Date()): string {
+  return `bulk-import-errors-${now.toISOString().slice(0, 10)}.csv`;
+}
+
+/**
+ * Download failed import rows as a CSV file (issue #1009).
+ *
+ * Used by the validation preview (before upload) and the post-import summary,
+ * so a user can fix and re-submit the rejected rows. Safe to call outside a
+ * browser: with no `document` it is a no-op rather than throwing.
+ */
+export function downloadImportErrorsCSV(
+  errors: Array<{
+    row?: number;
+    field?: string;
+    message: string;
+  }>,
+  filename = defaultImportErrorsFilename()
+): void {
+  // Guard SSR / test environments without a DOM: there is nothing to download.
+  if (typeof document === 'undefined') return;
+
+  const csv = buildImportErrorsCSV(errors);
 
   const blob = new Blob([csv], {
     type: 'text/csv;charset=utf-8;',

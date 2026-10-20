@@ -7,6 +7,7 @@
  * direction as the arrow.
  */
 import { render, screen } from '@testing-library/react';
+import { fireEvent, render as renderRtl, screen as screenRtl } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import MetricCard from '@/components/dashboard/MetricCard';
@@ -146,5 +147,58 @@ describe('MetricCard', () => {
     expect(
       screen.getByTestId('metric-card').querySelectorAll('p')
     ).toHaveLength(3);
+  });
+});
+
+describe('MetricCard definition tooltip (#1017)', () => {
+  it('shows a definition tooltip when a definition is supplied', () => {
+    renderRtl(
+      <MetricCard
+        title="Mean Time To Resolution"
+        value="2h 15m"
+        changePercentage={null}
+        trend="unknown"
+        comparison="No prior cycle to compare"
+        definition="Average time from detection to resolution."
+      />
+    );
+
+    const trigger = screenRtl.getByTestId('metric-definition-trigger');
+    expect(trigger).toBeInTheDocument();
+    expect(screenRtl.getByTestId('metric-definition')).toHaveTextContent(
+      'Average time from detection to resolution.'
+    );
+  });
+
+  it('reveals the definition on keyboard focus', () => {
+    renderRtl(
+      <MetricCard
+        title="MTTR"
+        value="2h 15m"
+        changePercentage={null}
+        trend="unknown"
+        comparison="No prior cycle to compare"
+        definition="Average time from detection to resolution."
+      />
+    );
+
+    const trigger = screenRtl.getByTestId('metric-definition-trigger');
+    fireEvent.focus(trigger);
+    expect(trigger).toHaveAttribute('aria-expanded', 'true');
+  });
+
+  it('renders no tooltip when no definition is supplied', () => {
+    renderRtl(
+      <MetricCard
+        title="MTTR"
+        value="2h 15m"
+        changePercentage={null}
+        trend="unknown"
+        comparison="No prior cycle to compare"
+      />
+    );
+    expect(
+      screenRtl.queryByTestId('metric-definition-trigger')
+    ).not.toBeInTheDocument();
   });
 });

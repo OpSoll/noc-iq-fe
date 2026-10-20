@@ -1,13 +1,12 @@
 /**
- * Centralized time formatting helpers (#993).
+ * Centralized time formatting helpers (#973).
  *
- * Relative-time formatting was previously done ad hoc inside components, which
- * made boundary behaviour (a value just over a minute, exactly a day, a future
- * timestamp, a missing backend field) impossible to verify and easy to regress.
- * This module is the single source of truth and is fully covered by
- * `src/lib/time.test.ts`:
+ * Previously every component did its own `new Date(x).toLocaleString()` or an
+ * ad-hoc relative-time calculation, so the same timestamp rendered differently
+ * (and crashed on `null`/invalid values) depending on where it appeared. These
+ * helpers are the single source of truth:
  *
- *   - `formatRelativeTime` — "just now", "5 minutes ago", "in 3 days"
+ *   - `formatRelativeTime` — "3 minutes ago", "in 2 hours"
  *   - `formatAbsoluteDate` / `formatAbsoluteDateTime` — locale-aware dates
  *   - `formatTimestamp` — the default "date + time" rendering
  *
@@ -19,16 +18,12 @@
 /** Rendered when a value is missing or cannot be parsed as a date. */
 export const INVALID_TIME_PLACEHOLDER = '—';
 
-const SECOND = 1;
-const MINUTE = 60 * SECOND;
+const MINUTE = 60;
 const HOUR = 60 * MINUTE;
 const DAY = 24 * HOUR;
 const WEEK = 7 * DAY;
 const MONTH = 30 * DAY;
 const YEAR = 365 * DAY;
-
-/** Below this many seconds a timestamp reads as "just now". */
-const JUST_NOW_THRESHOLD_SECONDS = 45;
 
 export interface RelativeTimeOptions {
   /** Value to render for missing/invalid input (default `INVALID_TIME_PLACEHOLDER`). */
@@ -45,121 +40,106 @@ export interface RelativeTimeOptions {
  */
 export function parseDate(value: unknown): Date | null {
   if (value === null || value === undefined || value === '') return null;
-  const date =
-    value instanceof Date ? value : new Date(value as string | number);
+  const date = value instanceof Date ? value : new Date(value as string | number);
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
 /**
  * Human-readable relative time, e.g. "just now", "5 minutes ago",
- * "in 3 days". Future timestamps are phrased with "in ...", and the unit is the
- * largest one the delta fills so a value never reads "90 minutes ago".
+ * "in 3 days". Future timestamps are phrased with "in ...".
  */
 export function formatRelativeTime(
   value: unknown,
   options: RelativeTimeOptions = {}
 ): string {
-  const { fallback = INVALID_TIME_PLACEHOLDER, locale, now } = options;
+  const { fallback = INVALID_TIME_PLACEHOLDER, now } = options;
   const date = parseDate(value);
   if (!date) return fallback;
 
   const nowMs = now === undefined ? Date.now() : new Date(now).getTime();
   const diffSeconds = Math.round((date.getTime() - nowMs) / 1000);
+  const abs = Math.abs(diffSeconds);
 
-  // `numeric: 'always'` keeps boundary output predictable ("1 day ago" rather
-  // than the locale's "yesterday"/"last week"), which is what callers and the
-  // boundary tests rely on; pluralization and the future/past sign are still
-  // handled by the formatter.
-  const formatter = new Intl.RelativeTimeFormat(locale, { numeric: 'always' });
+  if (abs < 45) return 'just now';
 
-  if (Math.abs(diffSeconds) < JUST_NOW_THRESHOLD_SECONDS) {
-    return 'just now';
-  }
+  const { amount, unit } = describeDuration(abs);
 
-  const absolute = Math.abs(diffSeconds);
-  const sign = diffSeconds < 0 ? -1 : 1;
-
-  let unit: Intl.RelativeTimeFormatUnit;
-  let divisor: number;
-  if (absolute < MINUTE) {
-    unit = 'second';
-    divisor = SECOND;
-  } else if (absolute < HOUR) {
-    unit = 'minute';
-    divisor = MINUTE;
-  } else if (absolute < DAY) {
-    unit = 'hour';
-    divisor = HOUR;
-  } else if (absolute < WEEK) {
-    unit = 'day';
-    divisor = DAY;
-  } else if (absolute < MONTH) {
-    unit = 'week';
-    divisor = WEEK;
-  } else if (absolute < YEAR) {
-    unit = 'month';
-    divisor = MONTH;
-  } else {
-    unit = 'year';
-    divisor = YEAR;
-  }
-
-  return formatter.format(sign * Math.round(absolute / divisor), unit);
+  // `Intl.RelativeTimeFormat` produces "5 minutes ago" / "in 3 days" and
+  // handles pluralization and the future/past sign for us.
+  const formatter = new Intl.RelativeTimeFormat(options.locale, {
+    numeric: 'auto',
+  });
+  return formatter.format(diffSeconds < 0 ? -amount : amount, unit);
 }
 
-/** Locale-aware date, e.g. "19 Oct 2026". Missing/invalid input renders the placeholder. */
+function describeDuration(seconds: number): {
+  amount: number;
+  unit: Intl.RelativeTimeFormatUnit;
+} {
+  if (seconds < MINUTE) return { amount: Math.round(seconds), unit: 'second' };
+  if (seconds < HOUR) return { amount: Math.round(seconds / MINUTE), unit: 'minute' };
+  if (seconds < DAY) return { amount: Math.round(seconds / HOUR), unit: 'hour' };
+  if (seconds < WEEK) return { amount: Math.round(seconds / DAY), unit: 'day' };
+  if (seconds < MONTH) return { amount: Math.round(seconds / WEEK), unit: 'week' };
+  if (seconds < YEAR) return { amount: Math.round(seconds / MONTH), unit: 'month' };
+  return { amount: Math.round(seconds / YEAR), unit: 'year' };
+}
+
+export interface AbsoluteTimeOptions {
+  fallback?: string;
+  locale?: string;
+  timeZone?: string;
+}
+
+/** Locale-aware date only, e.g. "10/19/2026". */
 export function formatAbsoluteDate(
   value: unknown,
-  locale?: string,
-  fallback: string = INVALID_TIME_PLACEHOLDER
+  options: AbsoluteTimeOptions = {}
 ): string {
+  const { fallback = INVALID_TIME_PLACEHOLDER, locale, timeZone } = options;
   const date = parseDate(value);
   if (!date) return fallback;
-  return new Intl.DateTimeFormat(locale, {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  }).format(date);
+  return date.toLocaleDateString(locale, { timeZone });
 }
 
-/** Locale-aware date and time, e.g. "19 Oct 2026, 14:05". */
+/** Locale-aware date + time, e.g. "10/19/2026, 8:15:00 PM". */
 export function formatAbsoluteDateTime(
   value: unknown,
-  locale?: string,
-  fallback: string = INVALID_TIME_PLACEHOLDER
+  options: AbsoluteTimeOptions = {}
 ): string {
+  const { fallback = INVALID_TIME_PLACEHOLDER, locale, timeZone } = options;
   const date = parseDate(value);
   if (!date) return fallback;
-  return new Intl.DateTimeFormat(locale, {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(date);
+  return date.toLocaleString(locale, { timeZone });
 }
 
-/** Default timestamp rendering (date + time); the placeholder for invalid input. */
+/**
+ * Default timestamp rendering used across tables and detail views: absolute
+ * date + time, with an optional short timezone label.
+ */
 export function formatTimestamp(
   value: unknown,
-  locale?: string,
-  fallback: string = INVALID_TIME_PLACEHOLDER
+  options: AbsoluteTimeOptions = {}
 ): string {
-  return formatAbsoluteDateTime(value, locale, fallback);
+  return formatAbsoluteDateTime(value, options);
 }
 
-/** Short timezone abbreviation for a date, e.g. "UTC". Placeholder when invalid. */
+/**
+ * Short timezone abbreviation for a timestamp (e.g. "UTC", "GMT+1"), or `null`
+ * when the input is invalid. Uses `Intl` so it reflects the runtime zone.
+ */
 export function getTimeZoneAbbreviation(
   value: unknown,
-  locale?: string,
-  fallback: string = INVALID_TIME_PLACEHOLDER
-): string {
+  locale?: string
+): string | null {
   const date = parseDate(value);
-  if (!date) return fallback;
-  const parts = new Intl.DateTimeFormat(locale, {
-    timeZoneName: 'short',
-  }).formatToParts(date);
-  return (
-    parts.find((part) => part.type === 'timeZoneName')?.value ?? fallback
-  );
+  if (!date) return null;
+  try {
+    const parts = new Intl.DateTimeFormat(locale, {
+      timeZoneName: 'short',
+    }).formatToParts(date);
+    return parts.find((p) => p.type === 'timeZoneName')?.value ?? null;
+  } catch {
+    return null;
+  }
 }

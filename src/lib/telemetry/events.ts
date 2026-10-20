@@ -3,8 +3,9 @@
  * Typed event definitions for all major user actions.
  */
 
-export type EventCategory = 'outage' | 'payment' | 'webhook' | 'auth';
+import { redactForEmission } from './privacy';
 
+export type EventCategory = 'outage' | 'payment' | 'webhook' | 'auth';
 export type OutageAction = 'create' | 'resolve' | 'update';
 export type PaymentAction = 'process' | 'refund';
 export type WebhookAction = 'create' | 'delete';
@@ -124,7 +125,10 @@ export function emitTelemetry(event: TelemetryEvent): void {
   }
 
   try {
-    emitFn?.(event);
+    // #977: strip token-like and authorization content before the event leaves
+    // the client, so error telemetry can never carry a credential.
+    const safe = redactForEmission(event);
+    emitFn?.(safe as TelemetryEvent);
   } catch {
     // Telemetry must never break the app
   }

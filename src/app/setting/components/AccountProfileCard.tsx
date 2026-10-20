@@ -1,6 +1,7 @@
 'use client';
 
 import { useSession } from '@/hooks/useSession';
+import { formatAbsoluteDate } from '@/lib/time';
 
 export function AccountProfileCard() {
   const { state: sessionState, user: sessionUser } = useSession();
@@ -30,9 +31,7 @@ export function AccountProfileCard() {
             },
             {
               label: 'Member since',
-              value: sessionUser.created_at
-                ? new Date(sessionUser.created_at).toLocaleDateString()
-                : '—',
+              value: formatAbsoluteDate(sessionUser.created_at),
             },
           ].map(({ label, value }) => (
             <div

@@ -14,6 +14,8 @@ export interface SLAResult {
   amount: number;
   payment_type: 'reward' | 'penalty';
   rating: 'exceptional' | 'excellent' | 'good' | 'poor';
+  /** Optional backend reason code explaining the computed result (see #985). */
+  reason_code?: string;
 }
 
 export interface OutageResolutionPayment {

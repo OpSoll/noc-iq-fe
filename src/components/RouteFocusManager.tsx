@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useRef } from 'react';
 
 import { getRouteAnnouncement } from '@/lib/breadcrumbs';
+import { getRouteTitle } from '@/lib/routeTitle';
 
 /**
  * Moves screen reader focus to the new page's `<h1>` on every route change.
@@ -67,11 +68,16 @@ export default function RouteFocusManager({
 
   useEffect(() => {
     if (!enabled) return;
+    if (!pathname) return;
+
+    // #981: keep the browser title in step with the route on every navigation
+    // (including the first load) so tabs, history and bookmarks are distinct.
+    document.title = getRouteTitle(pathname);
+
     if (isFirstRender.current) {
       isFirstRender.current = false;
       return;
     }
-    if (!pathname) return;
 
     const heading = findMainHeading();
     if (heading) {

@@ -161,6 +161,85 @@ Examples:
 - the codebase still contains a mix of newer App Router pages and older page-style screens
 - some frontend flows depend on backend endpoints that are still being stabilized in `noc-iq-be`
 
+## Troubleshooting
+
+Common errors hit while running the app locally, and how to resolve them. All
+of these assume the frontend runs on `http://localhost:3000` and the backend
+(`noc-iq-be`) runs on `http://localhost:8000`.
+
+### "Payments unavailable" / views load but show no data
+
+**Cause:** the backend is not running, or it is not reachable at
+`http://localhost:8000`. The frontend calls the API through `src/lib/api.ts`,
+whose base URL is `http://localhost:8000/api/v1/`. Without it, the app shell
+still renders, but outages, payments, exports, bulk import and analytics have no
+live data.
+
+**Resolution:**
+
+1. Start the backend from the `noc-iq-be` repository (see its own README).
+2. Confirm it is up:
+
+   ```bash
+   curl http://localhost:8000/api/v1/health
+   ```
+
+3. Reload the frontend.
+
+### CORS errors in the browser console
+
+**Cause:** the backend is running on a different origin than the frontend and is
+not allowing browser requests from `http://localhost:3000`. Typical symptoms are
+`Access to fetch ... has been blocked by CORS policy` or `No
+'Access-Control-Allow-Origin' header`.
+
+**Resolution:**
+
+1. Confirm you are using `http://localhost:3000` (not `127.0.0.1:3000` or a
+   different port); the backend allow-list usually names one exact origin.
+2. Add the frontend origin to the backend's CORS allow-list
+   (`CORS_ALLOWED_ORIGINS` / equivalent setting in `noc-iq-be`) and restart the
+   backend.
+3. Requests that send credentials need a specific origin — wildcard `*` will not
+   work.
+
+### Port already in use (`EADDRINUSE`)
+
+**Cause:** another process is already listening on port `3000` (frontend) or
+`8000` (backend). Next.js reports `Port 3000 is in use` and offers the next free
+port; the backend fails to bind outright.
+
+**Resolution:**
+
+1. Find the process using the port:
+
+   ```bash
+   lsof -i :3000
+   ```
+
+2. Stop it, or start the frontend on another port:
+
+   ```bash
+   npm run dev -- -p 3001
+   ```
+
+   If you change the frontend port, update the backend's CORS allow-list to
+   match.
+
+3. For the backend, free port `8000` or reconfigure its bind port, then restart.
+
+### `npm run dev` fails after switching branches
+
+**Cause:** dependencies changed on the branch you checked out.
+
+**Resolution:**
+
+```bash
+npm install
+```
+
+Then restart the dev server.
+
 ## Contributing Notes
 
 When making frontend changes:
