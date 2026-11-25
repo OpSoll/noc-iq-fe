@@ -6,14 +6,14 @@
 
 | Metric | Value |
 |--------|-------|
-| Total Wave 5 issues | 101 |
+| Total Wave 5 issues | 100 |
 | Closed | 100 |
-| Open | 1 |
-| Completion | 99% |
+| Open | 0 |
+| Completion | 100% |
 
 ## Open Issues
 
-- [ ] #468 Outages: Add duplicate outage detection warning when logging incident for same site
+_All issues closed! 🎉_
 
 ## Closed Issues
 
