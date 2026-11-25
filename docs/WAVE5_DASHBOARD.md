@@ -1,39 +1,31 @@
 # Wave 5 Closure Dashboard
 
-> Last updated: 2026-11-24
+> Last updated: 2026-11-25
 
 ## Issue Completion
 
 | Metric | Value |
 |--------|-------|
-| Total Wave 5 issues | 121 |
+| Total Wave 5 issues | 113 |
 | Closed | 100 |
-| Open | 21 |
-| Completion | 83% |
+| Open | 13 |
+| Completion | 88% |
 
 ## Open Issues
 
 - [ ] #478 Payments: Add Stellar Expert transaction status inspector link
 - [ ] #477 Payments: Add Stellar transaction hash validation helper in PaymentTransactionsView
 - [ ] #476 Outages: Add export filtered outage list to CSV / Excel spreadsheet
-- [ ] #474 Outages: Add outage resolution notes template parser
-- [ ] #472 Outages: Add maintenance window exclusion toggle for scheduled downtime
 - [ ] #471 Outages: Add outage duration live counter on active incident cards
 - [ ] #469 Outages: Add affected services multi-select tag input component
 - [ ] #468 Outages: Add duplicate outage detection warning when logging incident for same site
-- [ ] #467 Outages: Add site ID autocomplete search input in Create Outage form
 - [ ] #466 Outages: Add outage timeline audit trail event history log
 - [ ] #465 Outages: Add root cause taxonomy tags (Hardware, Fiber Cut, Power, Third-Party)
 - [ ] #464 Outages: Add affected subscribers impact calculation helper in OutageDetailsModal
-- [ ] #463 Outages: Add bulk outage status update actions (Acknowledge, Assign, Resolve)
-- [ ] #462 Outages: Add resolution preview step in ResolveOutageModal
-- [ ] #461 Dashboard: Add SLA dashboard full-screen kiosk mode for NOC wall monitors
 - [ ] #460 Dashboard: Add SLA availability uptime SLA 9s display (99.9% vs 99.99%)
 - [ ] #459 Dashboard: Add SLA violation notification sound alert toggle for NOC control rooms
-- [ ] #458 Dashboard: Add customizable KPI card layout switcher (Grid / Compact List)
 - [ ] #457 Dashboard: Add comparative SLA performance benchmark vs previous month
 - [ ] #456 Dashboard: Add SLA breach risk prediction score badge on open incidents
-- [ ] #455 Dashboard: Add regional site outage heatmap visualization map
 
 ## Closed Issues
 
