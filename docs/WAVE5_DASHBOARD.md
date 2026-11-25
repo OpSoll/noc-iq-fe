@@ -6,17 +6,14 @@
 
 | Metric | Value |
 |--------|-------|
-| Total Wave 5 issues | 104 |
+| Total Wave 5 issues | 101 |
 | Closed | 100 |
-| Open | 4 |
-| Completion | 96% |
+| Open | 1 |
+| Completion | 99% |
 
 ## Open Issues
 
-- [ ] #469 Outages: Add affected services multi-select tag input component
 - [ ] #468 Outages: Add duplicate outage detection warning when logging incident for same site
-- [ ] #465 Outages: Add root cause taxonomy tags (Hardware, Fiber Cut, Power, Third-Party)
-- [ ] #464 Outages: Add affected subscribers impact calculation helper in OutageDetailsModal
 
 ## Closed Issues
 
