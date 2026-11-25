@@ -6,17 +6,13 @@
 
 | Metric | Value |
 |--------|-------|
-| Total Wave 5 issues | 113 |
+| Total Wave 5 issues | 108 |
 | Closed | 100 |
-| Open | 13 |
-| Completion | 88% |
+| Open | 8 |
+| Completion | 93% |
 
 ## Open Issues
 
-- [ ] #478 Payments: Add Stellar Expert transaction status inspector link
-- [ ] #477 Payments: Add Stellar transaction hash validation helper in PaymentTransactionsView
-- [ ] #476 Outages: Add export filtered outage list to CSV / Excel spreadsheet
-- [ ] #471 Outages: Add outage duration live counter on active incident cards
 - [ ] #469 Outages: Add affected services multi-select tag input component
 - [ ] #468 Outages: Add duplicate outage detection warning when logging incident for same site
 - [ ] #466 Outages: Add outage timeline audit trail event history log
@@ -24,7 +20,6 @@
 - [ ] #464 Outages: Add affected subscribers impact calculation helper in OutageDetailsModal
 - [ ] #460 Dashboard: Add SLA availability uptime SLA 9s display (99.9% vs 99.99%)
 - [ ] #459 Dashboard: Add SLA violation notification sound alert toggle for NOC control rooms
-- [ ] #457 Dashboard: Add comparative SLA performance benchmark vs previous month
 - [ ] #456 Dashboard: Add SLA breach risk prediction score badge on open incidents
 
 ## Closed Issues
