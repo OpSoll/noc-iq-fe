@@ -7,6 +7,7 @@ import dynamic from 'next/dynamic';
 
 import { SLADisputesPanel } from '@/components/outages/SLADisputesPanel';
 import { PostMortemUploader } from '@/components/outages/PostMortemUploader';
+import { OutageDurationCounter } from '@/components/outages/OutageDurationCounter';
 import { PrintButton } from '@/components/shared/PrintButton';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -591,6 +592,18 @@ export default function OutageDetailsPage() {
                   : 'Ongoing'}
               </span>
             </div>
+            {!outage.resolved_at && (
+              <>
+                <Separator />
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Duration</span>
+                  <OutageDurationCounter
+                    detectedAt={outage.detected_at}
+                    status={outage.status}
+                  />
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
 

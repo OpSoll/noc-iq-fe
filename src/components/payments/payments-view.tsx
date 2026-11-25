@@ -1,10 +1,11 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 import { useUrlSync } from '@/hooks/useUrlSync';
 import { PaymentService } from '@/services/paymentService';
 import type { Payment } from '@/types/payment';
+import { isValidStellarTxHash, getStellarExpertTxUrl } from '@/lib/stellar';
 import {
   Tooltip,
   TooltipContent,
@@ -20,7 +21,7 @@ import {
   STELLAR_NETWORK_LABEL,
   type ExplorerEntityType,
 } from '@/lib/explorer';
-import { ExternalLink, Inbox } from 'lucide-react';
+import { ExternalLink, Inbox, Search, X } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
 import {
   Pagination,
@@ -89,6 +90,7 @@ const URL_DEFAULTS = {
   type: 'all',
   assetCode: 'all',
   walletAddress: '',
+  txHash: '',
   dateFrom: '',
   dateTo: '',
   page: '1',
@@ -128,18 +130,22 @@ function SafeExplorerLink({
   value: string | null | undefined;
   label?: string;
 }) {
-  const href = explorerLink(type, value);
+  const href =
+    type === 'tx' && value
+      ? getStellarExpertTxUrl(value)
+      : explorerLink(type, value);
   if (!href || !value) return <span className="text-gray-400">—</span>;
   return (
     <a
       href={href}
       target="_blank"
       rel="noreferrer"
+      aria-label="View on Stellar Expert"
       className="inline-flex items-center gap-1 font-mono text-xs text-blue-600 hover:underline"
       title={value}
       onClick={(e) => e.stopPropagation()}
     >
-      {label ?? `${value.slice(0, 8)}…`}
+      {label ?? (type === 'tx' ? 'View on Stellar Expert' : `${value.slice(0, 8)}…`)}
       <ExternalLink className="h-3 w-3" />
     </a>
   );
@@ -152,6 +158,47 @@ export function PaymentsView() {
   const typeFilter = urlState.type;
   const assetFilter = urlState.assetCode;
   const walletAddress = urlState.walletAddress;
+  const txHashFilter = urlState.txHash || '';
+  const [txHashInput, setTxHashInput] = useState(txHashFilter);
+  const [txHashError, setTxHashError] = useState<string | null>(null);
+
+  const handleTxHashChange = (val: string) => {
+    setTxHashInput(val);
+    const trimmed = val.trim();
+    if (!trimmed) {
+      setTxHashError(null);
+    } else if (!isValidStellarTxHash(trimmed)) {
+      setTxHashError('Invalid Stellar transaction hash. Must be 64 hexadecimal characters.');
+    } else {
+      setTxHashError(null);
+    }
+  };
+
+  const isTxHashInvalid =
+    txHashInput.trim().length > 0 && !isValidStellarTxHash(txHashInput.trim());
+
+  const handleTxHashSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = txHashInput.trim();
+    if (!trimmed) {
+      setUrlState({ txHash: '', page: '1' });
+      setTxHashError(null);
+      return;
+    }
+    if (!isValidStellarTxHash(trimmed)) {
+      setTxHashError('Invalid Stellar transaction hash. Must be 64 hexadecimal characters.');
+      return;
+    }
+    setTxHashError(null);
+    setUrlState({ txHash: trimmed, page: '1' });
+  };
+
+  const handleClearTxHash = () => {
+    setTxHashInput('');
+    setTxHashError(null);
+    setUrlState({ txHash: '', page: '1' });
+  };
+
   const walletError = validateWalletAddress(walletAddress);
   const activeWalletAddress = walletError ? '' : walletAddress;
   const dateFrom = urlState.dateFrom;
@@ -174,6 +221,7 @@ export function PaymentsView() {
     typeFilter !== URL_DEFAULTS.type ||
     assetFilter !== URL_DEFAULTS.assetCode ||
     walletAddress !== URL_DEFAULTS.walletAddress ||
+    txHashFilter !== URL_DEFAULTS.txHash ||
     dateFrom !== URL_DEFAULTS.dateFrom ||
     dateTo !== URL_DEFAULTS.dateTo;
 
@@ -207,15 +255,22 @@ export function PaymentsView() {
   });
 
   const payments = useMemo(() => data?.items ?? [], [data]);
-  const filteredPayments = useMemo(
-    () =>
-      activeWalletAddress
-        ? payments.filter((payment) =>
-            matchesWalletAddress(payment, activeWalletAddress)
-          )
-        : payments,
-    [payments, activeWalletAddress]
-  );
+  const filteredPayments = useMemo(() => {
+    let result = activeWalletAddress
+      ? payments.filter((payment) =>
+          matchesWalletAddress(payment, activeWalletAddress)
+        )
+      : payments;
+
+    if (txHashFilter) {
+      result = result.filter(
+        (payment) =>
+          payment.transactionHash?.toLowerCase() === txHashFilter.toLowerCase()
+      );
+    }
+
+    return result;
+  }, [payments, activeWalletAddress, txHashFilter]);
   const assetOptions = useMemo(() => {
     const codes = new Set<string>(['XLM', 'USDC']);
     for (const payment of payments) {
@@ -378,9 +433,51 @@ export function PaymentsView() {
               aria-label="Date to"
               aria-invalid={!!dateError}
             />
+            <form
+              onSubmit={handleTxHashSubmit}
+              className="flex items-center gap-1.5"
+              data-testid="tx-hash-form"
+            >
+              <div className="relative">
+                <input
+                  type="text"
+                  value={txHashInput}
+                  onChange={(e) => handleTxHashChange(e.target.value)}
+                  placeholder="Filter by Tx Hash..."
+                  className={`rounded border px-3 py-1.5 text-sm font-mono ${
+                    txHashError ? 'border-red-500' : ''
+                  }`}
+                  aria-label="Filter by Stellar transaction hash"
+                  aria-invalid={!!txHashError}
+                  data-testid="tx-hash-input"
+                />
+                {txHashInput && (
+                  <button
+                    type="button"
+                    onClick={handleClearTxHash}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    aria-label="Clear transaction hash filter"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+              <button
+                type="submit"
+                disabled={isTxHashInvalid}
+                className="rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                data-testid="tx-hash-search-btn"
+              >
+                Search
+              </button>
+            </form>
             {hasActiveFilters && (
               <button
-                onClick={() => setUrlState(URL_DEFAULTS)}
+                onClick={() => {
+                  setUrlState(URL_DEFAULTS);
+                  setTxHashInput('');
+                  setTxHashError(null);
+                }}
                 className="rounded border px-3 py-1.5 text-sm hover:bg-gray-50"
                 aria-label="Clear all filters"
               >
@@ -391,6 +488,15 @@ export function PaymentsView() {
           {dateError && (
             <p className="text-sm text-red-600" role="alert">
               {dateError}
+            </p>
+          )}
+          {txHashError && (
+            <p
+              className="text-sm text-red-600"
+              role="alert"
+              data-testid="tx-hash-error"
+            >
+              {txHashError}
             </p>
           )}
         </div>
@@ -620,6 +726,48 @@ export function PaymentsView() {
         </table>
       </div>
 
+      {/* Mobile/Card view for payment transactions (#478) */}
+      <div data-testid="payment-transaction-cards" className="grid gap-3 sm:hidden">
+        {filteredPayments.map((payment) => (
+          <div
+            key={payment.id}
+            data-testid={`payment-card-${payment.id}`}
+            onClick={() => handleRowClick(payment.id)}
+            className="cursor-pointer rounded-lg border bg-white p-4 shadow-sm hover:border-blue-400"
+          >
+            <div className="flex items-center justify-between pb-2">
+              <span className="font-semibold text-gray-900">{formatAmount(payment)}</span>
+              <span
+                data-testid="payment-status-badge"
+                className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusBadge(payment.status)}`}
+              >
+                {payment.status}
+              </span>
+            </div>
+            <div className="space-y-1 text-xs text-gray-600">
+              <p>Type: <span className="font-medium text-gray-800">{payment.type}</span></p>
+              <p>Date: {new Date(payment.createdAt).toLocaleDateString()}</p>
+              {payment.transactionHash && (
+                <div className="pt-2">
+                  <a
+                    href={getStellarExpertTxUrl(payment.transactionHash)}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label="View on Stellar Expert"
+                    data-testid="stellar-expert-link"
+                    onClick={(e) => e.stopPropagation()}
+                    className="inline-flex items-center gap-1 rounded border border-blue-600 px-2.5 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50"
+                  >
+                    View on Stellar Expert
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
       {totalPages > 1 && (
         <div className="flex justify-center">
           <Pagination>
@@ -685,4 +833,6 @@ export function PaymentsView() {
   );
 }
 
+export { PaymentsView as PaymentTransactionsView };
+export { isValidStellarTxHash, getStellarExpertTxUrl } from '@/lib/stellar';
 export default PaymentsView;

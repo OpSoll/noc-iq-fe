@@ -264,11 +264,12 @@ function groupResults(
     else groups.set(command.group, [{ command, index }]);
   });
 
-  return GROUP_ORDER.filter((group) => groups.has(group))
-    .map((group) => ({ group, items: groups.get(group)! }))
-    .concat(
-      Array.from(groups.entries())
-        .filter(([group]) => !(GROUP_ORDER as readonly string[]).includes(group))
-        .map(([group, items]) => ({ group, items }))
-    );
+  const ordered = (GROUP_ORDER.filter((group) => groups.has(group)) as readonly string[])
+    .map((group) => ({ group, items: groups.get(group)! }));
+
+  const extra = Array.from(groups.entries())
+    .filter(([group]) => !(GROUP_ORDER as readonly string[]).includes(group))
+    .map(([group, items]) => ({ group, items }));
+
+  return [...ordered, ...extra];
 }

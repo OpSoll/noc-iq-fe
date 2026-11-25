@@ -30,7 +30,7 @@ export function findMainHeading(root: Document | HTMLElement = document): HTMLEl
   const main =
     root.querySelector('main') ??
     root.querySelector('[role="main"]') ??
-    root.body;
+    ('body' in root ? root.body : root);
   if (!main) return null;
   return main.querySelector<HTMLElement>('h1');
 }

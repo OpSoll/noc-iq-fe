@@ -157,7 +157,8 @@ export function DateRangePicker({
 
   // Apply a preset selection
   const applyPreset = (p: typeof presets[number]) => {
-    const range = p.callback();
+    p.callback();
+    const range = todayRange();
     if (range) onChange(range);
   };
 
@@ -180,19 +181,10 @@ export function DateRangePicker({
       >
         {presets
           .filter((p) => p.name !== 'custom')
-          .map((p) => {
-            const isActive =
-              internalValue.from === todayRange().from &&
-              internalValue.to === todayRange().to &&
-              p.name === 'today';
-          })
           .map((p) => (
             <button
               key={p.name}
-              className={`inline-flex items-center rounded border px-2 py-0.5 text-xs font-medium ${
-                // simple active check – compare first preset's result
-                true
-              }`}
+              className="inline-flex items-center rounded border px-2 py-0.5 text-xs font-medium"
               onClick={() => applyPreset(p)}
               aria-pressed={true}
               title={p.label}
@@ -279,4 +271,3 @@ export function DateRangePicker({
     </div>
   );
 }
-export { DateRangePicker };

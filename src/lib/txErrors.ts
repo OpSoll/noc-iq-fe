@@ -72,6 +72,15 @@ const RULES: Record<TxErrorCode, ErrorRule> = {
     docsUrl: `${SOROBAN_DOCS}#resource-fee`,
     docsLabel: 'Soroban resource fees',
   },
+  expired_footprint: {
+    title: 'Contract entry footprint has expired',
+    description:
+      'The ledger entry or contract data has passed its TTL and was archived. Restoring the entry is required before accessing it.',
+    remedy:
+      'Restore the footprint with a restoreFootprintOp before submitting contract calls.',
+    docsUrl: `${SOROBAN_DOCS}#state-archival`,
+    docsLabel: 'Soroban state archival',
+  },
   tx_too_early: {
     title: 'Transaction submitted before its valid window',
     description:
