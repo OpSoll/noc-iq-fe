@@ -6,21 +6,17 @@
 
 | Metric | Value |
 |--------|-------|
-| Total Wave 5 issues | 108 |
+| Total Wave 5 issues | 104 |
 | Closed | 100 |
-| Open | 8 |
-| Completion | 93% |
+| Open | 4 |
+| Completion | 96% |
 
 ## Open Issues
 
 - [ ] #469 Outages: Add affected services multi-select tag input component
 - [ ] #468 Outages: Add duplicate outage detection warning when logging incident for same site
-- [ ] #466 Outages: Add outage timeline audit trail event history log
 - [ ] #465 Outages: Add root cause taxonomy tags (Hardware, Fiber Cut, Power, Third-Party)
 - [ ] #464 Outages: Add affected subscribers impact calculation helper in OutageDetailsModal
-- [ ] #460 Dashboard: Add SLA availability uptime SLA 9s display (99.9% vs 99.99%)
-- [ ] #459 Dashboard: Add SLA violation notification sound alert toggle for NOC control rooms
-- [ ] #456 Dashboard: Add SLA breach risk prediction score badge on open incidents
 
 ## Closed Issues
 
