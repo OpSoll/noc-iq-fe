@@ -3,6 +3,7 @@
 // ─── PenaltyCreditsWidget ────────────────────────────────────────────────────
 // Closes #607
 
+import { useMemo } from 'react';
 import type { DashboardMetrics } from '@/types/dashboard';
 import { calculatePenaltyCredits, groupCreditsByContract } from '@/lib/penaltyCredits';
 import type { MonthlyPenaltyPoint } from '@/lib/penaltyCredits';
@@ -133,13 +134,13 @@ export function PenaltyCreditsWidget({
       )}
 
       {/* Export Report button */}
-      <Button
+      <button
         type="button"
         onClick={handleExportReport}
         className="mt-4 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100"
       >
         Export Report
-      </Button>
+      </button>
     </div>
   );
 }

@@ -24,6 +24,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { explorerLink, STELLAR_NETWORK_LABEL } from '@/lib/explorer';
+import { getStellarExpertTxUrl } from '@/lib/stellar';
 import { getSafeExternalUrl } from '@/lib/destinationSafety';
 import { queryKeys } from '@/lib/queryKeys';
 import {
@@ -495,18 +496,20 @@ export function PaymentDetailDrawer({
                   {payment.transactionHash}
                 </p>
                 {(() => {
-                  const href =
-                    getSafeExternalUrl(payment.explorerUrl) ??
-                    explorerLink('tx', payment.transactionHash);
+                  const href = payment.transactionHash
+                    ? getStellarExpertTxUrl(payment.transactionHash)
+                    : getSafeExternalUrl(payment.explorerUrl) ??
+                      explorerLink('tx', payment.transactionHash);
                   return href ? (
                     <a
                       href={href}
                       target="_blank"
                       rel="noreferrer"
+                      aria-label="View on Stellar Expert"
                       className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:underline"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      Explorer
+                      View on Stellar Expert
                       <ExternalLink className="h-3.5 w-3.5" />
                     </a>
                   ) : null;

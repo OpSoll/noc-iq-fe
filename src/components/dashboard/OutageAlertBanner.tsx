@@ -168,6 +168,7 @@ export function OutageAlertBanner({
   if (!alert) return null;
 
   function dismiss() {
+    if (!alert) return;
     setDismissedId(alert.id);
     writeDismissedOutageId(alert.id);
   }

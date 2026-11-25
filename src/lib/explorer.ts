@@ -34,3 +34,5 @@ export const STELLAR_NETWORK = NETWORK;
 
 export const STELLAR_NETWORK_LABEL =
   NETWORK === 'mainnet' ? 'Mainnet' : 'Testnet';
+
+export { isValidStellarTxHash, getStellarExpertTxUrl } from '@/lib/stellar';

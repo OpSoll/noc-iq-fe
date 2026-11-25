@@ -2,13 +2,15 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { SlidersHorizontal, WifiOff } from 'lucide-react';
+import { Download, SlidersHorizontal, WifiOff } from 'lucide-react';
 import {
   HighlightedText,
   OutageSearchBar,
   matchesSearchTerm,
 } from '@/components/outages/OutageSearchBar';
 import { ExportButton } from '@/components/outages/ExportButton';
+import { downloadOutagesCsv } from '@/lib/outagesDurationAndExport';
+import { OutageDurationCounter } from '@/components/outages/OutageDurationCounter';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useToast } from '@/components/ui/toast';
 import { useUrlSync } from '@/hooks/useUrlSync';
@@ -123,17 +125,28 @@ export default function OutagesPageClient({ data, onRefresh }: Props) {
     queryFn: fetchOutageQueue,
     enabled: data === undefined,
   });
-  const outageRows =
-    data ??
-    (outageResponse ?? []).map((outage) => ({
-      id: outage.id,
-      title: outage.site_name,
-      severity: outage.severity,
-      status: outage.status,
-      createdAt: outage.detected_at,
-      assigned_to: outage.assigned_to,
-      sla_status: outage.sla_status,
+  const rawRows = (data ?? outageResponse ?? []) as any[];
+  const outageRows: (Outage & {
+    site_name?: string;
+    detected_at?: string;
+    resolved_at?: string;
+    description?: string;
+  })[] = useMemo(() => {
+    return rawRows.map((outage) => ({
+      ...outage,
+      id: String(outage.id),
+      title: (outage.title || outage.site_name || '') as string,
+      severity: (outage.severity || 'low') as Severity,
+      status: (outage.status || 'open') as OutageStatus,
+      createdAt: (outage.createdAt ||
+        outage.detected_at ||
+        new Date().toISOString()) as string,
+      detected_at: (outage.detected_at || outage.createdAt) as string | undefined,
+      site_name: (outage.site_name || outage.title) as string | undefined,
+      assigned_to: outage.assigned_to as string | undefined,
+      sla_status: outage.sla_status as SLAResult | undefined,
     }));
+  }, [data, outageResponse]);
 
   // -----------------------------
   // State
@@ -517,6 +530,17 @@ export default function OutagesPageClient({ data, onRefresh }: Props) {
           />
 
           <button
+            type="button"
+            onClick={() => downloadOutagesCsv(filteredData)}
+            className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            aria-label="Export CSV"
+            data-testid="export-csv-btn"
+          >
+            <Download className="h-4 w-4" />
+            Export CSV
+          </button>
+
+          <button
             onClick={() => {
               setDeleteError(null);
               setShowDeleteConfirm(true);
@@ -591,6 +615,7 @@ export default function OutagesPageClient({ data, onRefresh }: Props) {
               <div
                 key={getOutageRowKey(item)}
                 data-outage-id={getOutageRowKey(item)}
+                data-testid={`incident-card-${item.id}`}
                 className="border rounded-lg p-4 flex items-center justify-between"
               >
                 <div className="flex flex-col gap-1">
@@ -600,10 +625,16 @@ export default function OutagesPageClient({ data, onRefresh }: Props) {
                     </h3>
                     <SeverityBadge severity={item.severity} />
                     <span
-                      className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-medium uppercase ${STATUS_STYLE[item.status]}`}
+                      className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-medium uppercase ${STATUS_STYLE[item.status as OutageStatus] ?? 'bg-slate-100 text-slate-700'}`}
                     >
                       {item.status}
                     </span>
+                    {item.status !== 'resolved' && (
+                      <OutageDurationCounter
+                        detectedAt={item.createdAt}
+                        status={item.status}
+                      />
+                    )}
                     {item.sla_status ? (
                       <SlaStatusBadge
                         status={item.sla_status.status}

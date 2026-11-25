@@ -1,5 +1,7 @@
 'use client';
 
+import type { DashboardMetrics } from '@/types/dashboard';
+
 // ─── Pure helpers ────────────────────────────────────────────────────────────
 /**
  * Defines a single monthly penalty point returned by `calculatePenaltyCredits`.

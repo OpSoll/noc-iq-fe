@@ -36,7 +36,7 @@ export type CsvWorkerOutMessage =
   | { type: 'done'; id: string; headers: string[]; totalRows: number }
   | { type: 'error'; id: string; message: string };
 
-declare const self: DedicatedWorkerGlobalScope;
+declare const self: any;
 
 let cancelledIds = new Set<string>();
 
